@@ -5,17 +5,16 @@ function _init()
  x=0 --speed
  c=0 --beat count
  p=0 --phase
- dx=0 --change in heart speed
 end
 
 --arrows to increase/decrease "phase"
 --beat speed = .045+(.02*p)
+--last if/else checks number of beat
 function _update60()
- x+=dx
+ x+=.045+(.02*p)
  if x>1 then x=0 end
  if btnp(0) then p-=1 end
  if btnp(1) then p+=1 end
- dx=.045+(.02*p)
  if cos(x)==1 then c+=1 if c==3 then c=0 else sfx(0) end end
 end
 
