@@ -4,9 +4,8 @@ __lua__
 function _init()
  x=0 --speed
  c=0 --beat count
- p=0 --phase
  platforms={}
- for i=0, 7 do
+ for i=0, 5 do
   make_platform(i)
  end
  --game object
@@ -85,7 +84,7 @@ function make_bullet(o,d)
  x=o.x,
  y=o.y,
  d=d,
- sprite=3,
+ sprite=17,
  spd=1
  }
  return b
@@ -97,7 +96,7 @@ function make_diagonal_bullet(o,diag)
  x=o.x,
  y=o.y,
  dia=diag,
- sprite=3,
+ sprite=17,
  spd=1
  }
  return b
@@ -222,7 +221,7 @@ function makeplayer(slot)
    state=0,
    last_action=0,
    num=slot,
-   sprite=1,
+   sprite=206,
    x=0,
    y=32,
    dx=0,
@@ -497,15 +496,7 @@ function _draw()
  cls()
  map(0,0,0,0,16,16)
  draw_platforms()
- spr(11, 96, 48, 4,4)
- --normal eyes
- spr(21,104,60,1,1)
- spr(21,114,60,1,1)
- --angry eyes
- spr(24,104,60,1,1)
- spr(24,114,60,1,1,true,false)
- --angry mouth
- spr(22,109,68,1,1)
+ draw_boss()
  for p in all(players) do
   spr(p.sprite,p.x,p.y)
   print(p.state,32,16)
@@ -523,6 +514,22 @@ end
 
 function draw_boss()
  
+ if c==1 then 
+  sspr(88, 0, 32, 32, 76,40, 48, 48)
+ else
+  sspr(88, 0, 32, 32, 76,40, 44, 44)
+ end
+
+ if boss.phase==0 then 
+ spr(21,88,56,1,1)
+ spr(21,96,56,1,1)
+ end--draw happy
+ if boss.phase==1 then 
+ spr(24,96,56,1,1)
+ spr(24,104,56,1,1,true,false)
+ end--draw angry
+ if boss.phase==2 then end--draw sad
+ spr(22,93,68,1,1)
 end
 
 function draw_platforms()
