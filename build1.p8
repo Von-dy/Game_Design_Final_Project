@@ -147,7 +147,7 @@ function groundmovement(player)
  end
 
  --horizontal movement
- if not (solid(x+dx,y+dy) or solid(x+7+dx,y+dy) or solid(x+7+dx,y+7+dy)) then
+ if not (solid(x+dx,y+dy) or solid(x+7+dx,y+dy) or solid(x+7+dx,y+7+dy) or solid(x+dx,y+7+dy)) then
   x+=dx
   y+=dy
  else
