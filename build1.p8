@@ -4,11 +4,254 @@ __lua__
 function _init()
  x=0 --speed
  c=0 --beat count
- p=0 --phase
  platforms={}
- for i=0, 7 do
+ for i=0, 5 do
   make_platform(i)
  end
+ --game object
+ game={
+   --0=menu, 1=travel, 2=boss, 3=game over
+   state=2,
+   frame_counter=0
+ }
+ --player list
+ players = {}
+ --hitscan list
+ hitboxes = {}
+ makeplayer(1)
+ boss=generic_boss()
+end
+
+--generic boss class
+function generic_boss()
+ boss={
+  phase=0,
+  hp=0,
+  x=138,
+  y=60,
+  id=0
+ }
+ return boss
+end
+
+--determines what boss
+--is being fought based on id (n)
+function make_boss(n)
+ if n==1 then
+  --make heart boss
+  heart_boss()
+ end
+end
+
+--create the heart boss
+function heart_boss()
+ boss.ct=time()
+ boss.bullets={}
+ boss.sprite=17
+ boss.name="heart"
+ boss.state=0
+ boss.hp=1
+ boss.id=1
+ boss.av={}
+ boss.valves={}
+ for i=1,4 do
+  v=make_valve(i)
+  add(boss.valves,v)
+ end
+end
+
+--makes the valves for the heart boss
+function make_valve(n)
+ lx=96
+ ly=22
+ if n==2 then lx=120 ly=22 end
+ if n==3 then lx=96 ly=100 end
+ if n==4 then lx=120 ly=100 end
+ valve={
+ id=n,
+ hp=50,
+ x=lx,
+ y=ly,
+ sprite=16,
+ bullets={}
+ }
+ return valve
+end
+
+--make a bullet for some owner in some direction
+function make_bullet(o,d)
+ b={
+ x=o.x,
+ y=o.y,
+ d=d,
+ sprite=17,
+ spd=1
+ }
+ return b
+end
+
+--make a bullet that moves diagonally
+function make_diagonal_bullet(o,diag)
+ b={
+ x=o.x,
+ y=o.y,
+ dia=diag,
+ sprite=17,
+ spd=1
+ }
+ return b
+end
+
+--determining what the heart boss does based on state
+function hb_logic(s)
+        timer=time()-boss.ct
+        --if state 0 do nothing
+
+        --if state 1 do clot attacks and valve bursts
+        t=players[1]
+        if s==1 then
+         --determine side player is on
+         --left(0) right(1)
+         if t.x<=60 then side=0 else side=1 end
+         --every 5 seconds do a clot attack
+         if timer%5==0 then
+                clot_attack(side)
+         end
+         --every 8 seconds find what valve will burst
+         if timer%10==8 then
+          boss.av=vb()
+         end
+         --every 10 seconds start a new valve burst volley
+         if timer%10==0 then
+          valve_burst(boss.av)
+         end
+        end
+
+        --if in state 2 then do flood attack and streams
+        if s==2 then
+         --determine what valve will burst every 4 seconds
+         if timer%5==4 then
+          boss.av=vb()
+         end
+         --valve burst every 5 seconds
+         if timer%5==0 then
+          valve_burst(boss.av)
+         end
+         --every 20 seconds change where flood is coming from
+         if timer%20==0 then
+          --flood()
+         end
+        end
+
+        --move whatever bullets have been shot
+        move_bullets()
+end
+
+--rain clots of blood on one side of screen
+function clot_attack(side)
+ --generate where bullets will spawn
+ for i=0,64,3 do
+  tile={x=i,y=8}
+  if side==1 then tile.x+=64 end
+  t=rnd(5)
+  if t<=1 then add(boss.bullets,make_bullet(tile,3)) end
+ end
+end
+
+--determines what random valve
+--bursts
+function vb()
+ id=flr(rnd(4))+1
+ for v in all(boss.valves) do
+  if id==v.id then v.sprite=7 return v end
+ end
+end
+
+--for a valve, shoot a
+--burst of bullets out
+function valve_burst(v)
+ v.sprite=16
+ --make 8 bullets, 4 diagonals 4 straight
+ for i=0,7 do
+  if i<4 then
+  b=make_bullet(v,i)
+  add(boss.bullets,b)
+  else
+  b=make_diagonal_bullet(v,i)
+  add(boss.bullets,b)
+  end
+ end
+end
+
+function move_bullets()
+ for b in all(boss.bullets) do
+  --save tokens
+  d=b.d
+  x=b.x
+  y=b.y
+  dia=b.dia
+  spd=b.spd
+
+  --delete bullets
+  if x>288 or x<0 or y>180 or y<0 then del(boss.bullets,b) end
+
+  --normal bullet movement
+  if d==0 then x-=spd
+  elseif d==1 then x+=spd
+  elseif d==2 then y-=spd
+  elseif d==3 then y+=spd
+  end
+
+  --diagonal bullet movement
+  if dia==4 then x-=spd y-=spd
+  elseif dia==5 then x-=spd y+=spd
+  elseif dia==6 then x+=spd y-=spd
+  elseif dia==7 then x+=spd y+=spd
+  end
+
+  --update bullet values
+  b.x=x
+  b.y=y
+ end
+end
+
+function makeplayer(slot)
+ p={
+   --0=grounded, 1=airborne, 2=crouch, 3=dodge
+   state=0,
+   last_action=0,
+   num=slot,
+   sprite=206,
+   x=0,
+   y=32,
+   dx=0,
+   dy=0,
+   w=7,
+   h=7,
+   --direction(l/r)
+   d=1,
+   --jump flag
+   j=0,
+   --attacking flag
+   a=0,
+   --dodge duration
+   dodge=0,
+   --dodge cooldown
+   dcl=60
+ }
+ --add player to list
+ add(players,p)
+end
+
+function makehitbox(x,y,w,h,name)
+ hbox = {
+  x=x,
+  y=y,
+  w=w,
+  h=h
+ }
+ hitboxes[name]=hbox
+ add(hitboxes,hbox)
 end
 
 function make_platform(num)
@@ -21,12 +264,201 @@ function make_platform(num)
  add(platforms, platform)
 end
 
+--movement functions
+function groundmovement(player)
+ --import vars
+ local x=player.x
+ local y=player.y
+ local dx=player.dx
+ local dy=player.dy
+
+ --manage state
+ if player.state<3 then
+  if (solid(x,y+9) or solid(x+7,y+9)) then
+   player.state=0
+   dy=0
+  else
+   player.state=1
+  end
+ end
+
+ --left
+ if btn(0) then
+  --change direction
+  if player.d==1 then
+   player.d=0
+  end
+  --move
+  if dx > -2 then
+   dx-=0.25
+  end
+ end
+ --right
+ if btn(1) then
+  if player.d==0 then
+   player.d=1
+  end
+  if dx < 2 then
+   dx+=0.25
+  end
+ end
+ --up
+ if btn(2) then
+  if player.j==0 then
+   player.j=1
+   dy=-3.5
+  end
+  if dy > -3 then
+   dy-=0.03
+  end
+ end
+ --down
+ if btn(3) then
+  --crouch
+  player.state=2
+  --crawl (feel free to delete, just set dx=0)
+  if dx~=0 then
+   dx-=(dx/2)
+  end
+ end
+ --attack
+ if btn(4) then
+  --start attack if not attacking
+  if player.a==0 then
+   makehitbox(x,y,10,3,"player")
+   player.a=1
+  end
+ end
+ --extend hitbox
+ if player.a==1 then
+  --track position
+  hitboxes["player"].x=x+2
+  hitboxes["player"].y=y+2
+  --attack left
+  if player.d==1 then
+   if hitboxes["player"].w<50 then
+    hitboxes["player"].w+=3
+   else
+    player.a=2
+   end
+  --attack right
+  else
+   if hitboxes["player"].w>-50 then
+    hitboxes["player"].w-=3
+   else
+    player.a=2
+   end
+  end
+ --retract hitbox
+ elseif player.a==2 then
+  hitboxes["player"].x=x+2
+  hitboxes["player"].y=y+2
+  if player.d==1 then
+   if hitboxes["player"].w>0 then
+    hitboxes["player"].w-=3
+   else
+    --finish attack
+    del(hitboxes,hitboxes["player"])
+    player.a=0
+   end
+  else
+   if hitboxes["player"].w<0 then
+    hitboxes["player"].w+=3
+   else
+    --finish attack
+    del(hitboxes,hitboxes["player"])
+    player.a=0
+   end
+  end
+ end
+
+ --dodge
+ if btn(5) then
+  if player.dcl==0 then
+   player.state=3
+   player.dcl=100
+  end
+ end
+ if player.state==3 then
+  if player.dodge<40 then
+   dx=0
+   dy=-0.15
+   player.dodge+=1
+  else
+   player.state=1
+   player.dodge=0
+  end
+ else
+  --cooldown
+  if player.dcl>0 then
+   player.dcl-=1
+  end
+ end
+
+ --gravity
+ if not solid(x,y+player.h+(dy+ 0.1)) then
+  dy+=0.15
+ else
+  if player.j==1 then
+   player.j=0
+  end
+  dy=0
+ end
+
+ --inertia
+ if dx > 0 then
+  dx-=0.06
+ elseif dx < 0 then
+  dx+=0.06
+ end
+ if dx > -0.06 and dx < 0.06 then
+  dx=0
+ end
+
+ --horizontal movement
+ if not (solid(x+dx,y+dy) or solid(x+7+dx,y+dy) or solid(x+7+dx,y+6+dy) or solid(x+dx,y+6+dy)) then
+  if player.state==1 then
+   x+=(dx/2+dx/4)
+  else
+   x+=dx
+  end
+  y+=dy
+ else
+  dx=0
+  dy=0
+ end
+ --ground bounce
+ if y>105 then
+ y=104
+ end
+ --update vars
+ player.x=x
+ player.y=y
+ player.dx=dx
+ player.dy=dy
+end
+
+function solid(x,y)
+ val=mget(x/8,y/8)
+ return fget(val,0)
+end
+
 --arrows to increase/decrease "phase"
 --beat speed = .045+(.02*p)
 --last if/else checks number of beat
 function _update60()
- heart_beat()
+ --heart_beat()
  heart_platforms()
+ if game.state==2 then
+  for p in all(players) do
+   groundmovement(p)
+  end
+  --determine what boss you are fighting
+  if boss.id==0 then make_boss(1) end
+  --change what boss state
+  if btnp(4) then boss.state=(boss.state+1)%3 end
+  if boss.id==1 then hb_logic(boss.state) end
+ end
 end
 
 function heart_beat()
@@ -64,19 +496,75 @@ function _draw()
  cls()
  map(0,0,0,0,16,16)
  draw_platforms()
- spr(11, 96, 48, 4,4)
- --normal eyes
- spr(21,104,60,1,1)
- spr(21,114,60,1,1)
- --angry eyes
- spr(24,104,60,1,1)
- spr(24,114,60,1,1,true,false)
- --angry mouth
- spr(22,109,68,1,1)
+ draw_boss()
+ for p in all(players) do
+  spr(p.sprite,p.x,p.y)
+  print(p.state,32,16)
+  print(p.dcl,32,26)
+  --print(p.a,32,32)
+ end
+ for h in all(hitboxes) do
+  rectfill(h.x,h.y,h.x+h.w,h.y+h.h)
+  --print(h.w,32,42)
+ end
+ for b in all(boss.bullets) do
+  spr(b.sprite,b.x,b.y)
+ end
 end
 
 function draw_boss()
  
+ if c==1 then 
+  sspr(88, 0, 32, 32, 76,40, 48, 48)
+ else
+  sspr(88, 0, 32, 32, 76,40, 44, 44)
+ end
+ draw_face()
+ --if boss.phase==0 then 
+ --spr(21,88,56,1,1)
+ --spr(21,96,56,1,1)
+ --end--draw happy
+ --if boss.phase==1 then 
+ --spr(24,96,56,1,1)
+ --spr(24,104,56,1,1,true,false)
+ --end--draw angry
+ if boss.phase==2 then end--draw sad
+ spr(22,93,68,1,1)
+end
+
+function draw_face()
+ local y=0
+ local x=0
+
+ for p in all(players) do
+   y=p.y
+   x=p.x
+ end
+  circfill(88, 56, 4, 7)
+  circfill(100, 56, 4, 7)
+ if x>32 then
+   --left brow
+  line(84, 49, 90, 53, 2)
+  line(85, 50, 92, 54, 2)
+  line(85, 51, 93, 55, 8)
+
+  --right brow
+  line(101, 49, 98, 53, 2)
+  line(103, 50, 96, 54, 2)
+  line(103, 51, 95, 55, 8)
+ else
+  
+ end
+  if y<=48 then 
+    rectfill(86, 54, 88, 56, 0)
+    rectfill(98, 54, 100, 56, 0)
+   elseif y<=72 then
+    rectfill(86, 55, 88, 57, 0)
+    rectfill(98, 55, 100, 57, 0)
+   else
+    rectfill(86, 56, 88, 58, 0)
+    rectfill(98, 56, 100, 58, 0)
+  end
 end
 
 function draw_platforms()
@@ -101,11 +589,11 @@ __gfx__
 00000000000000000000000000000000000000000711177000000000000000000777777000000000000000000001122281888221828222882212220000000000
 00000000000000000000000000000000000000000077770000000000000000000077770000000000000000000002111222222221182281882218220000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000228111111128112821882211220000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000028881288822828821882211220000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000022888281118888121182112200000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000022888218811888228122182200000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002281222888882228122182200000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002221182888221128188182000000000000
+00000000000000000000000000000000000000000000000000000000088222220000000000000000000000000000028881288822828821882211220000000000
+00000000000000000000000000000000000000000000000000000000008882220000000000000000000000000000022888281118888121182112200000000000
+00000000000000000000000000000000000000000000000000000000000088820000000000000000000000000000022888218811888228122182200000000000
+00000000000000000000000000000000000000000000000000000000000000880000000000000000000000000000002281222888882228122182200000000000
+00000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000002221182888221128188182000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000228182188218122888822000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000028112288218112882220000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000022811282188822822200000000000000
@@ -344,7 +832,7 @@ __label__
 88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
 
 __gff__
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0001010001010101000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
 060606060606060606060606060606060000f7f7f70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
