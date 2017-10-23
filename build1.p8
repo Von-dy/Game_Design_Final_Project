@@ -20,6 +20,200 @@ function _init()
  --hitscan list
  hitboxes = {}
  makeplayer(1)
+ boss=generic_boss()
+end
+
+--generic boss class
+function generic_boss()
+ boss={
+  phase=0,
+  hp=0,
+  x=138,
+  y=60,
+  id=0
+ }
+ return boss
+end
+
+--determines what boss
+--is being fought based on id (n)
+function make_boss(n)
+ if n==1 then
+  --make heart boss
+  heart_boss()
+ end
+end
+
+--create the heart boss
+function heart_boss()
+ boss.ct=time()
+ boss.bullets={}
+ boss.sprite=17
+ boss.name="heart"
+ boss.state=0
+ boss.hp=1
+ boss.id=1
+ boss.av={}
+ boss.valves={}
+ for i=1,4 do
+  v=make_valve(i)
+  add(boss.valves,v)
+ end
+end
+
+--makes the valves for the heart boss
+function make_valve(n)
+ lx=96
+ ly=22
+ if n==2 then lx=120 ly=22 end
+ if n==3 then lx=96 ly=100 end
+ if n==4 then lx=120 ly=100 end
+ valve={
+ id=n,
+ hp=50,
+ x=lx,
+ y=ly,
+ sprite=16,
+ bullets={}
+ }
+ return valve
+end
+
+--make a bullet for some owner in some direction
+function make_bullet(o,d)
+ b={
+ x=o.x,
+ y=o.y,
+ d=d,
+ sprite=3,
+ spd=1
+ }
+ return b
+end
+
+--make a bullet that moves diagonally
+function make_diagonal_bullet(o,diag)
+ b={
+ x=o.x,
+ y=o.y,
+ dia=diag,
+ sprite=3,
+ spd=1
+ }
+ return b
+end
+
+--determining what the heart boss does based on state
+function hb_logic(s)
+        timer=time()-boss.ct
+        --if state 0 do nothing
+
+        --if state 1 do clot attacks and valve bursts
+        t=players[1]
+        if s==1 then
+         --determine side player is on
+         --left(0) right(1)
+         if t.x<=60 then side=0 else side=1 end
+         --every 5 seconds do a clot attack
+         if timer%5==0 then
+                clot_attack(side)
+         end
+         --every 8 seconds find what valve will burst
+         if timer%10==8 then
+          boss.av=vb()
+         end
+         --every 10 seconds start a new valve burst volley
+         if timer%10==0 then
+          valve_burst(boss.av)
+         end
+        end
+
+        --if in state 2 then do flood attack and streams
+        if s==2 then
+         --determine what valve will burst every 4 seconds
+         if timer%5==4 then
+          boss.av=vb()
+         end
+         --valve burst every 5 seconds
+         if timer%5==0 then
+          valve_burst(boss.av)
+         end
+         --every 20 seconds change where flood is coming from
+         if timer%20==0 then
+          --flood()
+         end
+        end
+
+        --move whatever bullets have been shot
+        move_bullets()
+end
+
+--rain clots of blood on one side of screen
+function clot_attack(side)
+ --generate where bullets will spawn
+ for i=0,64,3 do
+  tile={x=i,y=8}
+  if side==1 then tile.x+=64 end
+  t=rnd(5)
+  if t<=1 then add(boss.bullets,make_bullet(tile,3)) end
+ end
+end
+
+--determines what random valve
+--bursts
+function vb()
+ id=flr(rnd(4))+1
+ for v in all(boss.valves) do
+  if id==v.id then v.sprite=7 return v end
+ end
+end
+
+--for a valve, shoot a
+--burst of bullets out
+function valve_burst(v)
+ v.sprite=16
+ --make 8 bullets, 4 diagonals 4 straight
+ for i=0,7 do
+  if i<4 then
+  b=make_bullet(v,i)
+  add(boss.bullets,b)
+  else
+  b=make_diagonal_bullet(v,i)
+  add(boss.bullets,b)
+  end
+ end
+end
+
+function move_bullets()
+ for b in all(boss.bullets) do
+  --save tokens
+  d=b.d
+  x=b.x
+  y=b.y
+  dia=b.dia
+  spd=b.spd
+
+  --delete bullets
+  if x>288 or x<0 or y>180 or y<0 then del(boss.bullets,b) end
+
+  --normal bullet movement
+  if d==0 then x-=spd
+  elseif d==1 then x+=spd
+  elseif d==2 then y-=spd
+  elseif d==3 then y+=spd
+  end
+
+  --diagonal bullet movement
+  if dia==4 then x-=spd y-=spd
+  elseif dia==5 then x-=spd y+=spd
+  elseif dia==6 then x+=spd y-=spd
+  elseif dia==7 then x+=spd y+=spd
+  end
+
+  --update bullet values
+  b.x=x
+  b.y=y
+ end
 end
 
 function makeplayer(slot)
@@ -185,6 +379,11 @@ function _update60()
   for p in all(players) do
    groundmovement(p)
   end
+  --determine what boss you are fighting
+  if boss.id==0 then make_boss(1) end
+  --change what boss state
+  if btnp(4) then boss.state=(boss.state+1)%3 end
+  if boss.id==1 then hb_logic(boss.state) end
  end
 end
 
@@ -240,6 +439,9 @@ function _draw()
  for h in all(hitboxes) do
   rectfill(h.x,h.y,h.x+h.w,h.y+h.h)
   --print(h.w,32,42)
+ end
+ for b in all(boss.bullets) do
+  spr(b.sprite,b.x,b.y)
  end
 end
 
