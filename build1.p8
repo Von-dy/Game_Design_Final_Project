@@ -283,12 +283,20 @@ function groundmovement(player)
 
  --left
  if btn(0) then
+  --change direction
+  if player.d==1 then
+   player.d=0
+  end
+  --move
   if dx > -2 then
    dx-=0.25
   end
  end
  --right
  if btn(1) then
+  if player.d==0 then
+   player.d=1
+  end
   if dx < 2 then
    dx+=0.25
   end
@@ -314,27 +322,52 @@ function groundmovement(player)
  end
  --attack
  if btn(4) then
+  --start attack if not attacking
   if player.a==0 then
    makehitbox(x,y,10,3,"player")
    player.a=1
   end
  end
+ --extend hitbox
  if player.a==1 then
+  --track position
   hitboxes["player"].x=x+2
   hitboxes["player"].y=y+2
-  if hitboxes["player"].w<50 then
-   hitboxes["player"].w+=3
+  --attack left
+  if player.d==1 then
+   if hitboxes["player"].w<50 then
+    hitboxes["player"].w+=3
+   else
+    player.a=2
+   end
+  --attack right
   else
-   player.a=2
+   if hitboxes["player"].w>-50 then
+    hitboxes["player"].w-=3
+   else
+    player.a=2
+   end
   end
+ --retract hitbox
  elseif player.a==2 then
   hitboxes["player"].x=x+2
   hitboxes["player"].y=y+2
-  if hitboxes["player"].w>0 then
-   hitboxes["player"].w-=3
+  if player.d==1 then
+   if hitboxes["player"].w>0 then
+    hitboxes["player"].w-=3
+   else
+    --finish attack
+    del(hitboxes,hitboxes["player"])
+    player.a=0
+   end
   else
-   del(hitboxes,hitboxes["player"])
-   player.a=0
+   if hitboxes["player"].w<0 then
+    hitboxes["player"].w+=3
+   else
+    --finish attack
+    del(hitboxes,hitboxes["player"])
+    player.a=0
+   end
   end
  end
 
@@ -392,6 +425,10 @@ function groundmovement(player)
  else
   dx=0
   dy=0
+ end
+ --ground bounce
+ if y>105 then
+ y=104
  end
  --update vars
  player.x=x
