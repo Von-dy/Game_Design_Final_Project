@@ -229,6 +229,8 @@ function makeplayer(slot)
    dy=0,
    w=7,
    h=7,
+   --direction(l/r)
+   d=1,
    --jump flag
    j=0,
    --attacking flag
