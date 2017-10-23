@@ -447,7 +447,7 @@ end
 --beat speed = .045+(.02*p)
 --last if/else checks number of beat
 function _update60()
- --heart_beat()
+ heart_beat()
  heart_platforms()
  if game.state==2 then
   for p in all(players) do
@@ -462,10 +462,8 @@ function _update60()
 end
 
 function heart_beat()
- x+=.045+(.02*p)
+ x+=.045+(.02*boss.phase)
  if x>1 then x=0 end
- if btnp(0) then p-=1 end
- if btnp(1) then p+=1 end
  if cos(x)==1 then c+=1 if c==3 then c=0 else sfx(0) end end
 end
 
@@ -515,21 +513,11 @@ end
 function draw_boss()
  
  if c==1 then 
-  sspr(88, 0, 32, 32, 76,40, 48, 48)
+  sspr(88, 0, 32, 32, 75,39, 46, 46)
  else
   sspr(88, 0, 32, 32, 76,40, 44, 44)
  end
  draw_face()
- --if boss.phase==0 then 
- --spr(21,88,56,1,1)
- --spr(21,96,56,1,1)
- --end--draw happy
- --if boss.phase==1 then 
- --spr(24,96,56,1,1)
- --spr(24,104,56,1,1,true,false)
- --end--draw angry
- if boss.phase==2 then end--draw sad
- spr(22,93,68,1,1)
 end
 
 function draw_face()
@@ -547,14 +535,30 @@ function draw_face()
   line(84, 49, 90, 53, 2)
   line(85, 50, 92, 54, 2)
   line(85, 51, 93, 55, 8)
-
   --right brow
   line(101, 49, 98, 53, 2)
   line(103, 50, 96, 54, 2)
   line(103, 51, 95, 55, 8)
+
+  --angry mouth
+  for i=0, 15 do
+   pset(91+i, 72+3*sin(i/32), 1)
+   pset(91+i, 73+3*sin(i/32), 5)
+   pset(91+i, 74+3*sin(i/32), 5)
+   if c!=1 then 
+    pset(91+i, 75+3*sin(i/32), 1)
+    if i%2==0 and i!=0 then pset(91+i, 74+3*sin(i/32), 7) end
+   else
+    pset(91+i, 75+3*sin(i/32), 5)
+    pset(91+i, 76+3*sin(i/32), 1)
+    if i%2==0 and i!=0 then pset(91+i, 75+3*sin(i/32), 7) end
+   end
+  end
+
  else
   
  end
+ --pupil tracking
   if y<=48 then 
     rectfill(86, 54, 88, 56, 0)
     rectfill(98, 54, 100, 56, 0)
