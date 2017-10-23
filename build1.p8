@@ -9,6 +9,50 @@ function _init()
  for i=0, 7 do
   make_platform(i)
  end
+ --game object
+ game={
+   --0=menu, 1=travel, 2=boss, 3=game over
+   state=2,
+   frame_counter=0
+ }
+ --player list
+ players = {}
+ --hitscan list
+ hitboxes = {}
+ makeplayer(1)
+end
+
+function makeplayer(slot)
+ p={
+   --0=grounded, 1=airborne, 2=crouch, 3=dodge
+   state=0,
+   last_action=0,
+   num=slot,
+   sprite=1,
+   x=0,
+   y=0,
+   dx=0,
+   dy=0,
+   w=7,
+   h=7,
+   --jump flag
+   j=0,
+   --attacking flag
+   a=0
+ }
+ --add player to list
+ add(players,p)
+end
+
+function makehitbox(x,y,w,h,name)
+ hbox = {
+  x=x,
+  y=y,
+  w=w,
+  h=h
+ }
+ hitboxes[name]=hbox
+ add(hitboxes,hbox)
 end
 
 function make_platform(num)
@@ -21,12 +65,127 @@ function make_platform(num)
  add(platforms, platform)
 end
 
+--movement functions
+function groundmovement(player)
+ --import vars
+ local x=player.x
+ local y=player.y
+ local dx=player.dx
+ local dy=player.dy
+
+ --manage state
+ if player.state<2 then
+  if (solid(x,y+9) or solid(x+7,y+9)) then
+   player.state=0
+   dy=0
+  else
+   player.state=1
+  end
+ end
+
+ --left
+ if btn(0) then
+  if dx > -2 then
+   dx-=0.25
+  end
+ end
+ --right
+ if btn(1) then
+  if dx < 2 then
+   dx+=0.25
+  end
+ end
+ --up
+ if btn(2) then
+  if player.j==0 then
+   player.j=1
+   dy=-2.5
+  end
+  if dy > -3 then
+   dy-=0.03
+  end
+ end
+ --down
+ if btn(3) then
+
+ end
+ --attack
+ if btn(4) then
+  if player.a==0 then
+   makehitbox(x,y,10,3,"player")
+   player.a=1
+  end
+ end
+ if player.a==1 then
+  hitboxes["player"].x=x+2
+  hitboxes["player"].y=y+2
+  if hitboxes["player"].w<50 then
+   hitboxes["player"].w+=3
+  else
+   player.a=2
+  end
+ elseif player.a==2 then
+  hitboxes["player"].x=x+2
+  hitboxes["player"].y=y+2
+  if hitboxes["player"].w>0 then
+   hitboxes["player"].w-=3
+  else
+   del(hitboxes,hitboxes["player"])
+   player.a=0
+  end
+ end
+
+ --gravity
+ if not solid(x,y+player.h+(dy+ 0.1)) then
+  dy+=0.1
+ else
+  if player.j==1 then
+   player.j=0
+  end
+  dy=0
+ end
+
+ --inertia
+ if dx > 0 then
+  dx-=0.06
+ elseif dx < 0 then
+  dx+=0.06
+ end
+ if dx > -0.06 and dx < 0.06 then
+  dx=0
+ end
+
+ --horizontal movement
+ if not (solid(x+dx,y+dy) or solid(x+7+dx,y+dy) or solid(x+7+dx,y+7+dy) or solid(x+dx,y+7+dy)) then
+  x+=dx
+  y+=dy
+ else
+  dx=0
+  dy=0
+ end
+ --update vars
+ player.x=x
+ player.y=y
+ player.dx=dx
+ player.dy=dy
+end
+
+function solid(x,y)
+ val=mget(x/8,y/8)
+ return fget(val,0)
+end
+
 --arrows to increase/decrease "phase"
 --beat speed = .045+(.02*p)
 --last if/else checks number of beat
 function _update60()
  heart_beat()
  heart_platforms()
+ if game.state==2 then
+  for p in all(players) do
+   groundmovement(p)
+  end
+ end
 end
 
 function heart_beat()
@@ -73,6 +232,15 @@ function _draw()
  spr(24,114,60,1,1,true,false)
  --angry mouth
  spr(22,109,68,1,1)
+ for p in all(players) do
+  spr(p.sprite,p.x,p.y)
+  --print(p.state,32,16)
+  --print(p.a,32,32)
+ end
+ for h in all(hitboxes) do
+  rectfill(h.x,h.y,h.x+h.w,h.y+h.h)
+  --print(h.w,32,42)
+ end
 end
 
 function draw_boss()
