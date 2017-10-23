@@ -1,226 +1,32 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
-function dst(o1,o2)
- return sqrt(sqr(o1.x-o2.x)+sqr(o1.y-o2.y))
-end
-
-function sqr(x) return x*x end
-
-function find_mid()
- local t_x=0
- local t_y=0
- for p in all(players) do t_x+=p.x t_y+=p.y end
- return t_x/#players, t_y/#players
-end
-
-
 function _init()
- game={}
- game.state=0
- frame_counter=0
- menu_drip=0
- players={}
- make_player()
- make_player()
+	
+
 end
 
-function make_player()
- local player={}
- player.n=#players
- player.curr_choice=0
- if player.n==0 or player.n==2 then player.x=8 else player.x=68 end
- if player.n==0 or player.n==1 then player.y=32 else player.y=96 end
- player.wait=0
- player.waiting=false
- player.syringe={}
- player.syringe.p_col=3
- player.syringe.s_col=11
- player.syringe.circ_1=0
- player.syringe.circ_2=0
- player.syringe.circ_3=0
- player.syringe.circ_4=0
- player.syringe.ready=false
- add(players, player)
+t=200 p={t} n=64
+
+function _draw()
+cls()
+map(0,0,0,0,16,16)
+	for i=n,2,-1 do
+		p[i]=p[i-1]
+		x=p[n-i] or 0
+		if i % 2 == 0 then
+			line(x,n-i+24,x+1,n+48,2)
+			else
+		line(x,n-i+32,x+1,n+48,8)
+		end
+	end
+t+=0.001
+p[1]+=sin(t/2)--sin(t/2)+cos(t/3)
 end
 
 function _update60()
---frame tracker
- frame_counter+=1
- if frame_counter==60 then frame_counter=0 end
- if game.state==0 then update_menu() end
- if game.state==1 then update_flight() end
+
 end
-
-function update_wait(p)
- if p.waiting==true then p.wait+=1 end
- if p.wait==10 then p.wait=0 p.waiting=false end
-end
-
-function update_menu()
- local ready_count=0
- for p in all(players) do
-  update_wait(p)
-  update_player_menu(p)
-  if p.syringe.ready==true then ready_count+=1 end
- end
- if ready_count==#players then game.state=1 end
-end
-
-function update_player_menu(p)
- if frame_counter==59 then menu_drip+=1 end
- if menu_drip>60 then menu_drip=0 end
- --selection buttons
- if p.waiting==false then 
-  if p.syringe.ready==false then 
-   if btn(0, p.n) then p.curr_choice-=1 p.waiting=true end
-   if btn(1, p.n) then p.curr_choice+=1 p.waiting=true end
-  end
-  if btnp(4, p.n) then if p.syringe.ready==false then p.syringe.ready=true else p.syringe.ready=true end end
- end
- --selection boundries
- if p.curr_choice<0 then p.curr_choice=0 end
- if p.curr_choice>3 then p.curr_choice=3 end
-end
-
-function update_flight()
- for p in all(players) do 
-  update_player(p)
- end
-end
-
-function update_player(p)
- if btn(0, p.n) then p.x-=2 end
- if btn(1, p.n) then p.x+=2 end
- if btn(2, p.n) then p.y-=2 end
- if btn(3, p.n) then p.y+=2 end
-end
-
-function _draw()
- cls()
- if game.state==0 then draw_menu() end
- if game.state==1 then draw_flight() end
- debug()
-end
-
-function debug()
- print(game.state, 0, 0)
-end
-
-function draw_menu()
- --menu background
- map(0,0,0,0,16,16)
- draw_title()
- --menu "actors"
- for p in all(players) do 
-  draw_characters(p)
-  draw_syringe(p)
-  draw_instructions(p)
- end
-end
-
-function draw_title()
- spr(211, 35, 58) --d
- spr(212, 42, 58) --o
- spr(213, 49, 58) --c
- spr(214, 56, 58) --t
- spr(212, 62, 58) --o
- spr(215, 69, 58) --r'
- spr(216, 77, 58) --s
- 
- spr(227, 37, 66) --o
- spr(228, 45, 66) --f
- spr(228, 50, 66) --f
- spr(229, 56, 66) --i
- spr(213, 62, 66) --c
- spr(230, 69, 66) --e
-  
- circ(55+3, 65+7+menu_drip, 1, 8)
-end
-
-function draw_characters(p)
- local x=0
- local y=0
- if p.n==0 or p.n==2 then x=17 else x=77 end
- if p.n==0 or p.n==1 then y=24 else y=88 end
- if p.curr_choice==0 then spr(222, x, y) else spr(221, x, y) end
- if p.curr_choice==1 then spr(254, x+8, y) else spr(253, x+8, y) end
- if p.curr_choice==2 then spr(206, x+16, y) else spr(205, x+16, y) end
- if p.curr_choice==3 then spr(238, x+24, y) else spr(237, x+24, y) end
-end
-
-function draw_syringe(p)
- local x=0
- local y=0
- if game.state==0 then 
-  if p.n==0 or p.n==2 then x=8 else x=68 end
-  if p.n==0 or p.n==1 then y=32 else y=96 end
-  if p.curr_choice==0 then p.syringe.p_col=2 p.syringe.s_col=8 end
-  if p.curr_choice==1 then p.syringe.p_col=1 p.syringe.s_col=12 end
-  if p.curr_choice==2 then p.syringe.p_col=3 p.syringe.s_col=11 end
-  if p.curr_choice==3 then p.syringe.p_col=4 p.syringe.s_col=9 end
- else
-  x=p.x
-  y=p.y
- end
- spr(192, x, y, 6, 1)
- 
- if p.curr_choice==0 then p.syringe.p_col=2 p.syringe.s_col=8 end
- if p.curr_choice==1 then p.syringe.p_col=1 p.syringe.s_col=12 end
- if p.curr_choice==2 then p.syringe.p_col=3 p.syringe.s_col=11 end
- if p.curr_choice==3 then p.syringe.p_col=4 p.syringe.s_col=9 end
- 
- rectfill(x+9, y+1, x+41, y+6, p.syringe.p_col)
- rectfill(x+42, y+2, x+42, y+5, p.syringe.p_col)
- rectfill(x+43, y+3, x+43, y+4, p.syringe.p_col)
-
- if frame_counter<30 then 
-  if frame_counter%12==0 then p.syringe.circ_1+=.5 end
-	 if frame_counter%15==0 then p.syringe.circ_2+=.5 end
-	 if frame_counter%14==0 then p.syringe.circ_3+=.5 end
-  if frame_counter%13==0 then p.syringe.circ_4+=.5 end
-	 if p.syringe.circ_1==3 then p.syringe.circ_1=0 end
-	 if p.syringe.circ_2==3 then p.syringe.circ_2=0 end
-	 if p.syringe.circ_3==3 then p.syringe.circ_3=0 end
-	 if p.syringe.circ_4==3 then p.syringe.circ_4=0 end
- end
- if frame_counter<30 then
-  circfill(x+10, y+5-p.syringe.circ_1, 1, p.syringe.s_col)
-  circ(x+19, y+5-p.syringe.circ_2, 1, p.syringe.s_col)
-  circfill(x+29, y+5-p.syringe.circ_3, 1, p.syringe.s_col)
-  circ(x+38, y+5-p.syringe.circ_4, 1, p.syringe.s_col)
- else
-  circ(x+11, y+5-p.syringe.circ_1, 1, p.syringe.s_col)
-  circfill(x+20, y+5-p.syringe.circ_2, 1, p.syringe.s_col)
-  circ(x+28, y+5-p.syringe.circ_3, 1, p.syringe.s_col)
-  circfill(x+37, y+5-p.syringe.circ_4, 1, p.syringe.s_col) 
- end 
-end
-
-function draw_instructions(p)
- local x=0
- local y=0
- if p.n==0 or p.n==2 then x=8 else x=68 end
- if p.n==0 or p.n==1 then y=40 else y=104 end
-
- if p.n==0 then 
-  print("<- ->=cycle", x+5, y+1)
-  print("z=lock", x+5, y+9)
- elseif p.n==1 then 
-  print("a/f=cycle", x+5, y+1)
-  print("lshift,=lock", x+5, y+9)
- end
-end
-
-function draw_flight()
- local cam_x, cam_y = find_mid()
- camera(cam_x-32,cam_y-32)
- map(0,0,0,0,32,16)
- for p in all(players) do
-  draw_syringe(p)
- end
-end
-
 __gfx__
 000000002e282e8222eeee22222222224ff4ff4fef8e8f8fe8888e88228888220000000000000000000000000000000000000000000000000000000000000000
 00000000e282e82e2e2277e222222222f77f47f7f8ff88e88e8e8eee282277820000000000000000000000000000000000000000000000000000000000000000
