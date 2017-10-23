@@ -38,7 +38,11 @@ function makeplayer(slot)
    --jump flag
    j=0,
    --attacking flag
-   a=0
+   a=0,
+   --dodge duration
+   dodge=0,
+   --dodge cooldown
+   dcl=60
  }
  --add player to list
  add(players,p)
@@ -74,7 +78,7 @@ function groundmovement(player)
  local dy=player.dy
 
  --manage state
- if player.state<2 then
+ if player.state<3 then
   if (solid(x,y+9) or solid(x+7,y+9)) then
    player.state=0
    dy=0
@@ -99,7 +103,7 @@ function groundmovement(player)
  if btn(2) then
   if player.j==0 then
    player.j=1
-   dy=-2.5
+   dy=-3.5
   end
   if dy > -3 then
    dy-=0.03
@@ -107,7 +111,12 @@ function groundmovement(player)
  end
  --down
  if btn(3) then
-
+  --crouch
+  player.state=2
+  --crawl (feel free to delete, just set dx=0)
+  if dx~=0 then
+   dx-=(dx/2)
+  end
  end
  --attack
  if btn(4) then
@@ -135,9 +144,32 @@ function groundmovement(player)
   end
  end
 
+ --dodge
+ if btn(5) then
+  if player.dcl==0 then
+   player.state=3
+   player.dcl=100
+  end
+ end
+ if player.state==3 then
+  if player.dodge<40 then
+   dx=0
+   dy=-0.15
+   player.dodge+=1
+  else
+   player.state=1
+   player.dodge=0
+  end
+ else
+  --cooldown
+  if player.dcl>0 then
+   player.dcl-=1
+  end
+ end
+
  --gravity
  if not solid(x,y+player.h+(dy+ 0.1)) then
-  dy+=0.1
+  dy+=0.15
  else
   if player.j==1 then
    player.j=0
@@ -156,8 +188,12 @@ function groundmovement(player)
  end
 
  --horizontal movement
- if not (solid(x+dx,y+dy) or solid(x+7+dx,y+dy) or solid(x+7+dx,y+7+dy) or solid(x+dx,y+7+dy)) then
-  x+=dx
+ if not (solid(x+dx,y+dy) or solid(x+7+dx,y+dy) or solid(x+7+dx,y+6+dy) or solid(x+dx,y+6+dy)) then
+  if player.state==1 then
+   x+=(dx/2+dx/4)
+  else
+   x+=dx
+  end
   y+=dy
  else
   dx=0
@@ -234,7 +270,8 @@ function _draw()
  spr(22,109,68,1,1)
  for p in all(players) do
   spr(p.sprite,p.x,p.y)
-  --print(p.state,32,16)
+  print(p.state,32,16)
+  print(p.dcl,32,26)
   --print(p.a,32,32)
  end
  for h in all(hitboxes) do
