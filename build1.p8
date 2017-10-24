@@ -556,7 +556,19 @@ function draw_face()
   end
 
  else
-  
+ --happy mouth
+ for i=0, 15 do
+   pset(91+i, 72-4*sin(i/32), 1)
+   pset(91+i, 71-4*sin(i/32), 5)
+   pset(91+i, 70-4*sin(i/32), 5)
+
+   if c!=1 then 
+    pset(91+i, 69-4*sin(i/32), 1)
+   else
+    pset(91+i, 69-4*sin(i/32), 5)
+    pset(91+i, 68-4*sin(i/32), 1)
+   end
+  end
  end
  --pupil tracking
   if y<=48 then 
