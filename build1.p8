@@ -25,7 +25,7 @@ end
 --generic boss class
 function generic_boss()
  boss={
-  phase=0,
+  state=0,
   hp=0,
   x=138,
   y=60,
@@ -84,7 +84,7 @@ function make_bullet(o,d)
  x=o.x,
  y=o.y,
  d=d,
- sprite=17,
+ sprite=21,
  spd=1
  }
  return b
@@ -443,12 +443,7 @@ function solid(x,y)
  return fget(val,0)
 end
 
---arrows to increase/decrease "phase"
---beat speed = .045+(.02*p)
---last if/else checks number of beat
 function _update60()
- heart_beat()
- heart_platforms()
  if game.state==2 then
   for p in all(players) do
    groundmovement(p)
@@ -458,11 +453,13 @@ function _update60()
   --change what boss state
   if btnp(4) then boss.state=(boss.state+1)%3 end
   if boss.id==1 then hb_logic(boss.state) end
+  heart_beat()
+  heart_platforms()
  end
 end
 
 function heart_beat()
- x+=.045+(.02*boss.phase)
+ x+=.045+(.02*boss.state)
  if x>1 then x=0 end
  if cos(x)==1 then c+=1 if c==3 then c=0 else sfx(0) end end
 end
@@ -495,6 +492,7 @@ function _draw()
  map(0,0,0,0,16,16)
  draw_platforms()
  draw_boss()
+ print(boss.state)
  for p in all(players) do
   spr(p.sprite,p.x,p.y)
   print(p.state,32,16)
@@ -511,7 +509,6 @@ function _draw()
 end
 
 function draw_boss()
- 
  if c==1 then 
   sspr(88, 0, 32, 32, 75,39, 46, 46)
  else
@@ -541,35 +538,68 @@ function draw_face()
   line(103, 51, 95, 55, 8)
 
   --angry mouth
-  for i=0, 15 do
-   pset(91+i, 72+3*sin(i/32), 1)
-   pset(91+i, 73+3*sin(i/32), 5)
-   pset(91+i, 74+3*sin(i/32), 5)
-   if c!=1 then 
-    pset(91+i, 75+3*sin(i/32), 1)
-    if i%2==0 and i!=0 then pset(91+i, 74+3*sin(i/32), 7) end
-   else
-    pset(91+i, 75+3*sin(i/32), 5)
-    pset(91+i, 76+3*sin(i/32), 1)
-    if i%2==0 and i!=0 then pset(91+i, 75+3*sin(i/32), 7) end
-   end
-  end
-
+  draw_lips(1, 91, 72, 16, 1, 5)
  else
-  
+  --happy mouth
+  draw_lips(0, 91, 72, 16, 1, 5)
  end
  --pupil tracking
-  if y<=48 then 
-    rectfill(86, 54, 88, 56, 0)
-    rectfill(98, 54, 100, 56, 0)
-   elseif y<=72 then
-    rectfill(86, 55, 88, 57, 0)
-    rectfill(98, 55, 100, 57, 0)
-   else
-    rectfill(86, 56, 88, 58, 0)
-    rectfill(98, 56, 100, 58, 0)
-  end
+ draw_pupils(88, 56, 4, 12)
 end
+
+--left center_x, left center_y, radius, distance
+function draw_pupils(c_x, c_y, r, d)
+ local x=c_x-1
+ local y=c_y
+ local p_y=0
+ local p_x=0
+
+ for p in all(players) do
+   p_y=p.y
+   p_x=p.x
+ end
+
+ if p_y<=c_y then y-=1 end
+ if p_y<=c_y+32 then y-=1 end
+ if p_x>=c_x+20 then x+=1 end
+ if p_x<=c_x-20 then x-=1 end
+ if p_x>c_x-20 and p_x<c_x+20 then y+=1 end
+
+ rectfill(x,y,x+2,y+2,0)
+ rectfill(x+d,y,x+d+2, y+2, 0)
+end
+
+--mood, x, y, length, primary_col, secondary_col
+function draw_lips(m, x, y, len, p_col, s_col)
+ local l=len*2
+ if m==0 then --happy mood
+  for i=0, len-1 do
+   pset(x+i, y-4*sin(i/l), p_col)
+   pset(x+i, (y-1)-4*sin(i/l), s_col)
+   pset(x+i, (y-2)-4*sin(i/l), s_col)
+   if c!=1 then 
+    pset(x+i, (y-3)-4*sin(i/l), p_col)
+   else
+    pset(x+i, (y-3)-4*sin(i/l), s_col)
+    pset(x+i, (y-3)-4*sin(i/l), p_col)
+   end
+  end
+ elseif m==1 then --angry mood
+  for i=0, len-1 do
+    pset(x+i, y+3*sin(i/l), p_col)
+    pset(x+i, (y+1)+3*sin(i/l), s_col)
+    pset(x+i, (y+2)+3*sin(i/l), s_col)
+    if c!=1 then 
+     pset(x+i, (y+3)+3*sin(i/l), p_col)
+     if i%2==0 and i!=0 then pset(x+i, (y+2)+3*sin(i/l), 7) end
+    else
+     pset(x+i, (y+3)+3*sin(i/l), s_col)
+     pset(x+i, (y+4)+3*sin(i/l), p_col)
+     if i%2==0 and i!=0 then pset(x+i, (y+3)+3*sin(i/l), 7) end
+    end
+   end
+  end
+ end
 
 function draw_platforms()
  for p in all(platforms) do
