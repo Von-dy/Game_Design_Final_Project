@@ -133,7 +133,7 @@ function hb_logic(s)
           boss.av=vb()
          end
          --every 10 seconds start a new valve burst volley
-         if timer%10==0 and boss.av then
+         if timer%10==0 and boss.av!=nil then
           valve_burst(boss.av)
          end
          
