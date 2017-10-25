@@ -251,6 +251,16 @@ function makehitbox(x,y,w,h,name)
  add(hitboxes,hbox)
 end
 
+function make_platform(num)
+ local platform={
+  n=num,
+  x=6*flr(num/2)+(8*num)+8,
+  y=64,
+  d=1
+ }
+ add(platforms, platform)
+end
+
 --movement functions
 function groundmovement(player)
  --import vars
@@ -472,16 +482,18 @@ function _draw()
   --print(p.a,32,32)
  end
  for h in all(hitboxes) do
-  rectfill(h.x,h.y,h.x+h.w,h.y+h.h)
-  --print(h.w,32,42)
+  for i=0, h.w-1 do
+   local col=flr(rnd(3))
+   if col>1 then pset(h.x+i, 2*sin(i/h.w)+h.y+2, 3) else pset(h.x+i, 2*sin(i/h.w)+h.y+2, 11) end
+  end
  end
  for b in all(boss.bullets) do
   spr(b.sprite,b.x,b.y)
  end
 end
 
-function draw_boss()
 
+function draw_boss()
  if c==1 then 
   draw_valves()
   sspr(88, 0, 32, 32, 75,39, 46, 46)
