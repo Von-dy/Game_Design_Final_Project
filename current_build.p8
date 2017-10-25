@@ -4,6 +4,7 @@ __lua__
 function _init()
  z=0 --beat speed
  c=0 --beat count
+ tunes=0
 
  --game object
  game={
@@ -522,7 +523,13 @@ function _update60()
   if boss.id==0 then make_boss(1) end
   --change what boss state
   if btnp(4) then music(0) end
-  if boss.id==1 then hb_logic(boss.state) end
+  if boss.id==1 then 
+  	hb_logic(boss.state)
+	if boss.state==1 and tunes==0 then
+    tunes=1
+    music(0)
+   end
+  end
   heart_beat()
  end
 end
