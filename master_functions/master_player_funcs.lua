@@ -97,7 +97,7 @@ function groundmovement(player)
   end
  end
  --extend hitbox
- if player.a==1 then
+ if player.a==1 and hitboxes["player"] then
   --track position
   hitboxes["player"].x=x+2
   hitboxes["player"].y=y+2
@@ -118,8 +118,13 @@ function groundmovement(player)
     player.a=2
    end
   end
+ --if hit boss valve
+ for v in all(boss.valves) do
+  vhb=v.hbox
+  if hcollide(hitboxes["player"].x,hitboxes["player"].w,hitboxes["player"].y,hitboxes["player"].h, vhb.x,vhb.w,vhb.y,vhb.h) then player.a=2 v.hp-=2 end 
+ end
  --retract hitbox
- elseif player.a==2 then
+ elseif player.a==2 and hitboxes["player"] then
   hitboxes["player"].x=x+2
   hitboxes["player"].y=y+2
   if player.d==1 then
@@ -187,7 +192,7 @@ function groundmovement(player)
  end
 
  --horizontal movement
- if not (solid(x+dx,y+dy) or solid(x+7+dx,y+dy) or solid(x+7+dx,y+6+dy) or solid(x+dx,y+6+dy)) then
+ if not (solid(x+dx,y+dy) or solid(x+7+dx,y+dy) or solid(x+7+dx,y+6.5+dy) or solid(x+dx,y+6.5+dy)) then
   if player.state==1 then
    x+=(dx/2+dx/4)
   else
@@ -200,10 +205,15 @@ function groundmovement(player)
  end
  --ground bounce
  if y>105 then
- y=104
+  y=104
+ end
+ if solid(x,y+7) or solid(x+7,y+7) then
+  y-=0.1
  end
  --update vars
- player.x=x
+ if not (x<0 or x>122) then
+  player.x=x
+ end
  player.y=y
  player.dx=dx
  player.dy=dy
