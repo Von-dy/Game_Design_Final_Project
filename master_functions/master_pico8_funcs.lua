@@ -5,6 +5,7 @@
 function _init()
  z=0 --beat speed
  c=0 --beat count
+ tunes=0
 
  --game object
  game={
