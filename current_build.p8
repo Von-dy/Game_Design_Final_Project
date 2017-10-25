@@ -469,16 +469,16 @@ function groundmovement(player)
 
  --inertia
  if dx > 0 then
-  dx-=0.06
+  dx-=0.1
  elseif dx < 0 then
-  dx+=0.06
+  dx+=0.1
  end
  if dx > -0.06 and dx < 0.06 then
   dx=0
  end
 
  --horizontal movement
- if not (solid(x+dx,y+dy) or solid(x+7+dx,y+dy) or solid(x+7+dx,y+6+dy) or solid(x+dx,y+6+dy)) then
+ if not (solid(x+dx,y+dy) or solid(x+7+dx,y+dy) or solid(x+7+dx,y+6.5+dy) or solid(x+dx,y+6.5+dy)) then
   if player.state==1 then
    x+=(dx/2+dx/4)
   else
@@ -491,10 +491,15 @@ function groundmovement(player)
  end
  --ground bounce
  if y>105 then
- y=104
+  y=104
+ end
+ if solid(x,y+7) or solid(x+7,y+7) then
+  y-=0.1
  end
  --update vars
- player.x=x
+ if not (x<0 or x>122) then
+  player.x=x
+ end
  player.y=y
  player.dx=dx
  player.dy=dy
