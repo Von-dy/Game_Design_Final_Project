@@ -13,23 +13,9 @@ end
 function draw_face()
  local y=0
  local x=0
-
- for p in all(players) do
-   y=p.y
-   x=p.x
- end
+ for p in all(players) do y=p.y x=p.x end
   draw_eyes(boss.state, 88, 56, 4, 12, 2, 8)
-  
-
- if boss.state==1 then
-  --angry face
-  draw_lips(1, 91, 72, 16, 1, 5)
- elseif boss.state==0 then
-  --happy face
-  draw_lips(0, 91, 72, 16, 1, 5)
- elseif boss.state==2 then 
- --sad face
-  draw_lips(2, 91, 72, 16, 1, 5)
+  draw_lips(boss.state, 91, 72, 16, 1, 5)
   
   --pset(91,59,12)
   --pset(98,59,12)
@@ -47,9 +33,6 @@ function draw_face()
    --pset(97,60,12)
    --end
   --end
-  
- end
- --pupil tracking
 end
 
 --mood, eye_x, eye_y, eye_r, distance, primary color, secondary color
@@ -62,7 +45,7 @@ function draw_eyes(m, e_x, e_y, e_r, d, p_col, s_col)
  circfill(r_e_x, e_y, e_r, 7)
  
  --tracking pupils                                  -- sad pupils
- if m<=1 then draw_pupils(e_x, e_y, e_r, d, 0) else draw_pupils(88, 56, 4, 12, 1) end
+ if m<=1 then draw_pupils(e_x, e_y, e_r, d, 0) else draw_pupils(e_x, e_y, e_r, d, 1) end
 
  --angry eyebrows
  if m==1 then 
@@ -75,14 +58,12 @@ function draw_eyes(m, e_x, e_y, e_r, d, p_col, s_col)
  line(r_e_x+3, e_y-6, r_e_x-4, e_y-2, p_col)
  line(r_e_x+3, e_y-5, r_e_x+5, e_y-1, s_col)
  elseif m==2 then -- sad / eyelids
-  for i=1, e_r do 
+  for i=0, e_r do 
    line(l_e_x-i, e_y-e_r+i, l_e_x+i, e_y-e_r+i, p_col)
    line(r_e_x-i, e_y-e_r+i, r_e_x+i, e_y-e_r+i, p_col)
   end
   pset(91,59,12)
   pset(98,59,12)
-
-
  end
 
 end
@@ -127,7 +108,6 @@ function draw_lips(m, x, y, len, p_col, s_col)
    end
   end
  elseif m==1 then --angry mood
-  draw_pupils(88, 56, 4, 12, 0)
   for i=0, len-1 do
     pset(x+i, y+3*sin(i/l), p_col)
     pset(x+i, (y+1)+3*sin(i/l), s_col)
@@ -141,23 +121,8 @@ function draw_lips(m, x, y, len, p_col, s_col)
      if i%2==0 and i!=0 then pset(x+i, (y+3)+3*sin(i/l), 7) end
     end
    end
-  elseif m==2 then --sad mood
-   
-  end
  end
-
- function draw_valves()
-  sspr(80, 0, 8, 8, 108, 8, 8, 38)
-  sspr(80, 8, 8, 8, 108, 74, 8, 38)
-  sspr(80, 0, 8, 8, 84, 8, 8, 38)
-  sspr(80, 8, 8, 8, 84, 74, 8, 38)
- end
-
-   end
-  elseif m==2 then --sad mood
-   draw_pupils(88, 56, 4, 12, 1)
-  end
- end
+end
 
  function draw_valves()
   sspr(80, 0, 8, 8, 108, 8, 8, 38)
