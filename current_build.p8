@@ -151,6 +151,13 @@ function hb_logic(s)
           valve_burst(boss.av)
          end
          
+         --determine side player is on
+         --left(0) right(1)
+         if t.x<=60 then side=0 else side=1 end
+         --every 5 seconds do a clot attack
+         if timer%5==0 then
+                clot_attack(side)
+         end
          
          --every 20 seconds change where flood is coming from
          if timer%20==0 then
@@ -212,9 +219,17 @@ function move_bullets()
   hy=hbox.y
   dia=b.dia
   spd=b.spd
+  abc=true
 
+  --bullet collision with player
+		for p in all(players) do
+   if hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then p.hp-=1 del(boss.bullets,b) abc=false end
+  end
+  
+  if abc then
   --delete bullets
-  if x>128 or x<0 or y>112or y<8 then del(boss.bullets,b) end
+  if x>128 or x<0 or y>112or y<8 then del(boss.bullets,b)
+  else
 
   --normal bullet movement
   if d==0 then x-=spd hx-=spd 
@@ -230,18 +245,15 @@ function move_bullets()
   elseif dia==7 then x+=spd y+=spd hx+=spd hy+=spd
   end
 
-  --bullet collision with player
-		for p in all(players) do
-   if hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then p.hp-=1 del(boss.bullets,b) end
-  end
-
   --update bullet values
   b.x=x
   b.y=y
   hbox.x=hx
   hbox.y=hy
   b.hbox=hbox
+  end
  end
+end
 end
 
 function makeplayer(slot)
@@ -520,12 +532,12 @@ function _draw()
  cls()
  map(0,0,0,0,16,16)
  draw_boss()
- print(boss.state)
+ --print(boss.state)
  for p in all(players) do
   spr(p.sprite,p.x,p.y)
-  print(p.state,32,16)
-  print(p.dcl,32,26)
-  print(p.hp,p.x-8,p.y-8)
+  --print(p.state,32,16)
+  --print(p.dcl,32,26)
+  --print(p.hp,p.x-8,p.y-8)
  end
  for h in all(hitboxes) do
   for i=0, h.w-1 do
