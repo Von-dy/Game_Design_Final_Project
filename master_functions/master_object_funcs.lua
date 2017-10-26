@@ -70,19 +70,6 @@ function make_bullet(o,d)
  return b
 end
 
---make a bullet that moves diagonally
-function make_diagonal_bullet(o,diag)
- b={
- x=o.x,
- y=o.y,
- dia=diag,
- sprite=21,
- spd=1,
- hbox=makehitbox(o.x+2,o.y+2,4,4,nil)
- }
- return b
-end
-
 function makehitbox(x,y,w,h,name)
  hbox = {
   x=x,

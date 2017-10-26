@@ -94,11 +94,7 @@ function valve_burst(v)
  v.sprite=16
  --make 8 bullets, 4 diagonals 4 straight
  for i=0,7 do
-  if i<4 then
   b=make_bullet(v,i)
-  else
-  b=make_diagonal_bullet(v,i)
-  end
   add(boss.bullets,b)
  end
 end
@@ -134,10 +130,10 @@ function move_bullets()
     end
 
     --diagonal bullet movement
-    if dia==4 then x-=spd y-=spd hx-=spd hy-=spd
-    elseif dia==5 then x-=spd y+=spd hx-=spd hy+=spd
-    elseif dia==6 then x+=spd y-=spd hx+=spd hy-=spd
-    elseif dia==7 then x+=spd y+=spd hx+=spd hy+=spd
+    if d==4 then x-=spd y-=spd hx-=spd hy-=spd
+    elseif d==5 then x-=spd y+=spd hx-=spd hy+=spd
+    elseif d==6 then x+=spd y-=spd hx+=spd hy-=spd
+    elseif d==7 then x+=spd y+=spd hx+=spd hy+=spd
     end
 
     --update bullet values
