@@ -1,48 +1,71 @@
 --Decision making and attack logic for bosses
 
 --determining what the heart boss does based on state
+--determining what the heart boss does based on state
 function hb_logic(s)
-        timer=time()-boss.ct
-        --if state 0 do nothing
+ timer=time()-boss.ct
+ --check valve hp
+ for v in all(boss.valves) do
+  if v.hp<=0 then del(boss.valves,v) end
+ end
+ --if state 0 do nothing until attacked
+ if s==0 then
+  for v in all(boss.valves) do
+   if v.hp<50 then s=1 end
+  end
+ end
+ 
+ --if state 1 do clot attacks and valve bursts
+ t=players[1]
+ if s==1 then
+ --determine side player is on
+ --left(0) right(1)
+  if t.x<=60 then side=0 else side=1 end
+  --every 5 seconds do a clot attack
+  if timer%5==0 then
+   clot_attack(side)
+  end
+  --every 8 seconds find what valve will burst
+  if timer%10==8 then
+   boss.av=vb()
+  end
+  --every 10 seconds start a new valve burst volley
+  if timer%10==0 and boss.av!=nil then
+   valve_burst(boss.av)
+  end
+         
+  if #boss.valves<=2 then s=2 end
+ end
 
-        --if state 1 do clot attacks and valve bursts
-        t=players[1]
-        if s==1 then
-         --determine side player is on
-         --left(0) right(1)
-         if t.x<=60 then side=0 else side=1 end
-         --every 5 seconds do a clot attack
-         if timer%5==0 then
-                clot_attack(side)
-         end
-         --every 8 seconds find what valve will burst
-         if timer%10==8 then
-          boss.av=vb()
-         end
-         --every 10 seconds start a new valve burst volley
-         if timer%10==0 then
-          valve_burst(boss.av)
-         end
-        end
-
-        --if in state 2 then do flood attack and streams
-        if s==2 then
-         --determine what valve will burst every 4 seconds
-         if timer%5==4 then
-          boss.av=vb()
-         end
-         --valve burst every 5 seconds
-         if timer%5==0 then
-          valve_burst(boss.av)
-         end
-         --every 20 seconds change where flood is coming from
-         if timer%20==0 then
-          --flood()
-         end
-        end
-
-        --move whatever bullets have been shot
-        move_bullets()
+ --if in state 2 then do flood attack and streams
+ if s==2 then
+ --determine what valve will burst every 4 seconds
+  if timer%5==4 then
+   boss.av=vb()
+  end
+  --valve burst every 5 seconds
+  if timer%5==0 and boss.av then
+   valve_burst(boss.av)
+  end
+         
+  --determine side player is on
+  --left(0) right(1)
+  if t.x<=60 then side=0 else side=1 end
+  --every 5 seconds do a clot attack
+  if timer%5==0 then
+   clot_attack(side)
+  end
+         
+  --every 20 seconds change where flood is coming from
+  if timer%20==0 then
+   --flood()
+  end
+ end
+ 
+ --move whatever bullets have been shot
+ move_bullets()
+ --update boss state
+ boss.state=s
 end
 
 --rain clots of blood on one side of screen
@@ -61,7 +84,7 @@ end
 function vb()
  id=flr(rnd(4))+1
  for v in all(boss.valves) do
-  if id==v.id then v.sprite=7 return v end
+  if id==v.id then v.sprite=1 return v end
  end
 end
 
@@ -73,11 +96,10 @@ function valve_burst(v)
  for i=0,7 do
   if i<4 then
   b=make_bullet(v,i)
-  add(boss.bullets,b)
   else
   b=make_diagonal_bullet(v,i)
-  add(boss.bullets,b)
   end
+  add(boss.bullets,b)
  end
 end
 
@@ -87,28 +109,44 @@ function move_bullets()
   d=b.d
   x=b.x
   y=b.y
+  hbox=b.hbox
+  hx=hbox.x
+  hy=hbox.y
   dia=b.dia
   spd=b.spd
+  good=true
 
-  --delete bullets
-  if x>128 or x<0 or y>112or y<8 then del(boss.bullets,b) end
-
-  --normal bullet movement
-  if d==0 then x-=spd
-  elseif d==1 then x+=spd
-  elseif d==2 then y-=spd
-  elseif d==3 then y+=spd
+  --bullet collision with player
+  for p in all(players) do
+   if hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then p.hp-=1 del(boss.bullets,b) good=false end
   end
 
-  --diagonal bullet movement
-  if dia==4 then x-=spd y-=spd
-  elseif dia==5 then x-=spd y+=spd
-  elseif dia==6 then x+=spd y-=spd
-  elseif dia==7 then x+=spd y+=spd
-  end
+  if good then
+   --delete bullets out of bounds
+   if x>128 or x<0 or y>112or y<8 then del(boss.bullets,b)
+   else
 
-  --update bullet values
-  b.x=x
-  b.y=y
+    --normal bullet movement
+    if d==0 then x-=spd hx-=spd
+    elseif d==1 then x+=spd hx+=spd
+    elseif d==2 then y-=spd hy-=spd
+    elseif d==3 then y+=spd hy+=spd
+    end
+
+    --diagonal bullet movement
+    if dia==4 then x-=spd y-=spd hx-=spd hy-=spd
+    elseif dia==5 then x-=spd y+=spd hx-=spd hy+=spd
+    elseif dia==6 then x+=spd y-=spd hx+=spd hy-=spd
+    elseif dia==7 then x+=spd y+=spd hx+=spd hy+=spd
+    end
+
+    --update bullet values
+    b.x=x
+    b.y=y
+    hbox.x=hx
+    hbox.y=hy
+    b.hbox=hbox
+   end
+  end
  end
 end
