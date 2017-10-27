@@ -82,7 +82,14 @@ end
 --determines what random valve
 --bursts
 function vb()
- id=flr(rnd(4))+1
+ ids={}
+ --compose list of all valves
+ for v in all(boss.valves) do
+  add(ids,v.id)
+ end
+ selector=flr(rnd(#ids))+1
+ id=ids[selector]
+ --find which valve is the active one
  for v in all(boss.valves) do
   if id==v.id then v.sprite=1 return v end
  end
@@ -119,7 +126,7 @@ function move_bullets()
 
   if good then
    --delete bullets out of bounds
-   if x>128 or x<0 or y>112or y<8 then del(boss.bullets,b)
+   if x>128 or x<0 or y>112 or y<8 or solid(hbox.x,hbox.y) or solid(hbox.x+hbox.w, hbox.y+hbox.h) then del(boss.bullets,b)
    else
 
     --normal bullet movement

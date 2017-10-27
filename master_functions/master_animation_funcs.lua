@@ -1,3 +1,16 @@
+--given id of boss, draw the hp
+function draw_hud(id)
+ --heart boss
+ local hpleft=0
+ if id==1 then 
+  for v in all(boss.valves) do
+   if v.sprite==1 then rectfill(v.x,v.y,v.x+3,v.y+8,1) end
+   hpleft+=v.hp
+  end
+  rectfill(0,4,(hpleft/200)*128,6,10)
+ --end heart boss drawing
+ end
+end
 
 function draw_boss()
  if c==1 then 

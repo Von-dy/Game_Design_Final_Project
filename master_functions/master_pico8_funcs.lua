@@ -24,16 +24,23 @@ end
 --update60
 
 function _update60()
+ game.frame_counter+=1
+ if game.frame_counter>=60 then game.frame_counter=0 end
  if game.state==2 then
   for p in all(players) do
+   if p.hp<=0 then _init() end
    groundmovement(p)
   end
   --determine what boss you are fighting
   if boss.id==0 then make_boss(1) end
-  --change what boss state
-  if btnp(4) then music(0) boss.state=(boss.state+1)%3 end
-  if boss.id==1 then hb_logic(boss.state) end
-  heart_beat()
+  --fighting heart boss
+  s=boss.state
+  if boss.id==1 then 
+  	hb_logic(s)
+  	heart_beat()
+  	--if phase change
+  	if s~=boss.state then music_player(boss,boss.state) end
+  end
  end
 end
 
