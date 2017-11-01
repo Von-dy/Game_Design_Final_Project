@@ -76,11 +76,11 @@ end
 --rain clots of blood on one side of screen
 function clot_attack(side)
  --generate where bullets will spawn
- for i=0,64,3 do
+ for i=0,64,8 do
   tile={x=i,y=8}
   if side==1 then tile.x+=64 end
   t=rnd(5)
-  if t<=1 then add(boss.bullets,make_bullet(tile,3)) end
+  if t<=3.5 then add(boss.bullets,make_bullet(tile,3,21)) end
  end
 end
 
@@ -114,51 +114,42 @@ end
 function move_bullets()
  for b in all(boss.bullets) do
   --save tokens
-  d=b.d
-  x=b.x
-  y=b.y
+  d,x,y,dia,good,spd=b.d,b.x,b.y,b.dia,true,b.spd
   hbox=b.hbox
-  hx=hbox.x
-  hy=hbox.y
-  dia=b.dia
-  spd=b.spd
-  good=true
+  hx,hy=hbox.x,hbox.y
 
   --bullet collision with player
-  for p in all(players) do
-   if hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then p.hp-=1 del(boss.bullets,b) good=false end
+		for p in all(players) do
+   if p.state~=3 and hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then p.hp-=1 del(boss.bullets,b) good=false end
   end
 
   if good then
-   --delete bullets out of bounds
-   if x>128 or x<0 or y>112 or y<8 or solid(hbox.x,hbox.y) or solid(hbox.x+hbox.w, hbox.y+hbox.h) then del(boss.bullets,b)
-   else
+	  --delete bullets
+	  if x>128 or x<0 or y>112 or y<8 or solid(hbox.x,hbox.y) or solid(hbox.x+hbox.w, hbox.y+hbox.h) then del(boss.bullets,b)
+	  else
 
-    --normal bullet movement
-    if d==0 then x-=spd hx-=spd
-    elseif d==1 then x+=spd hx+=spd
-    elseif d==2 then y-=spd hy-=spd
-    elseif d==3 then y+=spd hy+=spd
-    end
+	  --normal bullet movement
+	  if d==0 then x-=spd hx-=spd
+	  elseif d==1 then x+=spd hx+=spd
+	  elseif d==2 then y-=spd hy-=spd
+	  elseif d==3 then y+=spd hy+=spd
+	  end
 
-    --diagonal bullet movement
-    if d==4 then x-=spd y-=spd hx-=spd hy-=spd
-    elseif d==5 then x-=spd y+=spd hx-=spd hy+=spd
-    elseif d==6 then x+=spd y-=spd hx+=spd hy-=spd
-    elseif d==7 then x+=spd y+=spd hx+=spd hy+=spd
-    end
+	  --diagonal bullet movement
+	  if d==4 then x-=spd y-=spd hx-=spd hy-=spd
+	  elseif d==5 then x-=spd y+=spd hx-=spd hy+=spd
+	  elseif d==6 then x+=spd y-=spd hx+=spd hy-=spd
+	  elseif d==7 then x+=spd y+=spd hx+=spd hy+=spd
+	  end
 
-    --special bullet movement
-    --mini heart
-    if d==10 then x-=spd y+=1.5*cos(.5*time()) hx-=spd hy+=1.5*cos(.5*time()) end
+	  --special bullet movement
+	  --mini heart
+	  if d==10 then x-=spd y+=1.5*cos(.5*time()) hx-=spd hy+=1.5*cos(.5*time()) end
 
-    --update bullet values
-    b.x=x
-    b.y=y
-    hbox.x=hx
-    hbox.y=hy
-    b.hbox=hbox
-   end
+	  --update bullet values
+	  b.x,b.y,hbox.x,hbox.y,b.hbox=x,y,hx,hy,hbox
+	  end
   end
  end
 end
+
