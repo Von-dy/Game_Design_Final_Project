@@ -2,10 +2,10 @@ pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
 function _init()
- z=0 --beat speed
- c=0 --beat count
- tunes=0
-
+ music(-1)
+ sfx(-1)
+ z,c,boss=0,0,generic_boss() --beat speed, count
+ 
  --game object
  game={
    --0=menu, 1=travel, 2=boss, 3=game over
@@ -17,7 +17,6 @@ function _init()
  --hitscan list
  hitboxes = {}
  makeplayer(1)
- boss=generic_boss()
 end
 
 --generic boss class
@@ -60,8 +59,8 @@ end
 
 --makes the valves for the heart boss
 function make_valve(n)
- lx=86
- ly=28
+ lx,ly=86,28
+
  if n==2 then lx=110 ly=28 end
  if n==3 then lx=86 ly=100 end
  if n==4 then lx=110 ly=100 end
@@ -78,12 +77,12 @@ function make_valve(n)
 end
 
 --make a bullet for some owner in some direction
-function make_bullet(o,d)
+function make_bullet(o,d,sp)
  b={
  x=o.x,
  y=o.y,
  d=d,
- sprite=21,
+ sprite=sp,
  spd=1,
  hbox=makehitbox(o.x+2,o.y+2,4,4,nil)
  }
@@ -103,7 +102,7 @@ function hb_logic(s)
  --if state 0 do nothing until attacked
 	if s==0 then
 	 for v in all(boss.valves) do
-	  if v.hp<50 then s=1 end
+	  if v.hp<50 then s=1 boss.ct=time() end
 	 end
 	end
  --if state 1 do clot attacks and valve bursts
@@ -138,9 +137,9 @@ function hb_logic(s)
   if timer%5==0 then
    clot_attack(side)
   end  
-  --every 20 seconds change where flood is coming from
-  if timer%20==0 then
-   --flood()
+  --every 10 seconds change where flood is coming from
+  if timer%6==0 then
+   mini_heart()
   end
  end
  --move whatever bullets have been shot
@@ -152,21 +151,34 @@ end
 --rain clots of blood on one side of screen
 function clot_attack(side)
  --generate where bullets will spawn
- for i=0,64,3 do
+ for i=0,64,8 do
   tile={x=i,y=8}
   if side==1 then tile.x+=64 end
   t=rnd(5)
-  if t<=1 then add(boss.bullets,make_bullet(tile,3)) end
+  if t<=1 then add(boss.bullets,make_bullet(tile,3,21)) end
  end
 end
 
 --determines what random valve
 --bursts
 function vb()
- id=flr(rnd(4))+1
+ ids={}
+ --compose list of all valves
+ for v in all(boss.valves) do
+  add(ids,v.id)
+ end
+ selector=flr(rnd(#ids))+1
+ id=ids[selector]
+ --find which valve is the active one
  for v in all(boss.valves) do
   if id==v.id then v.sprite=1 return v end
  end
+end
+
+function mini_heart()
+ local y=flr(rnd(104))+8
+ tile={x=128, y=y}
+ add(boss.bullets,make_bullet(tile,10,20))
 end
 
 --for a valve, shoot a
@@ -175,7 +187,7 @@ function valve_burst(v)
  v.sprite=16
  --make 8 bullets, 4 diagonals 4 straight
  for i=0,7 do
-  b=make_bullet(v,i)
+  b=make_bullet(v,i,21)
   add(boss.bullets,b)
  end
 end
@@ -183,24 +195,18 @@ end
 function move_bullets()
  for b in all(boss.bullets) do
   --save tokens
-  d=b.d
-  x=b.x
-  y=b.y
+  d,x,y,dia,good,spd=b.d,b.x,b.y,b.dia,true,b.spd
   hbox=b.hbox
-  hx=hbox.x
-  hy=hbox.y
-  dia=b.dia
-  spd=b.spd
-  good=true
-
+  hx,hy=hbox.x,hbox.y
+  
   --bullet collision with player
 		for p in all(players) do
-   if hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then p.hp-=1 del(boss.bullets,b) good=false end
+   if p.state~=3 and hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then p.hp-=1 del(boss.bullets,b) good=false end
   end
   
   if good then
 	  --delete bullets
-	  if x>128 or x<0 or y>112or y<8 then del(boss.bullets,b)
+	  if x>128 or x<0 or y>112 or y<8 or solid(hbox.x,hbox.y) or solid(hbox.x+hbox.w, hbox.y+hbox.h) then del(boss.bullets,b)
 	  else
 	
 	  --normal bullet movement
@@ -216,14 +222,22 @@ function move_bullets()
 	  elseif d==6 then x+=spd y-=spd hx+=spd hy-=spd
 	  elseif d==7 then x+=spd y+=spd hx+=spd hy+=spd
 	  end
+	  
+	  --special bullet movement
+	  --mini heart
+	  if d==10 then x-=spd y+=1.5*cos(.5*time()) hx-=spd hy+=1.5*cos(.5*time()) end
 	
 	  --update bullet values
-	  b.x=x
-	  b.y=y
-	  hbox.x=hx
-	  hbox.y=hy
-	  b.hbox=hbox
+	  b.x,b.y,hbox.x,hbox.y,b.hbox=x,y,hx,hy,hbox
 	  end
+  end
+ end
+end
+
+function col_collision(p,c)
+ for i=p.x+3,p.x+6 do
+  for j=p.y+3,p.y+6 do
+   if pget(i,j)==c then p.hp-=1 end
   end
  end
 end
@@ -264,7 +278,7 @@ function makehitbox(x,y,w,h,name)
   w=w,
   h=h
  }
- if name!=nil then hitboxes[name]=hbox add(hitboxes,hbox)
+ if name then hitboxes[name]=hbox add(hitboxes,hbox)
  else return hbox
  end
 end
@@ -469,8 +483,17 @@ function groundmovement(player)
 end
 
 function solid(x,y)
- val=mget(x/8,y/8)
- return fget(val,0)
+ return fget(mget(x/8,y/8),0)
+end
+
+function music_player(boss,state)
+ --heart boss
+ if boss.id==1 then
+  --no music
+  if state==0 then music(-1) end
+  --start at track 0
+  if state==1 then music(0) end 
+ end
 end
 
 function _update60()
@@ -480,26 +503,25 @@ function _update60()
   for p in all(players) do
    if p.hp<=0 then _init() end
    groundmovement(p)
+   col_collision(p,10)
   end
   --determine what boss you are fighting
   if boss.id==0 then make_boss(1) end
-  --change what boss state
-  if btnp(4) then music(0) end
+  --fighting heart boss
+  s=boss.state
   if boss.id==1 then 
-  	hb_logic(boss.state)
-	if boss.state==1 and tunes==0 then
-    tunes=1
-    music(0)
-   end
+  	hb_logic(s)
+  	heart_beat()
+  	--if phase change
+  	if s~=boss.state then music_player(boss,boss.state) end
   end
-  heart_beat()
  end
 end
 
 function heart_beat()
  z+=.045+(.02*boss.state)
  if z>1 then z=0 end
- if cos(z)==1 then c+=1 if c==3 then c=0 else sfx(0) end end
+ if cos(z)==1 then c+=1 if c==3 then c=0 sfx(0,1) end end
 end
 
 function _draw()
@@ -514,6 +536,7 @@ function _draw()
   --print(p.hp,p.x-8,p.y-8)
  end
  for h in all(hitboxes) do
+ -- rectfill(h.x,h.y,h.x+h.w,h.y+h.h,1)
   for i=0, h.w-1 do
    local col=flr(rnd(3))
    if col>1 then pset(h.x+i, 2*sin(i/h.w)+h.y+2, 3) else pset(h.x+i, 2*sin(i/h.w)+h.y+2, 11) end
@@ -521,21 +544,31 @@ function _draw()
  end
  for b in all(boss.bullets) do
   spr(b.sprite,b.x,b.y)
+  --rectfill(b.hbox.x,b.hbox.y,b.hbox.x+b.hbox.w,b.hbox.y+b.hbox.h,4)
  end
- local xyz=0
- for v in all(boss.valves) do
-  if v.sprite==1 then rectfill(v.x,v.y,v.x+3,v.y+8,1) end
-  xyz+=v.hp
- end
- rectfill(0,4,(xyz/200)*128,6,10)
+ draw_hud(boss.id)
  for i=1,players[1].hp do
   spr(53,0+8*i,120)
- end
+ end 
 end
 
+--given id of boss, draw the hp
+function draw_hud(id)
+ --heart boss
+ local hpleft=0
+ if id==1 then 
+  for v in all(boss.valves) do
+   if v.sprite==1 then rectfill(v.x,v.y,v.x+3,v.y+8,1) end
+   hpleft+=v.hp
+  end
+  rectfill(0,4,(hpleft/200)*128,6,10)
+ --end heart boss drawing
+ end
+ 
+end
 
 function draw_boss()
- if c==1 then 
+ if c==1 then
   draw_valves()
   sspr(88, 0, 32, 32, 75,39, 46, 46)
  else
@@ -545,62 +578,50 @@ function draw_boss()
  draw_face()
 end
 
+
 function draw_face()
  local y=0
  local x=0
+ for p in all(players) do y=p.y x=p.x end
+  draw_eyes(boss.state, 88, 56, 4, 12, 2, 8)
+  draw_lips(boss.state, 91, 72, 16, 1, 5)
+end
 
- for p in all(players) do
-   y=p.y
-   x=p.x
- end
-  circfill(88, 56, 4, 7)
-  circfill(100, 56, 4, 7)
+--mood, eye_x, eye_y, eye_r, distance, primary color, secondary color
+function draw_eyes(m, e_x, e_y, e_r, d, p_col, s_col)
+ local l_e_x=e_x
+ local r_e_x=e_x+d
 
- if boss.state==1 then
-   --left brow
-  line(84, 49, 90, 53, 2)
-  line(85, 50, 92, 54, 2)
-  line(85, 51, 93, 55, 8)
-  --right brow
-  line(101, 49, 98, 53, 2)
-  line(103, 50, 96, 54, 2)
-  line(103, 51, 95, 55, 8)
+ --base circle
+ circfill(e_x, e_y, e_r, 7)
+ circfill(r_e_x, e_y, e_r, 7)
 
-  --angry face
-  draw_lips(1, 91, 72, 16, 1, 5)
- elseif boss.state==0 then
-  --happy face
-  draw_lips(0, 91, 72, 16, 1, 5)
- elseif boss.state==2 then 
- --sad face
-  draw_lips(2, 91, 72, 16, 1, 5)
-  line(88-1,52,88+1, 52, 2)
-  line(88-3,53,88+3, 53, 2)
-  line(88-3,54,88+3, 54, 2)
-  line(88-4,55,88+4, 55, 2)
-  line(100-1,52,100+1, 52, 2)
-  line(100-3,53,100+3, 53, 2)
-  line(100-3,54,100+3, 54, 2)
-  line(100-4,55,100+4, 55, 2)
-  pset(91,59,12)
-  pset(98,59,12)
-  if c>=1 then 
-   line(88-4,56,88+4, 56, 2)
-   line(100-4,56,100+4, 56, 2)
-   pset(97,59,12)
-   pset(92,59,12)
-   if game.frame_counter%50<=30 then
-   line(88-4,57,88+4, 57, 2)
-   line(88-3,58,88+3, 58, 2)
-   line(100-4,57,100+4, 57, 2)
-   line(100-3,58,100+3, 58, 2)
-   pset(92,60,12)
-   pset(97,60,12)
+ --tracking pupils                                  -- sad pupils
+ if m<=1 then draw_pupils(e_x, e_y, e_r, d, 0) else draw_pupils(e_x, e_y, e_r, d, 1) end
+
+ --angry eyebrows
+ if m==1 then
+  --left brow
+ line(l_e_x-4, e_y-7, l_e_x+2, e_y-3, p_col)
+ line(l_e_x-3, e_y-6, l_e_x+4, e_y-2, p_col)
+ line(l_e_x-3, e_y-5, l_e_x+5, e_y-1, s_col)
+ --right brow
+ line(r_e_x+1, e_y-7, r_e_x-2, e_y-3, p_col)
+ line(r_e_x+3, e_y-6, r_e_x-4, e_y-2, p_col)
+ line(r_e_x+3, e_y-5, r_e_x+5, e_y-1, s_col)
+ elseif m==2 then -- sad / eyelids
+  for i=0, e_r do
+   if i==e_r then
+    line(l_e_x-i, e_y-e_r+i-1, l_e_x+i, e_y-e_r+i-1, p_col)
+    line(r_e_x-i, e_y-e_r+i-1, r_e_x+i, e_y-e_r+i-1, p_col)
+   else
+    line(l_e_x-i-1, e_y-e_r+i-1, l_e_x+i+1, e_y-e_r+i-1, p_col)
+    line(r_e_x-i-1, e_y-e_r+i-1, r_e_x+i+1, e_y-e_r+i-1, p_col)
    end
   end
-  
+  pset(91,59,12)
+  pset(98,59,12)
  end
- --pupil tracking
 end
 
 --left center_x, left center_y, radius, distance, mood
@@ -609,7 +630,7 @@ function draw_pupils(c_x, c_y, r, d, m)
  local y=c_y
  local p_y=0
  local p_x=0
- 
+
  if m==0 then --tracking
   for p in all(players) do
    p_y=p.y
@@ -631,12 +652,11 @@ end
 function draw_lips(m, x, y, len, p_col, s_col)
  local l=len*2
  if m==0 then --happy mood
-  draw_pupils(88, 56, 4, 12, 0)
   for i=0, len-1 do
    pset(x+i, y-4*sin(i/l), p_col)
    pset(x+i, (y-1)-4*sin(i/l), s_col)
    pset(x+i, (y-2)-4*sin(i/l), s_col)
-   if c!=1 then 
+   if c!=1 then
     pset(x+i, (y-3)-4*sin(i/l), p_col)
    else
     pset(x+i, (y-3)-4*sin(i/l), s_col)
@@ -644,12 +664,11 @@ function draw_lips(m, x, y, len, p_col, s_col)
    end
   end
  elseif m==1 then --angry mood
-  draw_pupils(88, 56, 4, 12, 0)
   for i=0, len-1 do
     pset(x+i, y+3*sin(i/l), p_col)
     pset(x+i, (y+1)+3*sin(i/l), s_col)
     pset(x+i, (y+2)+3*sin(i/l), s_col)
-    if c!=1 then 
+    if c!=1 then
      pset(x+i, (y+3)+3*sin(i/l), p_col)
      if i%2==0 and i!=0 then pset(x+i, (y+2)+3*sin(i/l), 7) end
     else
@@ -658,18 +677,16 @@ function draw_lips(m, x, y, len, p_col, s_col)
      if i%2==0 and i!=0 then pset(x+i, (y+3)+3*sin(i/l), 7) end
     end
    end
-  elseif m==2 then --sad mood
-   draw_pupils(88, 56, 4, 12, 1)
-  end
  end
+end
 
- function draw_valves()
-  sspr(80, 0, 8, 8, 108, 8, 8, 38)
-  sspr(80, 8, 8, 8, 108, 74, 8, 38)
-  sspr(80, 0, 8, 8, 84, 8, 8, 38)
-  sspr(80, 8, 8, 8, 84, 74, 8, 38)
- end
-
+function draw_valves()
+ sspr(80, 0, 8, 8, 108, 8, 8, 38)
+ sspr(80, 8, 8, 8, 108, 74, 8, 38)
+ sspr(80, 0, 8, 8, 84, 8, 8, 38)
+ sspr(80, 8, 8, 8, 84, 74, 8, 38)
+end
+               
 
 __gfx__
 000000002e282e8222eeee22dddddddd4ff4ff4fef8e8f8fe8888e88228888220000000000000000222c12220000000000000000888888800001111000000000
@@ -680,13 +697,13 @@ __gfx__
 0070070028228288e222222eddddddddf474f4fff8f8e8f888e8eee8822222281111111111111111002112000000011111228888822211111110000000000000
 00000000e28e2e2e2e2222e2ddddddddff7f7f478e8f8fe888e88e882822228201111111111111100021c2000000011112222888222221111100000000000000
 000000008e2828e222eeee22dddddddd474f474fe8fe8e8f8e888ee8228888220011111111111100002c12000000011122882888222111111100000000000000
-00000000000000000000000000000000000000000000000000000000000000000882222200000000002e82000001111128882881111111111200000000000000
-000000000000000000000000000000000000000000777700000000000000000000888222000000000028e2000001111118812888811111122220000000000000
-00000000000000000000000000000000000000000777777077777777000000000711888200000000002882000001111188812228888881812220000000000000
-00000000000000000000000000000000000000000777777055555555000000000711118800000000002882000001111888111222288881811112000000000000
-00000000000000000000000000000000000000000777777077777777000000000771177800000000002e82000001122881181111228882822212220000000000
-00000000000000000000000000000000000000000777777000000000000000000777777000000000002882000001122281888221828222882212220000000000
-000000000000000000000000000000000000000000777700000000000000000000777700000000000228e2200002111222222221182281882218220000000000
+00000000000000000000000000000000080000800000000000000000000000000882222200000000002e82000001111128882881111111111200000000000000
+000000000000000000000000000000008e8008e800777700000000000000000000888222000000000028e2000001111118812888811111122220000000000000
+000000000000000000000000000000008ee88ee80777777077777777000000000711888200000000002882000001111188812228888881812220000000000000
+000000000000000000000000000000008eeeeee80777777055555555000000000711118800000000002882000001111888111222288881811112000000000000
+0000000000000000000000000000000008eeee800777777077777777000000000771177800000000002e82000001122881181111228882822212220000000000
+00000000000000000000000000000000008ee8000777777000000000000000000777777000000000002882000001122281888221828222882212220000000000
+000000000000000000000000000000000008800000777700000000000000000000777700000000000228e2200002111222222221182281882218220000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000222e82220000228111111128112821882211220000000000
 00000000000000000000000000000000000000000000000000000000088222220000000000000000000000000000028881288822828821882211220000000000
 00000000000000000000000000000000000000000000000000000000008882220000000000000000000000000000022888281118888121182112200000000000
