@@ -58,12 +58,12 @@ function make_valve(n)
 end
 
 --make a bullet for some owner in some direction
-function make_bullet(o,d)
+function make_bullet(o,d,sp)
  b={
  x=o.x,
  y=o.y,
  d=d,
- sprite=21,
+ sprite=sp,
  spd=1,
  hbox=makehitbox(o.x+2,o.y+2,4,4,nil)
  }

@@ -1,7 +1,6 @@
 --Decision making and attack logic for bosses
 
 --determining what the heart boss does based on state
---determining what the heart boss does based on state
 function hb_logic(s)
  timer=time()-boss.ct
  --check valve hp
@@ -30,7 +29,7 @@ function hb_logic(s)
    boss.av=vb()
   end
   --every 10 seconds start a new valve burst volley
-  if timer%10==0 and boss.av!=nil then
+  if timer%10==0 and boss.av.x then
    valve_burst(boss.av)
   end
          
@@ -44,7 +43,7 @@ function hb_logic(s)
    boss.av=vb()
   end
   --valve burst every 5 seconds
-  if timer%5==0 and boss.av then
+  if timer%5==0 and boss.av.x then
    valve_burst(boss.av)
   end
          
@@ -55,17 +54,23 @@ function hb_logic(s)
   if timer%5==0 then
    clot_attack(side)
   end
-         
-  --every 20 seconds change where flood is coming from
-  if timer%20==0 then
-   --flood()
-  end
- end
+
+  --every 6 seconds do a mini heart
+  if timer%6==0 then
+   mini_heart()
+  end    
  
  --move whatever bullets have been shot
  move_bullets()
  --update boss state
  boss.state=s
+end
+
+--makes a mini heart that travels across the screen
+function mini_heart()
+ local y=flr(rnd(104))+8
+ tile={x=128, y=y}
+ add(boss.bullets,make_bullet(tile,10,20))
 end
 
 --rain clots of blood on one side of screen
@@ -142,6 +147,10 @@ function move_bullets()
     elseif d==6 then x+=spd y-=spd hx+=spd hy-=spd
     elseif d==7 then x+=spd y+=spd hx+=spd hy+=spd
     end
+
+    --special bullet movement
+    --mini heart
+    if d==10 then x-=spd y+=1.5*cos(.5*time()) hx-=spd hy+=1.5*cos(.5*time()) end
 
     --update bullet values
     b.x=x

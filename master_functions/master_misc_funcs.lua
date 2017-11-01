@@ -24,3 +24,10 @@ function music_player(boss,state)
  end
 end
 
+function col_collision(p,c)
+ for i=p.x+3,p.x+6 do
+  for j=p.y+3,p.y+6 do
+   if pget(i,j)==c then p.hp-=1 end
+  end
+ end
+end
