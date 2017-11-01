@@ -1,4 +1,3 @@
-
 function draw_boss()
  if c==1 then 
   draw_valves()
@@ -16,23 +15,6 @@ function draw_face()
  for p in all(players) do y=p.y x=p.x end
   draw_eyes(boss.state, 88, 56, 4, 12, 2, 8)
   draw_lips(boss.state, 91, 72, 16, 1, 5)
-  
-  --pset(91,59,12)
-  --pset(98,59,12)
-  --if c>=1 then 
-   --line(88-4,56,88+4, 56, 2)
-   --line(100-4,56,100+4, 56, 2)
-   --pset(97,59,12)
-   --pset(92,59,12)
-   --if game.frame_counter%50<=30 then
-   --line(88-4,57,88+4, 57, 2)
-   --line(88-3,58,88+3, 58, 2)
-   --line(100-4,57,100+4, 57, 2)
-   --line(100-3,58,100+3, 58, 2)
-   --pset(92,60,12)
-   --pset(97,60,12)
-   --end
-  --end
 end
 
 --mood, eye_x, eye_y, eye_r, distance, primary color, secondary color
@@ -59,11 +41,18 @@ function draw_eyes(m, e_x, e_y, e_r, d, p_col, s_col)
  line(r_e_x+3, e_y-5, r_e_x+5, e_y-1, s_col)
  elseif m==2 then -- sad / eyelids
   for i=0, e_r do 
-   line(l_e_x-i, e_y-e_r+i, l_e_x+i, e_y-e_r+i, p_col)
-   line(r_e_x-i, e_y-e_r+i, r_e_x+i, e_y-e_r+i, p_col)
+   if i==e_r then 
+    line(l_e_x-i, e_y-e_r+i-1, l_e_x+i, e_y-e_r+i-1, p_col)
+    line(r_e_x-i, e_y-e_r+i-1, r_e_x+i, e_y-e_r+i-1, p_col)
+   else
+    line(l_e_x-i-1, e_y-e_r+i-1, l_e_x+i+1, e_y-e_r+i-1, p_col)
+    line(r_e_x-i-1, e_y-e_r+i-1, r_e_x+i+1, e_y-e_r+i-1, p_col)
+   end
   end
   pset(91,59,12)
   pset(98,59,12)
+
+
  end
 
 end
