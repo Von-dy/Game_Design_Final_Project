@@ -4,7 +4,7 @@ __lua__
 function _init()
  music(-1)
  sfx(-1)
- z,c,boss=0,0,generic_boss() --beat speed, count
+ z,c=0,0 --beat speed,count
  
  --game object
  game={
@@ -17,6 +17,7 @@ function _init()
  --hitscan list
  hitboxes = {}
  makeplayer(1)
+ boss=generic_boss()
 end
 
 --generic boss class
@@ -39,16 +40,17 @@ function make_boss(n)
   --make heart boss
   heart_boss()
  end
+ if n==2 then
+ 	--make stomach
+ 	stomach()
+ end
 end
 
 --create the heart boss
 function heart_boss()
  boss.ct=time()
  boss.bullets={}
- boss.name="heart"
- boss.state=0
- boss.hp=1
- boss.id=1
+ boss.name,boss.state,boss.hp,boss.id="heart",0,1,1
  boss.av={}
  boss.valves={}
  for i=1,4 do
@@ -57,10 +59,16 @@ function heart_boss()
  end
 end
 
+function stomach()
+ boss.ct=time()
+ boss.bullets={}
+ boss.name,boss.state,boss.hp,boss.id="stomach",0,100,2
+
+end
+
 --makes the valves for the heart boss
 function make_valve(n)
  lx,ly=86,28
-
  if n==2 then lx=110 ly=28 end
  if n==3 then lx=86 ly=100 end
  if n==4 then lx=110 ly=100 end
@@ -89,22 +97,37 @@ function make_bullet(o,d,sp)
  return b
 end
 
+function stomach_logic(s)
+
+end
 
 --determining what the heart boss does based on state
 function hb_logic(s)
  timer=time()-boss.ct
  t=players[1]
+ 
+ --if all valves destroyed
+ if #boss.valves==0 then 
+  --death animation of boss
+  --change game state
+  --go to stomach boss
+  make_boss(2)
+ end
+ 
  if t.x<=60 then side=0 else side=1 end
+ 
  --check valve hp
  for v in all(boss.valves) do
   if v.hp<=0 then del(boss.valves,v) end
  end
+ 
  --if state 0 do nothing until attacked
 	if s==0 then
 	 for v in all(boss.valves) do
 	  if v.hp<50 then s=1 boss.ct=time() end
 	 end
 	end
+ 
  --if state 1 do clot attacks and valve bursts
  if s==1 then
   --every 5 seconds do a clot attack
@@ -155,7 +178,7 @@ function clot_attack(side)
   tile={x=i,y=8}
   if side==1 then tile.x+=64 end
   t=rnd(5)
-  if t<=1 then add(boss.bullets,make_bullet(tile,3,21)) end
+  if t<=3.5 then add(boss.bullets,make_bullet(tile,3,21)) end
  end
 end
 
@@ -187,21 +210,19 @@ function valve_burst(v)
  v.sprite=16
  --make 8 bullets, 4 diagonals 4 straight
  for i=0,7 do
-  b=make_bullet(v,i,21)
-  add(boss.bullets,b)
+  add(boss.bullets,make_bullet(v,i,21))
  end
 end
 
 function move_bullets()
  for b in all(boss.bullets) do
   --save tokens
-  d,x,y,dia,good,spd=b.d,b.x,b.y,b.dia,true,b.spd
-  hbox=b.hbox
+  d,x,y,hbox,dia,spd,good=b.d,b.x,b.y,b.hbox,b.dia,b.spd,true
   hx,hy=hbox.x,hbox.y
   
   --bullet collision with player
 		for p in all(players) do
-   if p.state~=3 and hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then p.hp-=1 del(boss.bullets,b) good=false end
+   if p.state~=3 and hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then p.hp-=1 del(boss.bullets,b) good=false p.hitcooldown=120 end
   end
   
   if good then
@@ -228,7 +249,11 @@ function move_bullets()
 	  if d==10 then x-=spd y+=1.5*cos(.5*time()) hx-=spd hy+=1.5*cos(.5*time()) end
 	
 	  --update bullet values
-	  b.x,b.y,hbox.x,hbox.y,b.hbox=x,y,hx,hy,hbox
+	  b.x=x
+	  b.y=y
+	  hbox.x=hx
+	  hbox.y=hy
+	  b.hbox=hbox
 	  end
   end
  end
@@ -261,11 +286,15 @@ function makeplayer(slot)
    j=0,
    --attacking flag
    a=0,
+   --attacking cooldown
+   ac=0,
    --dodge duration
    dodge=0,
    --dodge cooldown
    dcl=60,
-   hp=3
+   hp=3,
+   invulnerable=false,
+   hitcooldown=0
  }
  --add player to list
  add(players,p)
@@ -354,43 +383,43 @@ function groundmovement(player)
  --attack
  if btn(4) then
   --start attack if not attacking
-  if player.a==0 then
+  if player.a==0 and player.ac<1 then
    makehitbox(x,y,10,3,"player")
    player.a=1
+   player.ac=40
   end
  end
  --extend hitbox
  if player.a==1 and hitboxes["player"] then
   --track position
-  hitboxes["player"].x=x+2
   hitboxes["player"].y=y+2
-  --attack left
+  --attack right
   if player.d==1 then
+   hitboxes["player"].x=x+2
    if hitboxes["player"].w<50 then
     hitboxes["player"].w+=3
     player.sprite=203
    else
     player.a=2
    end
-  --attack right
+  --attack left
   else
-   if hitboxes["player"].w>-50 then
-    hitboxes["player"].w-=3
+   hitboxes["player"].x=x-(hitboxes["player"].w-4)
+   if hitboxes["player"].w<50 then
+    hitboxes["player"].w+=3
+    hitboxes["player"].x-=3
     player.sprite=202
    else
     player.a=2
    end
   end
- --if hit boss valve
- for v in all(boss.valves) do
-  vhb=v.hbox
-  if hcollide(hitboxes["player"].x,hitboxes["player"].w,hitboxes["player"].y,hitboxes["player"].h, vhb.x,vhb.w,vhb.y,vhb.h) then player.a=2 v.hp-=2 end 
- end
+  --if hit boss valve
+  boss_interaction(boss.id,player)
  --retract hitbox
  elseif player.a==2 and hitboxes["player"] then
-  hitboxes["player"].x=x+2
   hitboxes["player"].y=y+2
   if player.d==1 then
+   hitboxes["player"].x=x+2
    if hitboxes["player"].w>0 then
     hitboxes["player"].w-=3
    else
@@ -399,14 +428,19 @@ function groundmovement(player)
     player.a=0
    end
   else
-   if hitboxes["player"].w<0 then
-    hitboxes["player"].w+=3
+   hitboxes["player"].x=x-(hitboxes["player"].w-8)
+   if hitboxes["player"].w>0 then
+    hitboxes["player"].w-=3
    else
     --finish attack
     del(hitboxes,hitboxes["player"])
     player.a=0
    end
   end
+ end
+ --attack cooldown
+ if player.ac>0 then
+  player.ac-=1
  end
 
  --dodge
@@ -418,6 +452,7 @@ function groundmovement(player)
   end
  end
  if player.state==3 then
+  player.invulnerable=true
   if player.dodge<40 then
    dx=0
    dy=-0.15
@@ -432,6 +467,15 @@ function groundmovement(player)
   if player.dcl>0 then
    player.dcl-=1
   end
+  player.invulnerable=false
+ end
+
+ --post-hit invunerability cooldown
+ if player.hitcooldown>0 then
+  player.invulnerable=true
+  player.hitcooldown-=1
+ else
+  player.invulnerable=false
  end
 
  --gravity
@@ -482,6 +526,19 @@ function groundmovement(player)
  player.dy=dy
 end
 
+function boss_interaction(id,player)
+ if id==1 then
+	 for v in all(boss.valves) do
+	  vhb=v.hbox
+	  local hbp=hitboxes["player"]
+	  if hcollide(hbp.x,hbp.w,hbp.y,hbp.h, vhb.x,vhb.w,vhb.y,vhb.h) then
+	   player.a=2
+	   v.hp-=2
+	  end
+	 end
+	end
+end
+
 function solid(x,y)
  return fget(mget(x/8,y/8),0)
 end
@@ -494,6 +551,22 @@ function music_player(boss,state)
   --start at track 0
   if state==1 then music(0) end 
  end
+ --stomach
+ if boss.id==2 then
+ end
+end
+
+function boss_logic(id)
+ s=boss.state
+ if boss.id==1 then 
+  hb_logic(s)
+  heart_beat()
+ end
+ if boss.id==2 then
+  --stomach_logic(s)
+ end
+ --if phase change
+ if s~=boss.state then music_player(boss,boss.state) end
 end
 
 function _update60()
@@ -508,13 +581,7 @@ function _update60()
   --determine what boss you are fighting
   if boss.id==0 then make_boss(1) end
   --fighting heart boss
-  s=boss.state
-  if boss.id==1 then 
-  	hb_logic(s)
-  	heart_beat()
-  	--if phase change
-  	if s~=boss.state then music_player(boss,boss.state) end
-  end
+  boss_logic(boss.id)
  end
 end
 
@@ -568,7 +635,7 @@ function draw_hud(id)
 end
 
 function draw_boss()
- if c==1 then
+ if c==1 then 
   draw_valves()
   sspr(88, 0, 32, 32, 75,39, 46, 46)
  else
@@ -578,50 +645,62 @@ function draw_boss()
  draw_face()
 end
 
-
 function draw_face()
  local y=0
  local x=0
- for p in all(players) do y=p.y x=p.x end
-  draw_eyes(boss.state, 88, 56, 4, 12, 2, 8)
-  draw_lips(boss.state, 91, 72, 16, 1, 5)
-end
 
---mood, eye_x, eye_y, eye_r, distance, primary color, secondary color
-function draw_eyes(m, e_x, e_y, e_r, d, p_col, s_col)
- local l_e_x=e_x
- local r_e_x=e_x+d
+ for p in all(players) do
+   y=p.y
+   x=p.x
+ end
+  circfill(88, 56, 4, 7)
+  circfill(100, 56, 4, 7)
 
- --base circle
- circfill(e_x, e_y, e_r, 7)
- circfill(r_e_x, e_y, e_r, 7)
+ if boss.state==1 then
+   --left brow
+  line(84, 49, 90, 53, 2)
+  line(85, 50, 92, 54, 2)
+  line(85, 51, 93, 55, 8)
+  --right brow
+  line(101, 49, 98, 53, 2)
+  line(103, 50, 96, 54, 2)
+  line(103, 51, 95, 55, 8)
 
- --tracking pupils                                  -- sad pupils
- if m<=1 then draw_pupils(e_x, e_y, e_r, d, 0) else draw_pupils(e_x, e_y, e_r, d, 1) end
-
- --angry eyebrows
- if m==1 then
-  --left brow
- line(l_e_x-4, e_y-7, l_e_x+2, e_y-3, p_col)
- line(l_e_x-3, e_y-6, l_e_x+4, e_y-2, p_col)
- line(l_e_x-3, e_y-5, l_e_x+5, e_y-1, s_col)
- --right brow
- line(r_e_x+1, e_y-7, r_e_x-2, e_y-3, p_col)
- line(r_e_x+3, e_y-6, r_e_x-4, e_y-2, p_col)
- line(r_e_x+3, e_y-5, r_e_x+5, e_y-1, s_col)
- elseif m==2 then -- sad / eyelids
-  for i=0, e_r do
-   if i==e_r then
-    line(l_e_x-i, e_y-e_r+i-1, l_e_x+i, e_y-e_r+i-1, p_col)
-    line(r_e_x-i, e_y-e_r+i-1, r_e_x+i, e_y-e_r+i-1, p_col)
-   else
-    line(l_e_x-i-1, e_y-e_r+i-1, l_e_x+i+1, e_y-e_r+i-1, p_col)
-    line(r_e_x-i-1, e_y-e_r+i-1, r_e_x+i+1, e_y-e_r+i-1, p_col)
-   end
-  end
+  --angry face
+  draw_lips(1, 91, 72, 16, 1, 5)
+ elseif boss.state==0 then
+  --happy face
+  draw_lips(0, 91, 72, 16, 1, 5)
+ elseif boss.state==2 then 
+ --sad face
+  draw_lips(2, 91, 72, 16, 1, 5)
+  line(88-1,52,88+1, 52, 2)
+  line(88-3,53,88+3, 53, 2)
+  line(88-3,54,88+3, 54, 2)
+  line(88-4,55,88+4, 55, 2)
+  line(100-1,52,100+1, 52, 2)
+  line(100-3,53,100+3, 53, 2)
+  line(100-3,54,100+3, 54, 2)
+  line(100-4,55,100+4, 55, 2)
   pset(91,59,12)
   pset(98,59,12)
+  if c>=1 then 
+   line(88-4,56,88+4, 56, 2)
+   line(100-4,56,100+4, 56, 2)
+   pset(97,59,12)
+   pset(92,59,12)
+   if game.frame_counter%50<=30 then
+   line(88-4,57,88+4, 57, 2)
+   line(88-3,58,88+3, 58, 2)
+   line(100-4,57,100+4, 57, 2)
+   line(100-3,58,100+3, 58, 2)
+   pset(92,60,12)
+   pset(97,60,12)
+   end
+  end
+  
  end
+ --pupil tracking
 end
 
 --left center_x, left center_y, radius, distance, mood
@@ -630,7 +709,7 @@ function draw_pupils(c_x, c_y, r, d, m)
  local y=c_y
  local p_y=0
  local p_x=0
-
+ 
  if m==0 then --tracking
   for p in all(players) do
    p_y=p.y
@@ -652,11 +731,12 @@ end
 function draw_lips(m, x, y, len, p_col, s_col)
  local l=len*2
  if m==0 then --happy mood
+  draw_pupils(88, 56, 4, 12, 0)
   for i=0, len-1 do
    pset(x+i, y-4*sin(i/l), p_col)
    pset(x+i, (y-1)-4*sin(i/l), s_col)
    pset(x+i, (y-2)-4*sin(i/l), s_col)
-   if c!=1 then
+   if c!=1 then 
     pset(x+i, (y-3)-4*sin(i/l), p_col)
    else
     pset(x+i, (y-3)-4*sin(i/l), s_col)
@@ -664,11 +744,12 @@ function draw_lips(m, x, y, len, p_col, s_col)
    end
   end
  elseif m==1 then --angry mood
+  draw_pupils(88, 56, 4, 12, 0)
   for i=0, len-1 do
     pset(x+i, y+3*sin(i/l), p_col)
     pset(x+i, (y+1)+3*sin(i/l), s_col)
     pset(x+i, (y+2)+3*sin(i/l), s_col)
-    if c!=1 then
+    if c!=1 then 
      pset(x+i, (y+3)+3*sin(i/l), p_col)
      if i%2==0 and i!=0 then pset(x+i, (y+2)+3*sin(i/l), 7) end
     else
@@ -677,16 +758,18 @@ function draw_lips(m, x, y, len, p_col, s_col)
      if i%2==0 and i!=0 then pset(x+i, (y+3)+3*sin(i/l), 7) end
     end
    end
+  elseif m==2 then --sad mood
+   draw_pupils(88, 56, 4, 12, 1)
+  end
  end
-end
 
-function draw_valves()
- sspr(80, 0, 8, 8, 108, 8, 8, 38)
- sspr(80, 8, 8, 8, 108, 74, 8, 38)
- sspr(80, 0, 8, 8, 84, 8, 8, 38)
- sspr(80, 8, 8, 8, 84, 74, 8, 38)
-end
-               
+ function draw_valves()
+  sspr(80, 0, 8, 8, 108, 8, 8, 38)
+  sspr(80, 8, 8, 8, 108, 74, 8, 38)
+  sspr(80, 0, 8, 8, 84, 8, 8, 38)
+  sspr(80, 8, 8, 8, 84, 74, 8, 38)
+ end
+
 
 __gfx__
 000000002e282e8222eeee22dddddddd4ff4ff4fef8e8f8fe8888e88228888220000000000000000222c12220000000000000000888888800001111000000000
