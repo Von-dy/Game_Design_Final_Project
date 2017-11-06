@@ -336,9 +336,9 @@ function groundmovement(player)
 
  --inertia
  if dx > 0 then
-  dx-=0.1
+  dx-=0.15
  elseif dx < 0 then
-  dx+=0.1
+  dx+=0.15
  end
  if dx > -0.06 and dx < 0.06 then
   dx=0
