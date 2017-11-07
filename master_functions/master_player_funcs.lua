@@ -1,11 +1,22 @@
 function makeplayer(slot)
  p={
+  --menu items
+  curr_choice = 0,
+  syringe={
+  p_col=3,
+  s_col=11,
+  circ_1=0,
+  circ_2=0,
+  circ_3=0,
+  circ_4=0,
+  ready=false
+ },
    --0=grounded, 1=airborne, 2=crouch, 3=dodge
    state=0,
    last_action=0,
-   num=slot,
+   n=slot,
    sprite=206,
-   x=0,
+   x=64,
    y=32,
    dx=0,
    dy=0,
