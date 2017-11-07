@@ -1,3 +1,89 @@
+
+function draw_menu()
+ --menu background
+ --map(0,0,0,0,16,16)
+ --menu "actors"
+ for p in all(players) do 
+  draw_characters(p)
+  draw_syringe(p)
+  draw_instructions(p)
+ end
+end
+
+function draw_characters(p)
+ local x=0
+ local y=0
+ if p.n==0 or p.n==2 then x=17 else x=77 end
+ if p.n==0 or p.n==1 then y=24 else y=88 end
+ if p.curr_choice==0 then spr(22, x, y) else spr(19, x, y) end
+ if p.curr_choice==1 then spr(54, x+8, y) else spr(51, x+8, y) end
+ if p.curr_choice==2 then spr(6, x+16, y) else spr(3, x+16, y) end
+ if p.curr_choice==3 then spr(38, x+24, y) else spr(35, x+24, y) end
+end
+
+function draw_syringe(p)
+ local x=0
+ local y=32
+ if game.state==0 then 
+  if p.n==0 then x=8 else x=68 end
+  if p.curr_choice==0 then p.syringe.p_col=2 p.syringe.s_col=8 end
+  if p.curr_choice==1 then p.syringe.p_col=1 p.syringe.s_col=12 end
+  if p.curr_choice==2 then p.syringe.p_col=3 p.syringe.s_col=11 end
+  if p.curr_choice==3 then p.syringe.p_col=4 p.syringe.s_col=9 end
+ else
+  x=p.x
+  y=p.y
+ end
+ spr(7, x, y, 5, 1)
+ 
+ if p.curr_choice==0 then p.syringe.p_col=2 p.syringe.s_col=8 end
+ if p.curr_choice==1 then p.syringe.p_col=1 p.syringe.s_col=12 end
+ if p.curr_choice==2 then p.syringe.p_col=3 p.syringe.s_col=11 end
+ if p.curr_choice==3 then p.syringe.p_col=4 p.syringe.s_col=9 end
+ 
+ rectfill(x+9, y+1, x+41, y+6, p.syringe.p_col)
+ rectfill(x+42, y+2, x+42, y+5, p.syringe.p_col)
+ rectfill(x+43, y+3, x+43, y+4, p.syringe.p_col)
+
+ if game.frame_counter<30 then 
+  if game.frame_counter%12==0 then p.syringe.circ_1+=.5 end
+  if game.frame_counter%15==0 then p.syringe.circ_2+=.5 end
+  if game.frame_counter%14==0 then p.syringe.circ_3+=.5 end
+  if game.frame_counter%13==0 then p.syringe.circ_4+=.5 end
+  if p.syringe.circ_1==3 then p.syringe.circ_1=0 end
+  if p.syringe.circ_2==3 then p.syringe.circ_2=0 end
+  if p.syringe.circ_3==3 then p.syringe.circ_3=0 end
+  if p.syringe.circ_4==3 then p.syringe.circ_4=0 end
+ end
+ if game.frame_counter<30 then
+  circfill(x+10, y+5-p.syringe.circ_1, 1, p.syringe.s_col)
+  circ(x+19, y+5-p.syringe.circ_2, 1, p.syringe.s_col)
+  circfill(x+29, y+5-p.syringe.circ_3, 1, p.syringe.s_col)
+  circ(x+38, y+5-p.syringe.circ_4, 1, p.syringe.s_col)
+ else
+  circ(x+11, y+5-p.syringe.circ_1, 1, p.syringe.s_col)
+  circfill(x+20, y+5-p.syringe.circ_2, 1, p.syringe.s_col)
+  circ(x+28, y+5-p.syringe.circ_3, 1, p.syringe.s_col)
+  circfill(x+37, y+5-p.syringe.circ_4, 1, p.syringe.s_col) 
+ end 
+end
+
+function draw_instructions(p)
+ local x=0
+ local y=0
+ if p.n==0 or p.n==2 then x=8 else x=68 end
+ if p.n==0 or p.n==1 then y=40 else y=104 end
+
+ if p.n==0 then 
+  print("<- ->=cycle", x+5, y+1)
+  print("z=lock", x+5, y+9)
+ elseif p.n==1 then 
+  print("a/f=cycle", x+5, y+1)
+  print("lshift,=lock", x+5, y+9)
+ end
+end
+
+
 function draw_boss()
  if c==1 then 
   draw_valves()
@@ -10,11 +96,8 @@ function draw_boss()
 end
 
 function draw_face()
- local y=0
- local x=0
- for p in all(players) do y=p.y x=p.x end
-  draw_eyes(boss.state, 88, 56, 4, 12, 2, 8)
-  draw_lips(boss.state, 91, 72, 16, 1, 5)
+ draw_eyes(boss.state, 88, 56, 4, 12, 2, 8)
+ draw_lips(boss.state, 91, 72, 16, 1, 5)
 end
 
 --mood, eye_x, eye_y, eye_r, distance, primary color, secondary color
@@ -51,10 +134,7 @@ function draw_eyes(m, e_x, e_y, e_r, d, p_col, s_col)
   end
   pset(91,59,12)
   pset(98,59,12)
-
-
  end
-
 end
 
 --left center_x, left center_y, radius, distance, mood
