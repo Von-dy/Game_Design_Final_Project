@@ -120,7 +120,13 @@ function move_bullets()
 
   --bullet collision with player
 		for p in all(players) do
-   if p.state~=3 and hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then p.hp-=1 del(boss.bullets,b) good=false end
+   if p.state~=3 and hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) and p.invulnerable==false then
+    p.hp-=1
+    p.scores[boss.id].hitstaken+=1
+    del(boss.bullets,b)
+    good=false
+    p.hitcooldown=120
+   end
   end
 
   if good then
