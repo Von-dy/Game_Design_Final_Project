@@ -66,7 +66,7 @@ end
 
 function update_game()
  for p in all(players) do
-   if p.hp<=0 then _init() end
+   if p.hp<=0 then game.state=3 gameover() end
    groundmovement(p)
    col_collision(p,10)
   end
@@ -74,6 +74,13 @@ function update_game()
   if boss.id==0 then make_boss(1) end
   --fighting heart boss
   boss_logic(boss.id)
+  --keep track of time
+  updatetimers()
+end
+
+function update_gameover()
+ --x to restart
+ if btn(5) then _init() end
 end
 
 function heart_beat()
