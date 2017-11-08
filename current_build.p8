@@ -440,7 +440,7 @@ function groundmovement(player)
    end
   end
   --if hit boss
-  boss_interaction(boss.id,player)
+  
   --a=player.a
  --retract hitbox
  elseif player.a==2 then
@@ -554,9 +554,11 @@ function boss_interaction(id,player)
 	 for v in all(boss.valves) do
 	  vhb=v.hbox
 	  local hbp=player.hitbox
+   if hbp.x then 
 	  if hcollide(hbp.x,hbp.w,hbp.y,hbp.h, vhb.x,vhb.w,vhb.y,vhb.h) then
 	   player.a=2
 	   v.hp-=2
+   end
 	  end
 	 end
 	end
@@ -624,6 +626,7 @@ function update_game()
  for p in all(players) do
    if p.hp<=0 then _init() end
    groundmovement(p)
+   boss_interaction(boss.id,p)
    update_player_sprite(p)
   end
   --determine what boss you are fighting
@@ -660,14 +663,6 @@ end
 function _draw()
  cls()
  map(0,0,0,0,16,16)
- hb=players[1].hitbox
- if hb.x then
-  rectfill(hb.x,hb.y,hb.x+hb.w,hb.y+hb.h,7)
- end
- print(players[1].a)
- for v in all(boss.valves) do
-  print(v.hp,v.x,v.y)
- end
  if game.state==0 then draw_menu() end
  if game.state==2 then draw_game() end
 end
@@ -769,8 +764,34 @@ end
 
 function draw_players()
  for p in all(players) do
-  --local p_s=p.cc
+  local p_cc=p.curr_choice
+  local p_hb=p.hitbox
+  local pcol=0
+  local scol=0
+
+  if p_cc==0 then 
+   pcol=2
+   scol=8
+  end
+  if p_cc==1 then
+   pcol=1
+   scol=12
+  end
+  if p_cc==2 then
+   pcol=3
+   scol=11
+  end
+  if p_cc==3 then
+   pcol=9
+   scol=10
+  end
   spr(p.sprite,p.x,p.y)
+  if p_hb.x then
+  for i=0, p_hb.w-1 do
+   local col=flr(rnd(3))
+   if col>1 then pset(p_hb.x+i, 2*sin(i/p_hb.w)+p_hb.y+2, pcol) else pset(p_hb.x+i, 2*sin(i/p_hb.w)+p_hb.y+2, scol) end
+  end
+  end
  end
 end
 
@@ -796,11 +817,11 @@ function draw_boss()
 end
 
 function draw_heart()
- sspr(0, 96, 8, 8, 108, 8, 8+c, 38)
- sspr(0, 104, 8, 8, 108, 74, 8+c, 38)
- sspr(0, 96, 8, 8, 84, 8, 8+c, 38)
- sspr(0, 104, 8, 8, 84, 74, 8+c, 38)
- sspr(0, 64, 32, 32, 76,40, 44+c, 44+c)
+ sspr(0, 96, 8, 8, 108, 8, 8, 38)
+ sspr(0, 104, 8, 8, 108, 74, 8, 38)
+ sspr(0, 96, 8, 8, 84, 8, 8, 38)
+ sspr(0, 104, 8, 8, 84, 74, 8, 38)
+ sspr(0, 64, 32, 32, 76,40, 44+c%2, 44+c%2)
  draw_eyes(boss.state, 88, 56, 4, 12, 2, 8)
  draw_lips(boss.state, 91, 72, 16, 1, 5)
 end
