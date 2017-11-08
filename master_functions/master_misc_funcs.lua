@@ -41,6 +41,17 @@ function update_menu()
  if ready_count==#players then game.state=1 end
 end
 
+function updatetimers()
+ local t=time()
+ local currboss=boss.id
+ for p in all(players) do
+  if t-p.scores[boss.id].lasttime>2 then
+   p.scores[boss.id].timer+=1
+   p.scores[boss.id].lasttime=t
+  end
+ end
+end
+
 function update_player_menu(p)
  --selection buttons
   if p.syringe.ready==false then 
