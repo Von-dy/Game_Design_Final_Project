@@ -19,11 +19,30 @@ function make_boss(n)
  if n==1 then
   --make heart boss
   heart_boss()
+ elseif n==2 then
+  --make stomach
+  stomach()
+ end
+ addscoreboard(n)
+end
+
+--track stats for score
+function scoreboard(n)
+ thisboard={
+  bossid=bossid,
+  lasttime=time(),
+  timer=0,
+  hitstaken=0,
+  hitsgiven=0
+ }
+ for p in all(players) do
+  p.scores[bossid]=thisboard
  end
 end
 
 --create the heart boss
 function heart_boss()
+ boss.st=time()
  boss.ct=time()
  boss.bullets={}
  boss.name="heart"
@@ -37,6 +56,15 @@ function heart_boss()
   add(boss.valves,v)
  end
 end
+
+--stomach boss
+function stomach()
+ boss.st=time()
+ boss.ct=time()
+ boss.bullets={}
+ boss.name,boss.state,boss.hp,boss.id="stomach",0,100,2
+end
+
 
 --makes the valves for the heart boss
 function make_valve(n)
