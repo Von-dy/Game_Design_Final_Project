@@ -3,6 +3,7 @@ function _draw()
  map(0,0,0,0,16,16)
  if game.state==0 then draw_menu() end
  if game.state==2 then draw_game() end
+ if game.state==3 then gameover() end
 end
 
 function draw_menu()

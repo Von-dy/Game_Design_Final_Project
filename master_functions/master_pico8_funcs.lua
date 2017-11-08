@@ -29,6 +29,7 @@ function _update60()
  if game.frame_counter>=60 then game.frame_counter=0 end
  if game.state==0 then update_menu() end
  if game.state==2 then update_game() end
+ if game.state==3 then update_gameover() end
 end
 
 --draw

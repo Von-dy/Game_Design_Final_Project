@@ -36,7 +36,8 @@ function makeplayer(slot)
    dcl=60,
    hp=3,
    invulnerable=false,
-   hitcooldown=0
+   hitcooldown=0,
+   scores={}
  }
  --add player to list
  add(players,p)
@@ -137,7 +138,11 @@ function groundmovement(player)
  --if hit boss valve
  for v in all(boss.valves) do
   vhb=v.hbox
-  if hcollide(hitboxes["player"].x,hitboxes["player"].w,hitboxes["player"].y,hitboxes["player"].h, vhb.x,vhb.w,vhb.y,vhb.h) then player.a=2 v.hp-=2 end 
+  if hcollide(hitboxes["player"].x,hitboxes["player"].w,hitboxes["player"].y,hitboxes["player"].h, vhb.x,vhb.w,vhb.y,vhb.h) then
+   player.a=2
+   v.hp-=2
+   player.scores[boss.id].hitsgiven+=1
+  end 
  end
  --retract hitbox
  elseif player.a==2 and hitboxes["player"] then
@@ -270,6 +275,7 @@ function groundmovement(player)
    if hcollide(hbp.x,hbp.w,hbp.y,hbp.h, vhb.x,vhb.w,vhb.y,vhb.h) then
     player.a=2
     v.hp-=2
+    player.scores[boss.id].hitsgiven+=1
    end 
   end
  --retract hitbox
@@ -336,7 +342,7 @@ function groundmovement(player)
  end
 
  --gravity
- if not solid(x,y+player.h+(dy+ 0.1)) then
+ if not (solid(x,y+player.h+(dy+ 0.1)) or solid(x+player.w,y+player.h+(dy+0.1))) then
   dy+=0.15
  else
   if player.j==1 then

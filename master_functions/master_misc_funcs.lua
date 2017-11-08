@@ -41,6 +41,17 @@ function update_menu()
  if ready_count==#players then game.state=1 end
 end
 
+function updatetimers()
+ local t=time()
+ local currboss=boss.id
+ for p in all(players) do
+  if t-p.scores[boss.id].lasttime>2 then
+   p.scores[boss.id].timer+=1
+   p.scores[boss.id].lasttime=t
+  end
+ end
+end
+
 function update_player_menu(p)
  --selection buttons
   if p.syringe.ready==false then 
@@ -55,7 +66,7 @@ end
 
 function update_game()
  for p in all(players) do
-   if p.hp<=0 then _init() end
+   if p.hp<=0 then game.state=3 gameover() end
    groundmovement(p)
    col_collision(p,10)
   end
@@ -63,6 +74,13 @@ function update_game()
   if boss.id==0 then make_boss(1) end
   --fighting heart boss
   boss_logic(boss.id)
+  --keep track of time
+  updatetimers()
+end
+
+function update_gameover()
+ --x to restart
+ if btn(5) then _init() end
 end
 
 function heart_beat()
@@ -70,3 +88,20 @@ function heart_beat()
  if z>1 then z=0 end
  if cos(z)==1 then c+=1 if c==3 then c=0 sfx(0,1) end end
 end
+
+function gameover()
+ cls()
+ print("game over",50,30,3)
+ line(50,36,84,36,3)
+ print("time",28,42,11)
+ print("hits taken",58,42)
+ local ypos=52
+ for p in all(players) do
+  spr(p.sprite,12,ypos)
+  print(p.scores[boss.id].timer,28,ypos)
+  print(p.scores[boss.id].hitstaken,58,ypos)
+  ypos+=16
+ end
+ print("x to restart",45,100,3)
+end
+
