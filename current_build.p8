@@ -503,7 +503,7 @@ function groundmovement(player)
  end
 
  --gravity
- if not solid(x,y+h+dy+0.1) then
+ if not solid(x,y+h+dy+0.1) or solid(x+w,y+h+dy+0.1) then
   dy+=0.15
  else
   if j==1 then
