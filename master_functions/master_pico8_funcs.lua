@@ -5,6 +5,7 @@
 function _init()
  z=0 --beat speed
  c=0 --beat count
+ tunes=0
 
  --game object
  game={
@@ -16,6 +17,7 @@ function _init()
  players = {}
  --hitscan list
  hitboxes = {}
+ makeplayer(0)
  makeplayer(1)
  boss=generic_boss()
 end
@@ -23,23 +25,18 @@ end
 --update60
 
 function _update60()
- if game.state==2 then
-  for p in all(players) do
-   groundmovement(p)
-  end
-  --determine what boss you are fighting
-  if boss.id==0 then make_boss(1) end
-  --change what boss state
-  if btnp(4) then music(0) boss.state=(boss.state+1)%3 end
-  if boss.id==1 then hb_logic(boss.state) end
-  heart_beat()
- end
+ game.frame_counter+=1
+ if game.frame_counter>=60 then game.frame_counter=0 end
+ if game.state==0 then update_menu() end
+ if game.state==2 then update_game() end
+ if game.state==3 then update_gameover() end
 end
 
 --draw
 
 function _draw()
  cls()
+ if game.state==0 then draw_menu() else
  map(0,0,0,0,16,16)
  draw_boss()
  print(boss.state)
@@ -57,5 +54,6 @@ function _draw()
  end
  for b in all(boss.bullets) do
   spr(b.sprite,b.x,b.y)
+ end
  end
 end

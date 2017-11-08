@@ -1,12 +1,14 @@
 --Constructors and Functions used to make objects
 
+--generic boss class
 function generic_boss()
  boss={
   state=0,
   hp=0,
   x=138,
   y=60,
-  id=0
+  id=0,
+  hboxes={}
  }
  return boss
 end
@@ -17,14 +19,32 @@ function make_boss(n)
  if n==1 then
   --make heart boss
   heart_boss()
+ elseif n==2 then
+  --make stomach
+  stomach()
+ end
+ addscoreboard(n)
+end
+
+--track stats for score
+function scoreboard(n)
+ thisboard={
+  bossid=bossid,
+  lasttime=time(),
+  timer=0,
+  hitstaken=0,
+  hitsgiven=0
+ }
+ for p in all(players) do
+  p.scores[bossid]=thisboard
  end
 end
 
 --create the heart boss
 function heart_boss()
+ boss.st=time()
  boss.ct=time()
  boss.bullets={}
- boss.sprite=17
  boss.name="heart"
  boss.state=0
  boss.hp=1
@@ -37,44 +57,43 @@ function heart_boss()
  end
 end
 
+--stomach boss
+function stomach()
+ boss.st=time()
+ boss.ct=time()
+ boss.bullets={}
+ boss.name,boss.state,boss.hp,boss.id="stomach",0,100,2
+end
+
+
 --makes the valves for the heart boss
 function make_valve(n)
- lx=96
- ly=22
- if n==2 then lx=120 ly=22 end
- if n==3 then lx=96 ly=100 end
- if n==4 then lx=120 ly=100 end
+ lx=86
+ ly=28
+ if n==2 then lx=110 ly=28 end
+ if n==3 then lx=86 ly=100 end
+ if n==4 then lx=110 ly=100 end
  valve={
  id=n,
  hp=50,
  x=lx,
  y=ly,
  sprite=16,
- bullets={}
+ bullets={},
+ hbox=makehitbox(lx,ly,3,8,nil)
  }
  return valve
 end
 
 --make a bullet for some owner in some direction
-function make_bullet(o,d)
+function make_bullet(o,d,sp)
  b={
  x=o.x,
  y=o.y,
  d=d,
- sprite=21,
- spd=1
- }
- return b
-end
-
---make a bullet that moves diagonally
-function make_diagonal_bullet(o,diag)
- b={
- x=o.x,
- y=o.y,
- dia=diag,
- sprite=17,
- spd=1
+ sprite=sp,
+ spd=1,
+ hbox=makehitbox(o.x+2,o.y+2,4,4,nil)
  }
  return b
 end
@@ -86,6 +105,8 @@ function makehitbox(x,y,w,h,name)
   w=w,
   h=h
  }
- hitboxes[name]=hbox
- add(hitboxes,hbox)
+ if name!=nil then hitboxes[name]=hbox add(hitboxes,hbox)
+ else return hbox
+ end
 end
+
