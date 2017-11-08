@@ -796,7 +796,7 @@ end
 function draw_game()
  draw_boss()
  draw_players()
- draw_hud()
+ draw_hud(boss.id)
  draw_bullets()
 end
 
@@ -844,9 +844,15 @@ function draw_hud(id)
   rectfill(0,4,(hpleft/200)*128,6,10)
  --end heart boss drawing
  end
- --[[for hp in 0,6 do
-  spr(32,10,110
- end]]
+ for p in all(players) do
+  tempx=10
+  if p.n==1 then tempx=80 end
+  if p.hp>0 then
+   for h=1,p.hp do
+    spr(32,tempx+h*8,120)
+   end
+  end
+ end
 end
 
 function draw_boss()
