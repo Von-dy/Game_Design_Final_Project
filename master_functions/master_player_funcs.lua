@@ -36,7 +36,8 @@ function makeplayer(slot)
    dcl=60,
    hp=3,
    invulnerable=false,
-   hitcooldown=0
+   hitcooldown=0,
+   scores={}
  }
  --add player to list
  add(players,p)
