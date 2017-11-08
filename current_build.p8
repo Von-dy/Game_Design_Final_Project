@@ -50,6 +50,7 @@ function make_boss(n)
  	stomach()
  end
  set_area()
+ scoreboard(n)
 end
 
 --change map
@@ -310,6 +311,7 @@ function makeplayer(slot)
    --0=grounded, 1=airborne, 2=crouch, 3=invuln
    state=0,
    last_action=0,
+   scores={},
    n=slot,
    sprite=6,
    x=20,
@@ -338,6 +340,20 @@ function makeplayer(slot)
  if slot==1 then p.x=12 end
  --add player to list
  add(players,p)
+end
+
+--track stats for score
+function scoreboard(n)
+ thisboard={
+  bossid=boss.id,
+  lasttime=time(),
+  timer=0,
+  hitstaken=0,
+  hitsgiven=0
+ }
+ for p in all(players) do
+  p.scores[boss.id]=thisboard
+ end
 end
 
 function makehitbox(x,y,w,h)
@@ -598,6 +614,7 @@ function _update60()
  if game.frame_counter>=60 then game.frame_counter=0 end
  if game.state==0 then update_menu() end
  if game.state==2 then update_game() end
+ if game.state==3 then update_gameover() end
 end
 
 function update_menu()
@@ -625,7 +642,7 @@ function update_game()
  count=0
  for p in all(players) do
    if p.hp<=0 then count+=1 end
-   if count==2 then _init() end
+   if count==2 then game.state=3 end
    if p.hp>0 then 
     groundmovement(p)
     boss_interaction(boss.id,p)
@@ -636,6 +653,18 @@ function update_game()
   if boss.id==0 then make_boss(1) end
   --fighting heart boss
   boss_logic(boss.id)
+  update_timers()
+end
+
+function update_timers()
+ local t=time()
+ local currboss=boss.id
+ for p in all(players) do
+  if t-p.scores[boss.id].lasttime>2 then
+   p.scores[boss.id].timer+=1
+   p.scores[boss.id].lasttime=t
+  end
+ end
 end
 
 function update_player_sprite(p)
@@ -657,6 +686,11 @@ function update_player_sprite(p)
  else p.sprite=16 end
 end
 
+function update_gameover()
+ --x to restart
+ if btn(5) then _init() end
+end
+
 function heart_beat()
  z+=.045+(.02*boss.state)
  if z>1 then z=0 end
@@ -666,9 +700,9 @@ end
 function _draw()
  cls()
  map(0,0,0,0,16,16)
- print(players[1].j)
  if game.state==0 then draw_menu() end
  if game.state==2 then draw_game() end
+ if game.state==3 then draw_gameover() end
 end
 
 function draw_menu()
@@ -752,10 +786,10 @@ function draw_instructions(p)
 
  if p.n==0 then
   print("<- ->=cycle", x+5, y+1)
-  print("z=lock", x+5, y+9)
+  print("x=lock", x+5, y+9)
  elseif p.n==1 then
-  print("a/f=cycle", x+5, y+1)
-  print("lshift,=lock", x+5, y+9)
+  print("<- ->=cycle", x+5, y+1)
+  print("x=lock", x+5, y+9)
  end
 end
 
@@ -936,6 +970,24 @@ function draw_bullets()
   spr(b.sprite,b.x,b.y)
  end
 end
+
+function draw_gameover()
+ cls()
+ print("game over",50,30,3)
+ line(50,36,84,36,3)
+ print("time",28,42,11)
+ print("hits taken",58,42)
+ local ypos=52
+ for p in all(players) do
+  spr(p.sprite,12,ypos)
+  print(p.scores[boss.id].timer,28,ypos)
+  print(p.scores[boss.id].hitstaken,58,ypos)
+  ypos+=16
+ end
+ print("x to restart",45,100,3)
+end
+
+
 __gfx__
 00000000000b30000003b0000000000000b33b0000b33b000003b000000770007777777777777777777777777700000000000000000000000000000000000000
 0000000000b33b0000b33b00000000000b333bb00b333bb000b33b00000770007000000000000000000000000070000000000000000000000000000000000000
