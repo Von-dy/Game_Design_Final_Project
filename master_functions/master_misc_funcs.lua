@@ -70,3 +70,20 @@ function heart_beat()
  if z>1 then z=0 end
  if cos(z)==1 then c+=1 if c==3 then c=0 sfx(0,1) end end
 end
+
+function gameover()
+ cls()
+ print("game over",50,30,3)
+ line(50,36,84,36,3)
+ print("time",28,42,11)
+ print("hits taken",58,42)
+ local ypos=52
+ for p in all(players) do
+  spr(p.sprite,12,ypos)
+  print(p.scores[boss.id].timer,28,ypos)
+  print(p.scores[boss.id].hitstaken,58,ypos)
+  ypos+=16
+ end
+ print("x to restart",45,100,3)
+end
+
