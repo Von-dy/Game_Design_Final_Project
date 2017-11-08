@@ -221,7 +221,13 @@ function move_bullets()
   
   --bullet collision with player
     for p in all(players) do
-   if p.state~=3 and hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then p.hp-=1 del(boss.bullets,b) good=false p.hitcooldown=120 end
+   if p.state~=3 and hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then
+    p.hp-=1
+    p.scores[boss.id].hitstaken+=1
+    del(boss.bullets,b)
+    good=false
+    p.hitcooldown=120
+   end
   end
   
   if good then
@@ -489,7 +495,7 @@ function groundmovement(player)
  end
 
  --gravity
- if not solid(x,y+player.h+(dy+ 0.1)) then
+ if not (solid(x,y+player.h+(dy+ 0.1)) or solid(x+player.w,y+player.h+(dy+0.1))) then
   dy+=0.15
  else
   if player.j==1 then
@@ -584,6 +590,7 @@ function _update60()
  if game.frame_counter>=60 then game.frame_counter=0 end
  if game.state==0 then update_menu() end
  if game.state==2 then update_game() end
+ if game.state==3 then update_gameover() end
 end
 
 function update_menu()
@@ -617,6 +624,19 @@ function update_game()
   if boss.id==0 then make_boss(1) end
   --fighting heart boss
   boss_logic(boss.id)
+  --keep track of time
+  updatetimers()
+end
+
+function updatetimers()
+ local t=time()
+ local currboss=boss.id
+ for p in all(players) do
+  if t-p.scores[boss.id].lasttime>2 then
+   p.scores[boss.id].timer+=1
+   p.scores[boss.id].lasttime=t
+  end
+ end
 end
 
 function heart_beat()
@@ -628,7 +648,8 @@ end
 function _draw()
  cls()
  if game.state==0 then draw_menu() end
-
+ if game.state==2 then draw_game() end
+ if game.state==3 then gameover() end
 end
 
 function draw_menu()
@@ -846,3 +867,20 @@ end
   sspr(80, 0, 8, 8, 84, 8, 8, 38)
   sspr(80, 8, 8, 8, 84, 74, 8, 38)
  end
+
+function gameover()
+ game.state=3
+ cls()
+ print("game over",50,30,3)
+ line(50,36,84,36,3)
+ print("time",28,42,11)
+ print("hits taken",58,42)
+ local ypos=52
+ for p in all(players) do
+  spr(p.sprite,12,ypos)
+  print(p.scores[boss.id].timer,28,ypos)
+  print(p.scores[boss.id].hitstaken,58,ypos)
+  ypos+=16
+ end
+ print("x to restart",45,100,3)
+end
