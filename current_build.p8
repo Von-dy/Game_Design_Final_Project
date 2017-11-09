@@ -379,16 +379,13 @@ function groundmovement(player)
  hbox=player.hitbox
  --manage state
  if state<3 then
-  for i=0,w do 
-   if (solid(x+i,y+9)) then
-    state=0
-    j=0
-    dy=0
-   else 
-    state=1
-    break  
-   end
-  end 
+  if (solid(x,y+9) or solid(x+w,y+9)) then
+   state=0
+   j=0
+   dy=0
+  else 
+   state=1  
+  end
  end
 
  --left
@@ -518,7 +515,7 @@ function groundmovement(player)
  end
 
  --gravity
- if not solid(x,y+h+dy) or solid(x+w,y+h+dy) then
+ if not (solid(x,y+player.h+(dy+ 0.1)) or solid(x+player.w,y+player.h+(dy+0.1))) then
   dy+=0.15
  else
   if j==1 then
