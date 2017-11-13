@@ -110,16 +110,16 @@ end
 
 function stomach_logic(s)
  --first phase
- if s==0 then 
- 
+ if s==0 then
+
  end
  --second phase
- if s==1 then 
- 
+ if s==1 then
+
  end
  --final phase
  if s==2 then
- 
+
  end
 end
 
@@ -127,29 +127,29 @@ end
 function hb_logic(s)
  timer=time()-boss.ct
  t=players[1]
- 
+
  --if all valves destroyed
- if #boss.valves==0 then 
+ if #boss.valves==0 then
   --death animation of boss
   --change game state
   --go to stomach boss
   make_boss(2)
  end
- 
+
  if t.x<=60 then side=0 else side=1 end
- 
+
  --check valve hp
  for v in all(boss.valves) do
   if v.hp<=0 then del(boss.valves,v) end
  end
- 
+
  --if state 0 do nothing until attacked
 	if s==0 then
 	 for v in all(boss.valves) do
 	  if v.hp<50 then s=1 boss.ct=time() end
 	 end
 	end
- 
+
  --if state 1 do clot attacks and valve bursts
  if s==1 then
   --every 5 seconds do a clot attack
@@ -164,7 +164,7 @@ function hb_logic(s)
   if timer%10==0 and boss.av then
    valve_burst(boss.av)
   end
-         
+
   if #boss.valves<=2 then s=2 end
  end
 
@@ -177,11 +177,11 @@ function hb_logic(s)
   --valve burst every 5 seconds
   if timer%5==0 and boss.av then
    valve_burst(boss.av)
-  end         
+  end
   --every 5 seconds do a clot attack
   if timer%5==0 then
    clot_attack(side)
-  end  
+  end
   --every 10 seconds change where flood is coming from
   if timer%6==0 then
    mini_heart()
@@ -242,7 +242,7 @@ function move_bullets()
   --save tokens
   d,x,y,hbox,dia,spd,good=b.d,b.x,b.y,b.hbox,b.dia,b.spd,true
   hx,hy=hbox.x,hbox.y
-  
+
   --bullet collision with player
 		for p in all(players) do
    if p.state~=3 and hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then
@@ -253,31 +253,31 @@ function move_bullets()
     p.scores[boss.id].hitstaken+=1
    end
   end
-  
+
   --if no collide with player
   if good then
 	  --delete bullets
 	  if x>128 or x<0 or y>112 or y<8 or solid(hbox.x,hbox.y) or solid(hbox.x+hbox.w, hbox.y+hbox.h) then del(boss.bullets,b)
 	  else
-	
+
 	  --normal bullet movement
-	  if d==0 then x-=spd hx-=spd 
+	  if d==0 then x-=spd hx-=spd
 	  elseif d==1 then x+=spd hx+=spd
 	  elseif d==2 then y-=spd hy-=spd
 	  elseif d==3 then y+=spd hy+=spd
 	  end
-	
+
 	  --diagonal bullet movement
 	  if d==4 then x-=spd y-=spd hx-=spd hy-=spd
 	  elseif d==5 then x-=spd y+=spd hx-=spd hy+=spd
 	  elseif d==6 then x+=spd y-=spd hx+=spd hy-=spd
 	  elseif d==7 then x+=spd y+=spd hx+=spd hy+=spd
 	  end
-	  
+
 	  --special bullet movement
 	  --mini heart
 	  if d==10 then x-=spd y+=1.5*cos(.5*time()) hx-=spd hy+=1.5*cos(.5*time()) end
-	
+
 	  --update bullet values
 	  b.x=x
 	  b.y=y
@@ -395,9 +395,9 @@ function groundmovement(player)
    state=0
    j=0
    dy=0
-  else 
+  else
    state=1
-  end 
+  end
  end
 
  --left
@@ -407,7 +407,7 @@ function groundmovement(player)
   --move
   if dx > -2 then dx-=0.25 end
  end
- 
+
  --right
  if btn(1,n) then
   if d==0 then d=1 end
@@ -422,20 +422,20 @@ function groundmovement(player)
   end
   if dy > -3 then dy-=0.03 end
  end
- 
+
  --down
  if btn(3,n) then
   --crouch
   state=2
   --crawl (feel free to delete, just set dx=0)
-  if dx~=0 then 
-   dx-=(dx/8) 
+  if dx~=0 then
+   dx-=(dx/8)
    h=3
   end
  else
   h=7
  end
- 
+
  --attack
  if btn(4,n) then
   --start attack if not attacking
@@ -444,7 +444,7 @@ function groundmovement(player)
    a,ac=1,40
   end
  end
- 
+
  --extend hitbox
  if player.a==1 then
   --track position
@@ -491,7 +491,7 @@ function groundmovement(player)
    end
   end
  end
- 
+
  --attack cooldown
  if ac>0 then
   ac-=1
@@ -505,7 +505,7 @@ function groundmovement(player)
    dcl=100
   end
  end
- 
+
  --if invuln
  if state==3 then
   --if the player was dodging
@@ -522,7 +522,7 @@ function groundmovement(player)
    end
   end
  end
- 
+
  --cooldown
  if dcl>0 then
   dcl-=1
@@ -570,9 +570,9 @@ function groundmovement(player)
  if (x<0 or x>122) then
   x=player.x
  end
- 
+
  player.x,player.y,player.dx,player.dy,player.state,player.d,player.w,player.h,player.j,player.a,player.ac,player.dcl,player.dodge,player.dflag=x,y,dx,dy,state,d,w,h,j,a,ac,dcl,dodge,dflag
- player.hitbox=hbox 
+ player.hitbox=hbox
 end
 
 function boss_interaction(id,player)
@@ -580,7 +580,7 @@ function boss_interaction(id,player)
 	 for v in all(boss.valves) do
 	  vhb=v.hbox
 	  local hbp=player.hitbox
-   if hbp.x then 
+   if hbp.x then
 	  if hcollide(hbp.x,hbp.w,hbp.y,hbp.h, vhb.x,vhb.w,vhb.y,vhb.h) then
 	   player.a=2
 	   v.hp-=2
@@ -601,7 +601,7 @@ function music_player(boss,state)
   --no music
   if state==0 then music(-1) end
   --start at track 0
-  if state==1 then music(0) end 
+  if state==1 then music(0) end
  end
  --stomach
  if boss.id==2 then
@@ -610,7 +610,7 @@ end
 
 function boss_logic(id)
  s=boss.state
- if boss.id==1 then 
+ if boss.id==1 then
   hb_logic(s)
   heart_beat()
  end
@@ -659,7 +659,7 @@ end
 
 function update_player_menu(p)
  --selection buttons
-  if p.syringe.ready==false then 
+  if p.syringe.ready==false then
    if btnp(0, p.n) then p.curr_choice-=1 end
    if btnp(1, p.n) then p.curr_choice+=1 end
   end
@@ -690,7 +690,7 @@ function update_game()
    else
     if count==2 then game.state=3 end
    end
-   if p.hp>0 then 
+   if p.hp>0 then
     groundmovement(p)
     boss_interaction(boss.id,p)
     update_player_sprite(p)
@@ -725,7 +725,7 @@ function update_player_sprite(p)
  if p_state==1 then p_s=4 end
  if p_state==2 then p_s=3 end
  --color offset
- if p_state!=3 then 
+ if p_state!=3 then
   if p_c==0 then p_s+=16 end
   if p_c==1 then p_s+=48 end
   --green is the base so no offset is applied
@@ -801,7 +801,7 @@ function draw_syringe(p)
 
  if p.n==0 then x=8 else x=68 end
  --wtf
- spr(7, x, y, 6, 1) 
+ spr(7, x, y, 6, 1)
  spr(10,x+4*8,y,2,1)
  if cc==0 then p_col=2 s_col=8 end
  if cc==1 then p_col=1 s_col=12 end
@@ -847,15 +847,37 @@ function draw_instructions(p)
  if p.n==0 or p.n==1 then y=40 else y=104 end
 
  if p.n==0 then
+  --code for keyboard layout
   print("<- ->=cycle", x+5, y+1)
-  print("x=lock", x+5, y+9)
+  print("z=lock", x+5, y+9)
+  print("controls:", x+5, y+22)
+  print("arrow keys", x+5, y+30)
+  print("z=attack", x+5, y+38)
+  print("x=dodge", x+5, y+46)
+
+  --code for controller layout
+  --print("d-pad=cycle", x+5, y+1)
+  --print("x=lock", x+5, y+9)
+  --print("controls:", x+5, y+22)
+  --print("d-pad=move", x+5, y+30)
+  --print("x=attack", x+5, y+38)
+  --print("o=dodge", x+5, y+46)
  elseif p.n==1 then
-  print("<- ->=cycle", x+5, y+1)
-  print("x=lock", x+5, y+9)
- end
- if p.syringe.ready then
-   print("ready", x+16, y-6, 7)
-  end
+  --code for keyboard layout
+  print("s AND f=cycle", x+5, y+1)
+  print("lshift=lock", x+5, y+9)
+  print("controls:", x+5, y+22)
+  print("e,s,d,f", x+5, y+30)
+  print("lshift=attack", x+5, y+38)
+  print("a=dodge", x+5, y+46)
+
+  --code for controller layout
+  --print("d-pad=cycle", x+5, y+1)
+  --print("x=lock", x+5, y+9)
+  --print("controls:", x+5, y+22)
+  --print("d-pad=move", x+5, y+30)
+  --print("x=attack", x+5, y+38)
+  --print("o=dodge", x+5, y+46)
 end
 
 function draw_game()
@@ -873,7 +895,7 @@ function draw_players()
   local pcol=0
   local scol=0
 
-  if p_cc==0 then 
+  if p_cc==0 then
    pcol=2
    scol=8
   end
@@ -952,12 +974,12 @@ function draw_eyes(m, e_x, e_y, e_r, d, p_col, s_col)
  --base circle
  circfill(e_x, e_y, e_r, 7)
  circfill(r_e_x, e_y, e_r, 7)
- 
+
  --tracking pupils                                  -- sad pupils
  if m<=1 then draw_pupils(e_x, e_y, e_r, d, 0) else draw_pupils(e_x, e_y, e_r, d, 1) end
 
  --angry eyebrows
- if m==1 then 
+ if m==1 then
   --left brow
  line(l_e_x-4, e_y-7, l_e_x+2, e_y-3, p_col)
  line(l_e_x-3, e_y-6, l_e_x+4, e_y-2, p_col)
@@ -967,8 +989,8 @@ function draw_eyes(m, e_x, e_y, e_r, d, p_col, s_col)
  line(r_e_x+3, e_y-6, r_e_x-4, e_y-2, p_col)
  line(r_e_x+3, e_y-5, r_e_x+5, e_y-1, s_col)
  elseif m==2 then -- sad / eyelids
-  for i=0, e_r do 
-   if i==e_r then 
+  for i=0, e_r do
+   if i==e_r then
     line(l_e_x-i, e_y-e_r+i-1, l_e_x+i, e_y-e_r+i-1, p_col)
     line(r_e_x-i, e_y-e_r+i-1, r_e_x+i, e_y-e_r+i-1, p_col)
    else
@@ -987,7 +1009,7 @@ function draw_pupils(c_x, c_y, r, d, m)
  local y=c_y
  local p_y=0
  local p_x=0
- 
+
  if m==0 then --tracking
   for p in all(players) do
    p_y=p.y
@@ -1013,7 +1035,7 @@ function draw_lips(m, x, y, len, p_col, s_col)
    pset(x+i, y-4*sin(i/l), p_col)
    pset(x+i, (y-1)-4*sin(i/l), s_col)
    pset(x+i, (y-2)-4*sin(i/l), s_col)
-   if c!=1 then 
+   if c!=1 then
     pset(x+i, (y-3)-4*sin(i/l), p_col)
    else
     pset(x+i, (y-3)-4*sin(i/l), s_col)
@@ -1025,7 +1047,7 @@ function draw_lips(m, x, y, len, p_col, s_col)
     pset(x+i, y+3*sin(i/l), p_col)
     pset(x+i, (y+1)+3*sin(i/l), s_col)
     pset(x+i, (y+2)+3*sin(i/l), s_col)
-    if c!=1 then 
+    if c!=1 then
      pset(x+i, (y+3)+3*sin(i/l), p_col)
      if i%2==0 and i!=0 then pset(x+i, (y+2)+3*sin(i/l), 7) end
     else
@@ -1489,4 +1511,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
