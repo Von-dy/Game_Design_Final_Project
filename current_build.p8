@@ -1,15 +1,21 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
+
+--change map
+function set_area(x,y)
+ for i=0,15 do
+  for j=0,15 do
+   mset(i,j,mget(i+x,j+y))
+  end
+ end
+end
+
 function _init()
  music(-1)
  sfx(-1)
+ set_area(15,0)
  lbx,z,c=0,0,0 --beat speed,count
- --[[for i=0,16 do
-  for j=0,16 do
-   mset(i,j,0)
-  end
- end]]
  --game object
  game={
    --0=menu, 1=travel, 2=boss, 3=game over, 4=main menu
@@ -48,17 +54,8 @@ function make_boss(n)
  	--make stomach
  	stomach()
  end
- set_area()
+ set_area(16,0)
  scoreboard()
-end
-
---change map
-function set_area()
- for i=0,15 do
-  for j=0,15 do
-   mset(i,j,mget(i+lbx/8,j))
-  end
- end
 end
 
 --create the heart boss
