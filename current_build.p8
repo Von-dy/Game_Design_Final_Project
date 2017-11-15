@@ -27,17 +27,18 @@ function _init()
  players = {}
  --hitscan list
  hitboxes = {}
- boss=generic_boss()
+ boss=generic_boss(0,0,0,100,60,0)
 end
 
 --generic boss class
-function generic_boss()
+function generic_boss(bx,s,h,x,y,id)
+ lbx=bx
  boss={
-  state=0,
-  hp=0,
-  x=100,
-  y=60,
-  id=0,
+  state=s,
+  hp=h,
+  x=x,
+  y=y,
+  id=id,
   hboxes={},
   hitcooldown=0
  }
@@ -65,9 +66,9 @@ end
 
 --create the heart boss
 function heart_boss()
+ boss=generic_boss(256,0,1,1,100,60,1)
  boss.ct=time()
  boss.bullets={}
- lbx,boss.name,boss.state,boss.hp,boss.id=256,"heart",0,1,1
  boss.av={}
  boss.valves={}
  for i=1,4 do
@@ -77,20 +78,21 @@ function heart_boss()
 end
 
 function stomach()
+ boss=generic_boss(384,0,1,100,60,2)
  boss.ct=time()
  boss.bullets={}
  boss.enzymes={}
- lbx,boss.name,boss.state,boss.hp,boss.id,boss.hit=384,"stomach",0,100,2,0
 end
 
 function lungs()
+ boss=generic_boss(0,0,100,100,60,3)
  boss.ct=time()
  boss.hboxes= {}
  lhb,rhb,mhb=makehitbox(30,40,28,56),makehitbox(69,40,28,56),makehitbox(56,8,16,65)
  add(boss.hboxes,lhb)
  add(boss.hboxes,rhb)
  add(boss.hboxes,mhb)
- lbx,lby,boss.name,boss.state,boss.phase,boss.hp,boss.id=0,128,"lungs",0,0,100,3
+ lby=128
 end
 
 --makes the valves for the heart boss
