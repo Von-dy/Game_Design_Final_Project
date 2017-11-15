@@ -84,7 +84,12 @@ end
 
 function lungs()
  boss.ct=time()
- lbx,lby,boss.name,boss.state,boss.hp,boss.id=0,128,"lungs",0,100,3
+ boss.hboxes= {}
+ lhb,rhb,mhb=makehitbox(30,40,28,56),makehitbox(69,40,28,56),makehitbox(56,8,16,65)
+ add(boss.hboxes,lhb)
+ add(boss.hboxes,rhb)
+ add(boss.hboxes,mhb)
+ lbx,lby,boss.name,boss.state,boss.phase,boss.hp,boss.id=0,128,"lungs",0,0,100,3
 end
 
 --makes the valves for the heart boss
@@ -246,6 +251,13 @@ function hb_logic(s)
  if boss.id==1 then
   boss.state=s
  end
+end
+
+--lungs logic
+function lungs_logic(s)
+ timer=time()-boss.ct
+ t=players[1]
+
 end
 
 function wave()
@@ -800,6 +812,17 @@ function boss_interaction(id,player)
 	 end
 	 if fget(mget(player.x/8,player.y/8),4) then player.hp-=1 end
 	end
+ --lungs interaction
+ if id==3 then
+  for hb in all(boss.hboxes) do
+   local hbp=player.hitbox
+   if hbp.x and hcollide(hbp.x,hbp.w,hbp.y,hbp.h,hb.x,hb.w,hb.y,hb.h) then
+    player.a=2
+    boss.hp-=1
+    player.scores[boss.id].hitsgiven+=1
+   end
+  end
+ end
 end
 
 
@@ -829,6 +852,9 @@ function boss_logic(id)
  end
  if boss.id==2 then
   stomach_logic(s)
+ end
+ if boss.id==3 then
+  lungs_logic(s)
  end
  --if phase change
  if s~=boss.state then music_player(boss,boss.state) end
@@ -910,7 +936,7 @@ function update_game()
    else p.x=-20 end
   end
   --determine what boss you are fighting
-  if boss.id==0 then make_boss(1) end
+  if boss.id==0 then make_boss(2) end
   --fighting heart boss
   boss_logic(boss.id)
   update_timers()
@@ -1102,7 +1128,10 @@ function draw_game()
 end
 
 function draw_players()
- print(players[1].scores[boss.id].timer,32,16)
+ --debug stuff
+ print(players[1].scores[boss.id].timer,5,2)
+ print(players[1].x,20,2,7)
+ print(players[1].y,80,2)
  for p in all(players) do
   local p_cc=p.curr_choice
   local p_hb=p.hitbox
@@ -1146,7 +1175,7 @@ function draw_hud(id)
   rectfill(0,4,(hpleft/40)*128,6,10)
  --end heart boss drawing
  end
- 
+ --stomach boss
  if id==2 then
   rectfill(0,4,(9-boss.hit)/9*128,6,10)
  end
@@ -1158,6 +1187,10 @@ function draw_hud(id)
     spr(32,tempx+h*8,120)
    end
   end
+ end
+ --lung boss
+ if id==3 then
+  rectfill(0,4,(boss.hp/10)/9*128,6,10)
  end
  print(boss.state,20,60)
 end
@@ -1208,6 +1241,10 @@ function draw_lungs()
  --right lung
  sspr(82, 66, 13, 28, 71, 40, 26, 56)
  draw_eyes(0, 48, 56, 6, 31, 14, 8)
+ --show hurtboxes (debug)
+ for hb in all(boss.hboxes) do
+  rect(hb.x,hb.y,hb.x+hb.w,hb.y+hb.h)
+ end
 end
 
 --mood, eye_x, eye_y, eye_r, distance, primary color, secondary color
