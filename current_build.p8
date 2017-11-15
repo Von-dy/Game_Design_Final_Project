@@ -38,7 +38,8 @@ function generic_boss()
   x=100,
   y=60,
   id=0,
-  hboxes={}
+  hboxes={},
+  hitcooldown=0
  }
  return boss
 end
@@ -793,7 +794,8 @@ function boss_interaction(id,player)
 	  vhb=v.hbox
 	  local hbp=player.hitbox
    if hbp.x then 
-		  if hcollide(hbp.x,hbp.w,hbp.y,hbp.h, vhb.x,vhb.w,vhb.y,vhb.h) then
+		  if boss.hitcooldown==0 and hcollide(hbp.x,hbp.w,hbp.y,hbp.h, vhb.x,vhb.w,vhb.y,vhb.h) then
+		   boss.hitcooldown=30
 		   player.a=2
 		   v.hp-=2
 	    player.scores[boss.id].hitsgiven+=1
@@ -807,7 +809,8 @@ function boss_interaction(id,player)
 	  ehb=e.hbox
 	  local hbp=player.hitbox
    if hbp.x then 
-		  if hcollide(hbp.x,hbp.w,hbp.y,hbp.h, ehb.x,ehb.w,ehb.y,ehb.h) then
+		  if boss.hitcooldown==0 and hcollide(hbp.x,hbp.w,hbp.y,hbp.h, ehb.x,ehb.w,ehb.y,ehb.h) then
+		   boss.hitcooldown=30
 		   player.a=2
 		   e.state=5
 	    player.scores[boss.id].hitsgiven+=1
@@ -820,7 +823,8 @@ function boss_interaction(id,player)
  if id==3 then
   for hb in all(boss.hboxes) do
    local hbp=player.hitbox
-   if hbp.x and hcollide(hbp.x,hbp.w,hbp.y,hbp.h,hb.x,hb.w,hb.y,hb.h) then
+   if hbp.x and boss.hitcooldown==0 and hcollide(hbp.x,hbp.w,hbp.y,hbp.h,hb.x,hb.w,hb.y,hb.h) then
+    boss.hitcooldown=30
     player.a=2
     boss.hp-=1
     player.scores[boss.id].hitsgiven+=1
@@ -862,6 +866,9 @@ function boss_logic(id)
  end
  --if phase change
  if s~=boss.state then music_player(boss,boss.state) end
+ if boss.hitcooldown>0 then
+  boss.hitcooldown-=1
+ end
 end
 
 function _update60()
