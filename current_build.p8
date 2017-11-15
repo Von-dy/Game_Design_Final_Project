@@ -18,7 +18,7 @@ function _init()
  lbx,lby,z,c=0,0,0,0 --beat speed,count
  --game object
  game={
-   --0=menu, 1=travel, 2=boss, 3=game over, 4=main menu
+   --0=pmenu, 1=travel, 2=boss, 3=game over, 4=main menu
    state=4,
    frame_counter=0,
    playerct=1
@@ -448,7 +448,7 @@ function move_bullets()
 
   --bullet collision with player
 		for p in all(players) do
-   if p.hitcooldown==0 and p.state~=3 and hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then
+   if p.state~=3 and hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then
     p.hp-=1
     del(boss.bullets,b)
     good=false
@@ -723,8 +723,8 @@ function groundmovement(player)
     dy=-0.15
     dodge+=1
    --player was hit
-   --[[elseif player.hitcooldown>0 then
-    player.hitcooldown-=1]]
+   elseif player.hitcooldown>0 then
+    player.hitcooldown-=1
    else
     state,dodge,dflag=1,0,0
    end
@@ -738,7 +738,7 @@ function groundmovement(player)
  if player.hitcooldown>0 then
   player.hitcooldown-=1
  end
- 
+
  --gravity
  if not (solid(x,y+7+(dy+ 0.1)) or solid(x+player.w,y+7+(dy+0.1))) then
   dy+=0.15
@@ -771,8 +771,9 @@ function groundmovement(player)
   dx,dy=0,0
  end
  --ground bounce
- if y>105 then
-  y=104
+ if y>116 then
+  dy=-3.2
+  if player.hitcooldown==0 then player.hp-=1 player.hitcooldown=120 end
  end
  if solid(x,y+7) or solid(x+7,y+7) then
   y-=0.1
