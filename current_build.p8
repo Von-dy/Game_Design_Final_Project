@@ -448,7 +448,7 @@ function move_bullets()
 
   --bullet collision with player
 		for p in all(players) do
-   if p.state~=3 and hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then
+   if p.hitcooldown==0 and p.state~=3 and hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then
     p.hp-=1
     del(boss.bullets,b)
     good=false
@@ -723,8 +723,8 @@ function groundmovement(player)
     dy=-0.15
     dodge+=1
    --player was hit
-   elseif player.hitcooldown>0 then
-    player.hitcooldown-=1
+   --[[elseif player.hitcooldown>0 then
+    player.hitcooldown-=1]]
    else
     state,dodge,dflag=1,0,0
    end
@@ -735,7 +735,10 @@ function groundmovement(player)
  if dcl>0 then
   dcl-=1
  end
-
+ if player.hitcooldown>0 then
+  player.hitcooldown-=1
+ end
+ 
  --gravity
  if not (solid(x,y+7+(dy+ 0.1)) or solid(x+player.w,y+7+(dy+0.1))) then
   dy+=0.15
@@ -936,7 +939,7 @@ function update_game()
    else p.x=-20 end
   end
   --determine what boss you are fighting
-  if boss.id==0 then make_boss(2) end
+  if boss.id==0 then make_boss(3) end
   --fighting heart boss
   boss_logic(boss.id)
   update_timers()
