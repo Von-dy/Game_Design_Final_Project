@@ -791,50 +791,38 @@ function groundmovement(player)
 end
 
 function boss_interaction(id,player)
+ --heart interaction
  if id==1 then
-	 for v in all(boss.valves) do
-	  vhb=v.hbox
-	  local hbp=player.hitbox
-   if hbp.x then 
-		  if boss.hitcooldown==0 and hcollide(hbp.x,hbp.w,hbp.y,hbp.h, vhb.x,vhb.w,vhb.y,vhb.h) then
-		   boss.hitcooldown=30
-		   player.a=2
-		   v.hp-=2
-	    player.scores[boss.id].hitsgiven+=1
-	   end
-	  end
-	 end
-	end
-	--stomach interaction
-	if id==2 then
-	 for e in all(boss.enzymes) do
-	  ehb=e.hbox
-	  local hbp=player.hitbox
-   if hbp.x then 
-		  if boss.hitcooldown==0 and hcollide(hbp.x,hbp.w,hbp.y,hbp.h, ehb.x,ehb.w,ehb.y,ehb.h) then
-		   boss.hitcooldown=30
-		   player.a=2
-		   e.state=5
-	    player.scores[boss.id].hitsgiven+=1
-	   end
-	  end
-	 end
-	 if fget(mget(player.x/8,player.y/8),4) then player.hp-=1 end
-	end
+  for v in all(boss.valves) do
+   if attackcollide(player,v) then v.hp-=1 end
+  end
+ end
+ --stomach interaction
+ if id==2 then
+    for enz in all(boss.enzymes) do
+     if attackcollide(player,enz) then enz.state=5 end
+    end
+  if fget(mget(player.x/8,player.y/8),4) then player.hp-=1 end
+ end
  --lungs interaction
  if id==3 then
   for hb in all(boss.hboxes) do
-   local hbp=player.hitbox
-   if hbp.x and boss.hitcooldown==0 and hcollide(hbp.x,hbp.w,hbp.y,hbp.h,hb.x,hb.w,hb.y,hb.h) then
-    boss.hitcooldown=30
-    player.a=2
-    boss.hp-=1
-    player.scores[boss.id].hitsgiven+=1
-   end
+   if attackcollide(player,hb) then boss.hp-=1 end
   end
  end
 end
 
+function attackcollide(p,hb)
+ local hbp=p.hitbox
+ --check for collision
+ if hbp.x and boss.hitcooldown==0 and hcollide(hbp.x,hbp.w,hbp.y,hbp.h,hb.x,hb.w,hb.y,hb.h) then
+   boss.hitcooldown=30
+   p.a=2
+   p.scores[boss.id].hitsgiven+=1
+   return true
+ end
+ return false
+end
 
 function solid(x,y)
  return fget(mget(x/8,y/8),0)
