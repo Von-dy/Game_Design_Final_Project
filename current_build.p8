@@ -21,7 +21,10 @@ function _init()
    --0=pmenu, 1=travel, 2=boss, 3=game over, 4=main menu
    state=4,
    frame_counter=0,
-   playerct=1
+   playerct=1,
+   screenshake=0,
+   camx=0,
+   camy=0
  }
  --player list
  players = {}
@@ -352,7 +355,7 @@ function move_enzyme(e)
  if x>128 or x<0 or y<0 or y>112 then del(boss.enzymes, e) end
  --delete if hit player
  for p in all(players) do
-  if p.state~=3 and hcollide(hbx,7,hby,7,p.x,p.w,p.y,p.h) then del(boss.enzymes,e) p.hp-=1 end
+  if p.state~=3 and hcollide(hbx,7,hby,7,p.x,p.w,p.y,p.h) then del(boss.enzymes,e) p.hp-=1 game.screenshake=8 end
  end
  
  
@@ -490,6 +493,7 @@ function move_bullets()
     good=false
     p.hitcooldown=120
     p.scores[boss.id].hitstaken+=1
+    game.screenshake=8
    end
   end
 
@@ -669,6 +673,8 @@ function groundmovement(player)
 
  --down
  if btn(3,n) then
+  --temporary: screenshake
+  game.screenshake=5
   --crouch
   state=2
   --crawl (feel free to delete, just set dx=0)
@@ -809,7 +815,7 @@ function groundmovement(player)
  --ground bounce
  if y>116 then
   dy=-3.2
-  if player.hitcooldown==0 then player.hp-=1 player.hitcooldown=120 end
+  if player.hitcooldown==0 then player.hp-=1 player.hitcooldown=120 game.screenshake=8 end
  end
  if solid(x,y+7) or solid(x+7,y+7) then
   y-=0.1
@@ -972,7 +978,7 @@ function update_game()
    else p.x=-20 end
   end
   --determine what boss you are fighting
-  if boss.id==0 then make_boss(2) end
+  if boss.id==0 then make_boss(3) end
   --fighting heart boss
   boss_logic(boss.id)
   update_timers()
@@ -1023,6 +1029,7 @@ end
 function _draw()
  cls()
  map(0,0,0,0,16,16)
+ cameffects()
  if game.state==0 then draw_menu() end
  if game.state==2 then draw_game() end
  if game.state==3 then draw_gameover() end
@@ -1406,6 +1413,17 @@ function draw_gameover()
   ypos+=16
  end
  print("x to restart",45,100,3)
+end
+
+function cameffects(dur)
+ local st=time()
+ if game.screenshake>0 then
+  game.camx,game.camy=rnd(2)-1,rnd(2)-1
+  game.screenshake-=1
+ else
+  game.camx,game.camy=0,0
+ end
+ camera(game.camx,game.camy)
 end
 __gfx__
 00000000000b30000003b0000000000000b33b0000b33b000003b000000770007777777777777777777777777700000000000000000000000000000000000000
