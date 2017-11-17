@@ -17,6 +17,7 @@ function _init()
  set_area(16,0)
  lbx,lby,z,c=0,0,0,0 --beat speed,count
  --game object
+ boss_list={"entrance","heart","stomach","lungs","brain"}
  game={
    --0=pmenu, 1=travel, 2=boss, 3=game over, 4=main menu
    state=4,
@@ -25,7 +26,7 @@ function _init()
    screenshake=0,
    camx=0,
    camy=0,
-   b_remaining={1,2,3}
+   b_remaining={1,2,3} --for testing 
  }
  --player list
  players = {}
@@ -36,19 +37,15 @@ end
 
 function init_overworld()
  set_area(32,16)
- local prev_boss=0
- local next_boss=0
- if overworld then prev_boss=boss.id else prev_boss=0 end
- if #game.b_remaining>0 then
-  next_boss=game.b_remaining[flr(rnd(#game.b_remaining))+1]
-  game.next_boss=next_boss
-  del(game.b_remaining, next_boss)
- else
-  next_boss=4
- end
  --set game state to overworld
  game.state=1
- return {prev_boss, next_boss}
+ if game.prev_boss then game.prev_boss=boss.id else game.prev_boss=0 end
+ if #game.b_remaining!=0 then
+  game.next_boss=game.b_remaining[flr(rnd(#game.b_remaining))+1]
+  del(game.b_remaining, game.next_boss)
+ else
+  next_boss=4 --if all bosses done, run next_boss
+ end
 end
 
 --generic boss class
@@ -68,7 +65,9 @@ end
 
 --determines what boss
 --is being fought based on id (n)
-function make_boss(n)
+function make_boss()
+ game.state=2
+ local n=game.next_boss
  if n==1 then
   --make heart boss
    heart_boss()
@@ -1025,11 +1024,7 @@ function update_menu()
   update_player_menu(p)
   if p.syringe.ready==true then ready_count+=1 end
  end
- if ready_count==#players then 
- --overworld=init_overworld() end
- game.state=2 
- make_boss(3)
- end
+ if ready_count==#players then init_overworld() end
 end
 
 function update_player_menu(p)
@@ -1060,6 +1055,10 @@ function update_overworld()
  for p in all(players) do
   groundmovement(p)
   update_player_sprite(p)
+  --player can interact with shop
+  if p.x>48 and p.x<72 then end
+  --player can interact next boss
+  if p.x>88 and p.x<120 then make_boss() end
  end
 end
 
@@ -1133,10 +1132,6 @@ function _draw()
  cameffects()
  if game.state==0 then draw_menu() end
  if game.state==2 or game.state==1 then draw_game() end
-
- --test code temp
- if game.state==1 then print(game.next_boss, 72, 64) end
-
  if game.state==3 then draw_gameover() end
  if game.state==4 then draw_mainmenu() end
  print(game.state)
@@ -1162,6 +1157,23 @@ function draw_menu()
   draw_syringe(p)
   draw_instructions(p)
  end
+end
+
+function draw_overworld()
+ local prev=game.prev_boss
+ local next=game.next_boss
+ --draw left door
+ circ(16, 98, 12, 2)
+ circfill(16,98,11,8)
+ --draw right door
+ circ(101, 98, 12, 2)
+ circfill(101,98,11,8)
+
+ --spr of sign planks
+
+ --prints for signs
+ print(boss_list[prev+1], 3, 72, 11)
+ print(boss_list[next+1], 88, 72, 11)
 end
 
 function draw_characters(p)
@@ -1274,6 +1286,7 @@ function draw_game()
  draw_players()
  draw_hud(boss.id)
  draw_bullets()
+ if game.state==1 then draw_overworld() end
 end
 
 function draw_players()
