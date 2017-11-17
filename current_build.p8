@@ -40,7 +40,8 @@ function init_overworld()
  local next_boss=0
  if overworld then prev_boss=boss.id else prev_boss=0 end
  if #game.b_remaining>0 then
-  next_boss=game.b_remaining[flr(rnd(#game.b_remaining))-1]
+  next_boss=game.b_remaining[flr(rnd(#game.b_remaining))+1]
+  game.next_boss=next_boss
   del(game.b_remaining, next_boss)
  else
   next_boss=4
@@ -1062,6 +1063,10 @@ function _draw()
  cameffects()
  if game.state==0 then draw_menu() end
  if game.state==2 or game.state==1 then draw_game() end
+
+ --test code temp
+ if game.state==1 then print(game.next_boss, 72, 64) end
+
  if game.state==3 then draw_gameover() end
  if game.state==4 then draw_mainmenu() end
 end
