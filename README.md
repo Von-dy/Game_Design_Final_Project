@@ -23,3 +23,4 @@ Folders and Files:
   - Master Object -> Holds Cunstructors and Make Methods
   - Master Pico8 -> Holds _init(), _update60(), _draw()
   - Master Player -> Holds functions related to player creation and movement. Override of Object for player
+  ** note for debugging ** change line beginning with if ready_count=#players to change game state easily
