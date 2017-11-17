@@ -1,0 +1,93 @@
+-------------------------------------------------------------------------------------------------------------------------
+Play-Testing Notes	11/15/2017
+-------------------------------------------------------------------------------------------------------------------------
+- Feel free to test anything mentioned below, some of these are subjective.
+- Also, some things may have been fixed and went unnoticed when this was uploaded.
+
+-------------------------------------------------------------------------------------------------------------------------
+Overall
+-------------------------------------------------------------------------------------------------------------------------
+- Players are able to attack while crouched and while in the dodge state. If attacking while crouched is wanted, 
+the animation may want to be changed due to the attack coming out from thin air above the player's body.
+
+- Player is able to jump while crouched. Can stay, just wanted to note it.
+
+- Player is able to "save a jump" if they walk of a ledge without jumping. 
+Can stay, if wanted, but just wanted to make a note of it.
+
+- Player can get stuck onthe side of a platform is they keep moving trying towards the platform. 
+This can stay as a feature since we are a virus and don't have work like a person, but still, wanted this noted.
+
+- If player crouches while they are in dodge state, meaning if they dodge, and then crouch while still dodging, 
+the player is taken out of the dodge state and crouches. Can stay if wanted as a way to break out of dodge.
+
+- Invulnerability for when the player is hit. We could either respawn the players when they are hit, 
+or they can just be invulnerable for a few moments.
+
+
+-------------------------------------------------------------------------------------------------------------------------
+Main Menu
+-------------------------------------------------------------------------------------------------------------------------
+- Possibly more instrctions on how to navigatethe menu, such, up and down for selecting between 1 or 2 players, 
+and what key actually selects their option
+
+- Locking in a character no longer shows the "ready" on the selection screen
+
+-Current background menu colors are somewhat clashing with the colors of the words when selecting character.
+
+-------------------------------------------------------------------------------------------------------------------------
+Transitions
+-------------------------------------------------------------------------------------------------------------------------
+- Once you kill the heart, stomach arena is drawn and player is in the ground, 
+slowly moves up to the ground, and fight begins. This is due to the lack of the overworld, 
+or any other form of transition.
+
+-------------------------------------------------------------------------------------------------------------------------
+Heart Boss Fight
+-------------------------------------------------------------------------------------------------------------------------
+- A visual effect showingthat the valve is about to burst with an attack would be helpful to players.
+
+- Heart could use maybe some more health, due to being able to beat it rather quickly. Subjective.
+
+-------------------------------------------------------------------------------------------------------------------------
+Stomach Boss Fight
+-------------------------------------------------------------------------------------------------------------------------
+-Art stuff, aka "beautify" the level
+
+-Boss does not have an idle state, meaning the battle begins instantly.
+
+-Fruit pieces are not being shot directly from the mouth, rather from a upper right part of the boss
+
+- Hard to tell what the player is supposed to do to deal damage. A player will die many times 
+before they figure out that hitting an enzyme above the corresponding fruit will cause damage.
+Not sure about a fix, maybe a visual like the fruit glows when the corresponding enzyme is out.
+
+- Hard to hit the yellow enzyme. Player must jump in order to hit it. 
+Maybe lower the hitbox slightly, or make it fly slightly lower
+
+- Yellow Enzyme also doesn't hit the player when they are standing still. The enzyme goes straight through.
+Just a hitbox issue. The player is capable of being hit by it, by like jumping, but just not moving, the enzyme misses
+
+- Can almost never hit the purple enzyme over the grape due to it starting above the grave, 
+alloting a split second chance of having it fall above the grape. maybe make the enzyme start on the left side
+
+- Similar issue with the red enzyme. It starts over the apple, leaving the player little time to react 
+and hit the enzyme before it teleports elsewhere. Maybe start the red enzyme onthe otherside, 
+or make it go through the same sequence a second or third time to give the player more of a chance to hit it.
+
+- Insta death from falling from the pit is difficult. Could be an issue with the invulnerability. 
+Maybe the player takes a hit and then is free to jump out of the pit, or they fall in the pit, 
+lose a life and then spawn back in. The pillar has the same issue, just an invulnerability thing.
+
+- Stomach only fires fruit pieces at player 1, even after player 1 dies. 
+Once player 1 dies, the stomach fires at the bttom left corner of the level, never at player 2
+
+-Seems like there is a limit to the amount of shots/time this boss has. After hitting stage 2, roughly after a minute 
+or so, the game got harder as expected, shooting more and what not. But then after another 20-30 seconds, the boss 
+stopped shooting fruit pieces and pillars stopped spawning in. It is not a set time thing, I tested waiting out the 
+same time (~100 seconds) in just phase 1, but the fight kept going. Somewhere is a bug with how long it can go on for.
+
+-------------------------------------------------------------------------------------------------------------------------
+Lungs Boss Fight
+-------------------------------------------------------------------------------------------------------------------------
+- 
