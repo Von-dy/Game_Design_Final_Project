@@ -1,0 +1,120 @@
+-------------------------------------------------------------------------------------------------------------------------
+Play-Testing Notes	11/17/2017 (Before Meeting)
+-------------------------------------------------------------------------------------------------------------------------
+- "*-" means it is a new note that has been added, or it is a note that has been updated.
+- As mentioned before, some of these may have been glossed over and have been already fixed, or be subjective.
+
+-------------------------------------------------------------------------------------------------------------------------
+Overall
+-------------------------------------------------------------------------------------------------------------------------
+- Player is able to jump while crouched. Can stay, just wanted to note it.
+
+- Player is able to "save a jump" if they walk of a ledge without jumping. 
+Can stay, if wanted, but just wanted to note it.
+
+- Player can get stuck on the side of a platform is they keep moving trying towards the platform. 
+This can stay as a feature since we are a virus and don't have work like a person, but still, wanted this noted.
+
+- If player crouches while they are in dodge state, meaning if they dodge, and then crouch while still dodging, 
+the player is taken out of the dodge state and crouches. Can stay if wanted as a way to break out of dodge.
+
+*- Crouching causes screen to shake
+
+*- Crouch does not make hitbox smaller
+
+-------------------------------------------------------------------------------------------------------------------------
+Main Menu
+-------------------------------------------------------------------------------------------------------------------------
+- Possibly more instructions on how to navigate the menu, such, up and down for selecting between 1 or 2 players, 
+and what key actually selects their option
+
+- Locking in a character no longer shows the "ready" on the selection screen
+
+- Current background menu colors are somewhat clashing with the colors of the words when selecting character.
+
+*- For some reason, number of player choice shows "8 players" instead of 2, despite the code being written for "2".
+
+*- When 1 player is selected, dodge button shows "8=dodge" rather than "x=dodge", despite being coded correctly.
+When 2 players is chosen, this problem occurs on the instruction for plaer 2, but player 1's instruction are right.
+
+
+-------------------------------------------------------------------------------------------------------------------------
+Transitions
+-------------------------------------------------------------------------------------------------------------------------
+*- When a boss is beat, the boss will stay drawn on the screen, into the overworld, and the screen change is instant, 
+so maybe, as we mentioned before, create some form of death animation, to clear the boss off, then enter the overworld
+
+
+-------------------------------------------------------------------------------------------------------------------------
+Game Over
+-------------------------------------------------------------------------------------------------------------------------
+*- Similar to the main menu issue, the instructions for retrying shows what looks like an 8 but missing a pixel, 
+so it looks almost like a 3. It should show an "x".
+
+*- Retrying after player dies currently reloads the entire game from the start. Do we want to implement a checkpoint
+system, allowing a player to restart from current boss? However, his would make the game much easier, allowing for 
+players to have unlmited lives, so there is no reason to try their best to stay alive. Just a thought about this.
+
+
+-------------------------------------------------------------------------------------------------------------------------
+OverWorld
+-------------------------------------------------------------------------------------------------------------------------
+*- Stomach boss entrance from overworld lands player into a pit, which causes instant death
+
+
+-------------------------------------------------------------------------------------------------------------------------
+Heart Boss Fight
+-------------------------------------------------------------------------------------------------------------------------
+- A visual effect showing that the valve is about to burst with an attack would be helpful to players.
+
+- Heart could use maybe some more health, due to being able to beat it rather quickly. Subjective.
+
+-------------------------------------------------------------------------------------------------------------------------
+Stomach Boss Fight
+-------------------------------------------------------------------------------------------------------------------------
+- Boss does not have an idle state, meaning the battle begins instantly.
+
+- Fruit pieces are not being shot directly from the mouth, rather from a upper right part of the boss
+
+- Hard to tell what the player is supposed to do to deal damage. A player will die many times 
+before they figure out that hitting an enzyme above the corresponding fruit will cause damage.
+Not sure about a fix, maybe a visual like the fruit glows when the corresponding enzyme is out.
+
+- Hard to hit the yellow enzyme. Player must jump in order to hit it. 
+Maybe lower the hitbox slightly, or make it fly slightly lower.
+
+- Yellow Enzyme also doesn't hit the player when they are standing still. The enzyme goes straight through.
+Just a hitbox issue. The player is capable of being hit by it, by like jumping, but just not moving, the enzyme misses
+
+- Can almost never hit the purple enzyme over the grape due to it starting above the grave, 
+alloting a split second chance of having it fall above the grape. maybe make the enzyme start on the left side
+
+- Similar issue with the red enzyme. It starts over the apple, leaving the player little time to react 
+and hit the enzyme before it teleports elsewhere. Maybe start the red enzyme onthe otherside, 
+or make it go through the same sequence a second or third time to give the player more of a chance to hit it.
+
+*- Insta death from falling from the pit is difficult. This should be treated just as how the lung battle is 
+
+*- Stomach only fires fruit pieces at player 1. Once player 1 dies, the stomach fires at the bottom left corner of 
+the level, never at player 2.
+
+- Seems like there is a limit to the amount of shots/time this boss has. After hitting stage 2, roughly after a minute 
+or so, the game got harder as expected, shooting more and what not. But then after another 20-30 seconds, the boss 
+stopped shooting fruit pieces and pillars stopped spawning in. It is not a set time thing, I tested waiting out the 
+same time (~100 seconds) in just phase 1, but the fight kept going. Somewhere is a bug with how long it can go on for.
+
+*- Pillars that come out of the pits no longer come up, they seem to be going down into the ground.
+Could just be the equation used to move them.
+
+*- Player is can walk "off the fruit platform" which appears as floating above the ground. We can either try to make 
+collision more accurate to the actual fruit, or make the ground level with the fruit so there is no "floating".
+
+-------------------------------------------------------------------------------------------------------------------------
+Lungs Boss Fight
+-------------------------------------------------------------------------------------------------------------------------
+*- Player will randomnly take damage. Not debris hitting him.
+
+*- The blow/suck can cause a player to get stuck in the side of a wall/platform, which then causes the player to slowly 
+move through the corner until the player is on top of the platform/ground.
+
+*-
