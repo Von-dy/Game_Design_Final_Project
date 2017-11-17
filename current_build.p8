@@ -109,7 +109,8 @@ end
 
 function lungs()
  boss=generic_boss(0,0,100,100,60,3)
- boss.ct,boss.d=time(),3
+ boss.ct,boss.d,boss.blow=time(),3,0
+ boss.bullets={}
  boss.hboxes= {}
  lhb,rhb,mhb=makehitbox(30,40,28,56),makehitbox(69,40,28,56),makehitbox(56,8,16,65)
  add(boss.hboxes,lhb)
@@ -117,7 +118,6 @@ function lungs()
  add(boss.hboxes,mhb)
  lby=128
 end
-
 --makes the valves for the heart boss
 function make_valve(n)
  lx,ly=86,28
@@ -206,8 +206,9 @@ function stomach_logic(s)
  end
  for w in all(boss.hboxes) do
   if w.h<=0 then del(boss.hboxes,w)
-  elseif time()-w.spawn_time<5 then w.h+=7
-  elseif time()-w.spawn_time>5 then w.h-=7
+  elseif time()-w.spawn_time<2 then w.h=2
+  elseif time()-w.spawn_time<5 then w.h+=.2
+  elseif time()-w.spawn_time>5 then w.h-=.2
   end
  end
  boss.state=s
@@ -296,41 +297,106 @@ function lungs_logic(s)
   s=0
  end
  if boss.hp<100 and boss.hp>66 then 
-  if timer%15==0 then
-   boss.d=flr(rnd(3))
-  end
-  if timer%25==0 then
-   boss.d=3
+  s=1
+  if timer%10==0 then
+   local d=flr(rnd(4))
+   while d==boss.d do
+    d=flr(rnd(4))
+   end
+   boss.d=d
   end
  end
+ if boss.hp<=66 and boss.hp>33 then
+  s=2
+  if timer%8==0 then
+   local d=flr(rnd(4))
+   while d==boss.d do
+    d=flr(rnd(4))
+   end
+   boss.d=d
+  end
+  if timer%10==6 then
+   boss.safe_space=safespace()
+  end
+  if timer%10==0 then
+   if boss.safe_space then
+    ss=boss.safe_space
+    for p in all(players) do
+     if (p.x<ss.x1 or p.x+p.w>ss.x2 or p.y<ss.y1 or p.y>ss.y2) then
+      p.hp-=1
+      p.hitcooldown=100
+     end
+    end
+    boss.safe_space={}
+   end
+  end
+ end
+ 
+ if boss.hp>0 then
+  if timer%2==0 then
+  	spawn_debris()
+  end
+ end
+ for b in all(boss.bullets) do
+  b.d=boss.d
+ end
+ move_bullets()
  blow(boss.d)
  boss.state=s
- --added for overworld
- if boss.hp<=0 then init_overworld() end
+end
+
+function safespace()
+ local id=flr(rnd(4))
+ local safe_space=make_ss(10,22,68,80)
+ if id==1 then
+  safe_space=make_ss(38,50,100,112)
+ end
+ if id==2 then
+  safe_space=make_ss(94,106,100,112)
+ end
+ if id==3 then
+  safe_space=make_ss(106,118,68,80)
+ end
+ --safe_space={x1=x1,x2=x2,y1=y1,y2=y2}
+ return safe_space
+end
+
+function make_ss(x1,x2,y1,y2)
+ safe_space={x1=x1,x2=x2,y1=y1,y2=y2}
+ return safe_space
+end
+
+function spawn_debris()
+ local tile={x=0,y=rnd(56)+48}
+ if boss.d==0 then tile.x=128 end
+ local c=make_bullet(tile,boss.d,48)
+ c.spd=.2
+ add(boss.bullets,c)
 end
 
 function blow(d)
  for p in all(players) do
   --left
   if d==0 then
-   if p.x>1 then p.x-=.1 end
+   if p.x>1 and not solid(p.x+.1,p.y) then p.x-=.1 end
   end
   --right
   if d==1 then
-   if p.x<119 then p.x+=.1 end
+   if p.x<119 and not solid(p.x-.1,p.y) then p.x+=.1 end
   end
   --center
   if d==2 then
-   if p.x>=64 then p.x-=.1 else
-   p.x+=.1 end
+   if p.x>=64 and not solid(p.x-.1,p.y) then p.x-=.1 
+   elseif not solid(p.x+.1,p.y) then p.x+=.1 end
   end
  end
 end
 
 function wave()
  --which pit to spawn from
+ local side=flr(rnd(2))
  local x=32
- local y=104
+ local y=112
  if side==1 then x=96 end
  local w=makehitbox(x,y,8,1)
  w.spawn_time=time()
@@ -510,7 +576,7 @@ function move_bullets()
 
   --bullet collision with player
   for p in all(players) do
-   if p.state~=3 and hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then
+   if p.hitcooldown==0 and p.state~=3 and hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y,p.h) then
     p.hp-=1
     del(boss.bullets,b)
     good=false
@@ -959,7 +1025,11 @@ function update_menu()
   update_player_menu(p)
   if p.syringe.ready==true then ready_count+=1 end
  end
- if ready_count==#players then overworld=init_overworld() end
+ if ready_count==#players then 
+ --overworld=init_overworld() end
+ game.state=2 
+ make_boss(3)
+ end
 end
 
 function update_player_menu(p)
@@ -1069,6 +1139,7 @@ function _draw()
 
  if game.state==3 then draw_gameover() end
  if game.state==4 then draw_mainmenu() end
+ print(game.state)
 end
 
 function draw_mainmenu()
