@@ -11,6 +11,17 @@ function set_area(x,y)
  end
 end
 
+function make_attack(fun,t1,t2,t3,t4)
+	local a={
+		fun=fun,
+	 t1=t1,
+	 t2=t2,
+	 t3=t3,
+	 t4=t4
+	}
+	add(boss.attacks,a)
+end
+
 function _init()
  music(-1)
  sfx(-1)
@@ -41,7 +52,8 @@ function init_overworld()
  game.state=1
  if game.prev_boss then game.prev_boss=boss.id else game.prev_boss=0 end
  if #game.b_remaining!=0 then
-  game.next_boss=game.b_remaining[flr(rnd(#game.b_remaining))+1]
+  game.next_boss=2
+  --game.b_remaining[flr(rnd(#game.b_remaining))+1]
   del(game.b_remaining, game.next_boss)
  else
   next_boss=4 --if all bosses done, run next_boss
@@ -58,6 +70,8 @@ function generic_boss(bx,s,h,x,y,id)
   y=y,
   id=id,
   hboxes={},
+  attacks={},
+  bullets={},
   hitcooldown=0
  }
  return boss
@@ -71,7 +85,6 @@ function make_boss()
  if n==1 then
   --make heart boss
    heart_boss()
-   
  end
  if n==2 then
   --make stomach
@@ -89,21 +102,30 @@ end
 function heart_boss()
  boss=generic_boss(256,0,1,100,60,1)
  boss.ct=time()
- boss.bullets={}
  boss.av={}
  boss.valves={}
  for i=1,4 do
   v=make_valve(i)
   add(boss.valves,v)
  end
+ make_attack(clot_attack,10,0,5,0)
+ make_attack(vb,10,7,10,8)
+ make_attack(valve_burst,10,0,10,0)
+ make_attack(mini_heart,999,0,6,0)
 end
 
 function stomach()
- boss=generic_boss(384,0,1,100,60,2)
- boss.hit=0
+ boss=generic_boss(384,0,9,100,60,2)
  boss.ct=time()
- boss.bullets={}
  boss.enzymes={}
+ boss.hurtboxes={}
+ for p in all(players) do
+  p.x=10
+  p.y=90
+ end
+ make_attack(wave,10,0,10,0)
+ make_attack(spawn_food,8,0,4,0)
+ make_attack(spawn_enzyme,11,0,11,0)
 end
 
 function lungs()
@@ -116,7 +138,12 @@ function lungs()
  add(boss.hboxes,rhb)
  add(boss.hboxes,mhb)
  lby=128
+ make_attack(change_direction,10,0,10,0)
+ make_attack(spawn_debris,3,0,2,0)
+ make_attack(safespace,999,0,10,6)
+ make_attack(hurt_space,999,0,10,0)
 end
+
 --makes the valves for the heart boss
 function make_valve(n)
  lx,ly=86,28
@@ -149,65 +176,23 @@ function make_bullet(o,d,sp)
 end
 
 function stomach_logic(s)
- timer=time()-boss.ct
- t=players[1]
- if boss.hit<=3 then s=0 end
- if boss.hit>3 and boss.hit<7 then s=1 end
- if boss.hit>=7 and boss.hit<9 then s=2 end
- if boss.hit==9 then 
+ if boss.hp<10 then s=0 end
+ if boss.hp>=5 then s=1 end
+ if boss.hp<5 then s=2 end
+ 
+ if boss.hp==0 then 
   --kill boss
  end
-  --first phase
- if s==0 then
-  --spawn wave every six seconds
-  if timer%10==0 then
-   wave()
-  end
-  if timer%8==0 then 
-   spawn_food(t)
-  end
-  if timer%11==0 then 
-   local i=flr(rnd(3))+1
-   spawn_enzyme(i)
-  end
- end
- --second phase
- if s==1 then 
-  if timer%10==0 then
-   wave()
-  end
-  if timer%4==0 then 
-   spawn_food(t)
-  end
-  if timer%11==0 then 
-   local i=flr(rnd(3))+1
-   spawn_enzyme(i)
-  end
- end
- --final phase
- if s==2 then
-  if timer%10==0 then
-    wave()
-  end
-  if timer%4==0 then 
-   spawn_food(t)
-  end
-  if timer%11==0 then 
-   local i=flr(rnd(2))
-   if i==0 then i=3 end
-   spawn_enzyme(i)
-  end
- end
  
- move_bullets()
  for e in all(boss.enzymes) do 
   move_enzyme(e)
  end
- for w in all(boss.hboxes) do
+
+ for w in all(boss.hurtboxes) do
   if w.h<=0 then del(boss.hboxes,w)
   elseif time()-w.spawn_time<2 then w.h=2
-  elseif time()-w.spawn_time<5 then w.h+=.2
-  elseif time()-w.spawn_time>5 then w.h-=.2
+  elseif time()-w.spawn_time<5 then w.h+=.2 w.y-=.2
+  elseif time()-w.spawn_time>5 then w.h-=.2 w.y+=.2
   end
  end
  boss.state=s
@@ -218,130 +203,58 @@ end
 
 --determining what the heart boss does based on state
 function hb_logic(s)
- timer=time()-boss.ct
- t=players[1]
 
  --if all valves destroyed
  if #boss.valves==0 then
-  --death animation of boss
-  --change game state
-  --go to stomach boss
   init_overworld() --added for overworld
  end
-
- if t.x<=60 then side=0 else side=1 end
-
+ 
  --check valve hp
  for v in all(boss.valves) do
+  if v.hp<10 then s=1 end
   if v.hp<=0 then del(boss.valves,v) end
  end
 
- --if state 0 do nothing until attacked
- if s==0 then
-  for v in all(boss.valves) do
-   if v.hp<10 then s=1 boss.ct=time() end
-  end
- end
-
- --if state 1 do clot attacks and valve bursts
- if s==1 then
-  --every 5 seconds do a clot attack
-  if timer%5==0 then
-   clot_attack(side)
-  end
-  --every 8 seconds find what valve will burst
-  if timer%10==8 then
-   boss.av=vb()
-  end
-  --every 10 seconds start a new valve burst volley
-  if timer%10==0 and boss.av then
-   valve_burst(boss.av)
-  end
-
-  if #boss.valves<=2 then s=2 end
- end
-
- --if in state 2 then do flood attack and streams
- if s==2 then
-  --determine what valve will burst every 4 seconds
-  if timer%5==4 then
-   boss.av=vb()
-  end
-  --valve burst every 5 seconds
-  if timer%5==0 and boss.av then
-   valve_burst(boss.av)
-  end
-  --every 5 seconds do a clot attack
-  if timer%5==0 then
-   clot_attack(side)
-  end
-  --every 10 seconds change where flood is coming from
-  if timer%6==0 then
-   mini_heart()
-  end
- end
- --move whatever bullets have been shot
- move_bullets()
- --update boss state
- if boss.id==1 then
-  boss.state=s
- end
+ if #boss.valves<3 then s=2 end
+ 
+ boss.state=s
 end
 
 --lungs logic
 function lungs_logic(s)
- timer=time()-boss.ct
- t=players[1]
- if boss.hp==100 then
-  s=0
- end
- if boss.hp<100 and boss.hp>66 then 
-  s=1
-  if timer%10==0 then
-   local d=flr(rnd(4))
-   while d==boss.d do
-    d=flr(rnd(4))
-   end
-   boss.d=d
-  end
- end
- if boss.hp<=66 and boss.hp>33 then
-  s=2
-  if timer%8==0 then
-   local d=flr(rnd(4))
-   while d==boss.d do
-    d=flr(rnd(4))
-   end
-   boss.d=d
-  end
-  if timer%10==6 then
-   boss.safe_space=safespace()
-  end
-  if timer%10==0 then
-   if boss.safe_space then
-    ss=boss.safe_space
-    for p in all(players) do
-     if (p.x<ss.x1 or p.x+p.w>ss.x2 or p.y<ss.y1 or p.y>ss.y2) then
-      p.hp-=1
-      p.hitcooldown=100
-     end
-    end
-    boss.safe_space={}
-   end
-  end
- end
+ if boss.hp==100 then s=0 end
  
- if boss.hp>0 then
-  if timer%2==0 then
-  	spawn_debris()
-  end
- end
+ if boss.hp<100 then s=1 end
+ 
+ if boss.hp<=66 then s=2 end 
+
  for b in all(boss.bullets) do
   b.d=boss.d
  end
- move_bullets()
+
  blow(boss.d)
  boss.state=s
+end
+
+function hurt_space()
+ if boss.safe_space then
+  local ss=boss.safe_space
+  for p in all(players) do
+   if (p.x<ss.x1 or p.x+p.w>ss.x2 or p.y<ss.y1 or p.y>ss.y2) then
+     p.hp-=1
+     p.hitcooldown=100
+   end
+  end
+  del(boss,safe_space)
+ end
+end
+
+function change_direction()
+ local direction=flr(rnd(4))
+ while direction==boss.d do
+  direction=flr(rnd(4))
+ end
+ boss.d=direction
 end
 
 function safespace()
@@ -357,7 +270,7 @@ function safespace()
   safe_space=make_ss(106,118,68,80)
  end
  --safe_space={x1=x1,x2=x2,y1=y1,y2=y2}
- return safe_space
+ boss.safe_space=safe_space
 end
 
 function make_ss(x1,x2,y1,y2)
@@ -399,10 +312,11 @@ function wave()
  if side==1 then x=96 end
  local w=makehitbox(x,y,8,1)
  w.spawn_time=time()
- add(boss.hboxes,w)
+ add(boss.hurtboxes,w)
 end
 
-function spawn_food(t)
+function spawn_food()
+ local t=players[1]
  local sprite=195
  if flr(rnd(2))==1 then sprite=196 end
  local b=make_bullet(boss,13,sprite)
@@ -419,19 +333,24 @@ function food_angle(b)
  return atan2(dx,dy)
 end
 
-function spawn_enzyme(i)
- sp=199
+function spawn_enzyme()
+ local i=flr(rnd(3))+1
+ if boss.state==2 then 
+  i=flr(rnd(2)) 
+  if i==0 then i=3 end
+ end
+ local sp=199
  if i==2 then sp=201 end
  if i==3 then sp=200 end
  e={
- x=120,
- y=8,
- id=i,
- spd=1,
- sprite=sp,
- hbox=makehitbox(120,0,7,7),
- state=0,
- spawn=time(),
+	 x=120,
+	 y=8,
+	 id=i,
+	 spd=1,
+	 sprite=sp,
+	 hbox=makehitbox(120,0,7,7),
+	 state=0,
+	 spawn=time(),
  }
  add(boss.enzymes,e)
 end
@@ -445,7 +364,6 @@ function move_enzyme(e)
  for p in all(players) do
   if p.state~=3 and hcollide(hbx,7,hby,7,p.x,p.w,p.y,p.h) then del(boss.enzymes,e) p.hp-=1 game.screenshake=8 end
  end
- 
  
  --move first enzyme horizontally until it matches with player
  if id==1 then
@@ -465,7 +383,7 @@ function move_enzyme(e)
    hbx=-10
    hby=-10
    if y==112 then 
-    if x>104 then boss.hit+=1 end
+    if x>104 then boss.hp-=1 end
     del(boss.enzymes,e)
    end
   end
@@ -488,7 +406,7 @@ function move_enzyme(e)
    hbx=-10 
    hby=-10
    if y==112 then 
-    if x>48 and x<88 then boss.hit+=1 end
+    if x>48 and x<88 then boss.hp-=1 end
     del(boss.enzymes,e)
    end
   end 
@@ -505,17 +423,12 @@ function move_enzyme(e)
    hbx=-10
    hby=-10
    if y==112 then 
-    if x<24 then boss.hit+=1 end
+    if x<24 then boss.hp-=1 end
     del(boss.enzymes,e)
    end
   end
   if state~=5 then
-   if (time()-e.spawn)%3==0 then state+=1 end
-   if (time()-e.spawn)%8+1==0 then
-    for i=0,1 do
-     add(boss.bullets,make_bullet(e,i,48))
-    end
-   end 
+   if (time()-e.spawn)%3==0 then state+=1 end 
   end
  end
  --update vals
@@ -524,8 +437,9 @@ function move_enzyme(e)
 end
 
 --rain clots of blood on one side of screen
-function clot_attack(side)
+function clot_attack()
  --generate where bullets will spawn
+ local side=flr(rnd(2))
  for i=0,64,8 do
   tile={x=i,y=8}
   if side==1 then tile.x+=64 end
@@ -546,20 +460,23 @@ function vb()
  id=ids[selector]
  --find which valve is the active one
  for v in all(boss.valves) do
-  if id==v.id then v.sprite=1 return v end
+  if id==v.id then v.sprite=1 boss.av=v end
  end
 end
 
 --shoot a mini heart across the screen
 function mini_heart()
- local y=flr(rnd(104))+8
- tile={x=128, y=y}
- add(boss.bullets,make_bullet(tile,10,23))
+ for i=0,3 do
+	 local y=flr(rnd(104))+8
+	 tile={x=128, y=y}
+	 add(boss.bullets,make_bullet(tile,10,23))
+ end
 end
 
 --for a valve, shoot a
 --burst of bullets out
-function valve_burst(v)
+function valve_burst()
+ local v=boss.av
  v.sprite=16
  --make 8 bullets, 4 diagonals 4 straight
  for i=0,7 do
@@ -927,11 +844,14 @@ function boss_interaction(id,player)
  end
  --stomach interaction
  if id==2 then
-    for enz in all(boss.enzymes) do
-     ehb=enz.hbox
-     if attackcollide(player,ehb) then enz.state=5 end
-    end
-  if fget(mget(player.x/8,player.y/8),4) then player.hp-=1 end
+  for enz in all(boss.enzymes) do
+   ehb=enz.hbox
+   if attackcollide(player,ehb) then enz.state=5 end
+  end
+  if player.hitcooldown==0 and fget(mget(player.x/8,player.y/8),4) then player.hp-=1 player.hitcooldown=60 end
+  for wave in all(boss.hurtboxes) do
+   if player.hitcooldown==0 and hcollide(player.x,player.w,player.y,player.h,wave.x,wave.w,wave.y,wave.h) then player.hp-=1 player.hitcooldown=60 end
+  end
  end
  --lungs interaction
  if id==3 then
@@ -972,6 +892,9 @@ function music_player(boss,state)
 end
 
 function boss_logic(id)
+ timer=time()-boss.ct+1
+ t=players[1]
+
  s=boss.state
  if boss.id==1 then
   hb_logic(s)
@@ -983,6 +906,22 @@ function boss_logic(id)
  if boss.id==3 then
   lungs_logic(s)
  end
+ 
+ --do attacks
+ for a in all(boss.attacks) do
+  --what boss phase
+  if boss.state==1 then
+   if timer%a.t1==a.t2 then
+    a.fun()
+   end
+  end
+  if boss.state==2 then
+   if timer%a.t3==a.t4 then
+    a.fun()
+   end
+  end
+ end
+ move_bullets()
  --if phase change
  if s~=boss.state then music_player(boss,boss.state) end
  if boss.hitcooldown>0 then
@@ -1134,7 +1073,7 @@ function _draw()
  if game.state==2 or game.state==1 then draw_game() end
  if game.state==3 then draw_gameover() end
  if game.state==4 then draw_mainmenu() end
- print(game.state)
+ --print(game.state)
 end
 
 function draw_mainmenu()
@@ -1339,7 +1278,7 @@ function draw_hud(id)
  end
  --stomach boss
  if id==2 then
-  rectfill(0,4,(9-boss.hit)/9*128,6,10)
+  rectfill(0,4,(boss.hp)/9*128,6,10)
  end
  for p in all(players) do
   tempx=10
@@ -1354,7 +1293,7 @@ function draw_hud(id)
  if id==3 then
   rectfill(0,4,(boss.hp/100)*128,6,10)
  end
- print(boss.state,20,60)
+ print(#boss.attacks,100,60)
 end
 
 function draw_boss()
@@ -1362,7 +1301,7 @@ function draw_boss()
  if boss.id==2 then draw_stomach() 
   draw_food() 
   draw_enzymes() 
-  for w in all(boss.hboxes) do
+  for w in all(boss.hurtboxes) do
    rect(w.x,w.y,w.x+w.w,w.y+w.h,4)
   end
  end
