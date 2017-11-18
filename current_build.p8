@@ -52,8 +52,8 @@ function init_overworld()
  game.state=1
  if game.prev_boss then game.prev_boss=boss.id else game.prev_boss=0 end
  if #game.b_remaining!=0 then
-  game.next_boss=2
-  --game.b_remaining[flr(rnd(#game.b_remaining))+1]
+  --game.next_boss=2
+  game.next_boss=game.b_remaining[flr(rnd(#game.b_remaining))+1]
   del(game.b_remaining, game.next_boss)
  else
   next_boss=4 --if all bosses done, run next_boss
@@ -72,7 +72,8 @@ function generic_boss(bx,s,h,x,y,id)
   hboxes={},
   attacks={},
   bullets={},
-  hitcooldown=0
+  hitcooldown=0,
+  ct=time()
  }
  return boss
 end
@@ -101,7 +102,6 @@ end
 --create the heart boss
 function heart_boss()
  boss=generic_boss(256,0,1,100,60,1)
- boss.ct=time()
  boss.av={}
  boss.valves={}
  for i=1,4 do
@@ -116,7 +116,6 @@ end
 
 function stomach()
  boss=generic_boss(384,0,9,100,60,2)
- boss.ct=time()
  boss.enzymes={}
  boss.hurtboxes={}
  for p in all(players) do
@@ -130,7 +129,7 @@ end
 
 function lungs()
  boss=generic_boss(0,0,100,100,60,3)
- boss.ct,boss.d,boss.blow=time(),3,0
+ boss.d,boss.blow=3,0
  boss.bullets={}
  boss.hboxes= {}
  lhb,rhb,mhb=makehitbox(30,40,28,56),makehitbox(69,40,28,56),makehitbox(56,8,16,65)
@@ -152,7 +151,7 @@ function make_valve(n)
  if n==4 then lx=110 ly=100 end
  valve={
  id=n,
- hp=10,
+ hp=30,
  x=lx,
  y=ly,
  sprite=16,
@@ -211,7 +210,7 @@ function hb_logic(s)
  
  --check valve hp
  for v in all(boss.valves) do
-  if v.hp<10 then s=1 end
+  if v.hp<30 then s=1 end
   if v.hp<=0 then del(boss.valves,v) end
  end
 
@@ -240,7 +239,7 @@ function hurt_space()
  if boss.safe_space then
   local ss=boss.safe_space
   for p in all(players) do
-   if (p.x<ss.x1 or p.x+p.w>ss.x2 or p.y<ss.y1 or p.y>ss.y2) then
+   if p.hitcooldown==0 and (p.x<ss.x1 or p.x+p.w>ss.x2 or p.y<ss.y1 or p.y>ss.y2) then
      p.hp-=1
      p.hitcooldown=100
    end
@@ -259,15 +258,15 @@ end
 
 function safespace()
  local id=flr(rnd(4))
- local safe_space=make_ss(10,22,68,80)
+ local safe_space=make_ss(8,24,66,80)
  if id==1 then
-  safe_space=make_ss(38,50,100,112)
+  safe_space=make_ss(36,52,98,112)
  end
  if id==2 then
-  safe_space=make_ss(94,106,100,112)
+  safe_space=make_ss(92,108,98,112)
  end
  if id==3 then
-  safe_space=make_ss(106,118,68,80)
+  safe_space=make_ss(104,120,66,80)
  end
  --safe_space={x1=x1,x2=x2,y1=y1,y2=y2}
  boss.safe_space=safe_space
@@ -317,6 +316,7 @@ end
 
 function spawn_food()
  local t=players[1]
+ if t.hp==0 then t=players[2] end
  local sprite=195
  if flr(rnd(2))==1 then sprite=196 end
  local b=make_bullet(boss,13,sprite)
@@ -752,13 +752,18 @@ function groundmovement(player)
   ac-=1
  end
 
- --dodge
- if btn(5,n) then
-  if dcl==0 then
-   dflag=1
-   state=3
-   dcl=100
-  end
+ --interact
+ if btnp(5,n) then
+  if game.state~=1 then
+	  --dodge
+	  if dcl==0 then
+	   dflag=1
+	   state=3
+	   dcl=100
+	  end
+	 else
+	  if dflag==0 then dflag=1 else dflag=0 end
+	 end
  end
 
  --if invuln
@@ -991,13 +996,17 @@ function update_player_menu(p)
 end
 
 function update_overworld()
+ local count=0
  for p in all(players) do
   groundmovement(p)
   update_player_sprite(p)
   --player can interact with shop
   if p.x>48 and p.x<72 then end
   --player can interact next boss
-  if p.x>88 and p.x<120 then make_boss() end
+  if p.x>88 and p.x<120 then 
+   if p.dflag==1 then count+=1 end
+   if count==#players then make_boss() end
+  end
  end
 end
 
@@ -1273,7 +1282,7 @@ function draw_hud(id)
   for v in all(boss.valves) do
    hpleft+=v.hp
   end
-  rectfill(0,4,(hpleft/40)*128,6,10)
+  rectfill(0,4,(hpleft/120)*128,6,10)
  --end heart boss drawing
  end
  --stomach boss
@@ -1293,7 +1302,7 @@ function draw_hud(id)
  if id==3 then
   rectfill(0,4,(boss.hp/100)*128,6,10)
  end
- print(#boss.attacks,100,60)
+ --print(#boss.attacks,100,60)
 end
 
 function draw_boss()
@@ -1305,7 +1314,13 @@ function draw_boss()
    rect(w.x,w.y,w.x+w.w,w.y+w.h,4)
   end
  end
- if boss.id==3 then draw_lungs() end
+ if boss.id==3 then 
+  draw_lungs() 
+  if boss.safe_space then
+   ss=boss.safe_space
+   rect(ss.x1,ss.y1,ss.x2,ss.y2,3)
+  end 
+ end
  --if boss.id==4 then draw_brain() end
 end
 
@@ -1317,11 +1332,11 @@ end
 
 function draw_food()
  --apple
- sspr(8,96,16,16,0,104,24,16)
+ sspr(8,96,16,16,0,112,24,16)
  --plum
- sspr(8,112,8,8,112,104,16,16)
+ sspr(8,112,8,8,112,112,16,16)
  --banana
- sspr(24,104,16,16,56,104,24,16,false,true)
+ sspr(24,104,16,16,56,112,24,16,false,true)
 end
 
 function draw_heart()
@@ -1754,7 +1769,7 @@ __label__
 88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
 
 __gff__
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010100010101011010000010010101000000000000000000000000000000000101101000100100000000000000000001010101000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010100010101011010000010010001000000000000000000000000000000000101101000100100000000000000000001010101000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
 2929292929292929292929292929292940404040404040404040404040404040414141414141414141414141414141414444444444444444444444444444444400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
