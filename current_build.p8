@@ -153,10 +153,10 @@ end
 
 --makes the valves for the heart boss
 function make_valve(n)
- lx,ly=86,28
- if n==2 then lx=110 ly=28 end
- if n==3 then lx=86 ly=100 end
- if n==4 then lx=110 ly=100 end
+ lx,ly,vsx,vsy=86,8,0,96
+ if n==2 then lx=106 ly=8 vsx,vsy=0,96 end
+ if n==3 then lx=86 ly=74 vsx,vsy=0,104 end
+ if n==4 then lx=106 ly=74 vsx,vsy=0,104 end
  valve={
  id=n,
  hp=30,
@@ -164,7 +164,9 @@ function make_valve(n)
  y=ly,
  sprite=16,
  bullets={},
- hbox=makehitbox(lx,ly,3,8,nil)
+ hbox=makehitbox(lx,ly,8,38,nil),
+ sx=vsx,
+ sy=vsy
  }
  return valve
 end
@@ -1095,7 +1097,7 @@ end
 
 function draw_mainmenu()
  --title
- print("definitely not cuphead",20,30,3)
+ print("viral",54,30,3)
  line(15,38,112,38)
  --mode choice
  print("1 player",20,90,11)
@@ -1348,10 +1350,11 @@ function draw_food()
 end
 
 function draw_heart()
- sspr(0, 96, 8, 8, 108, 8, 8, 38)
- sspr(0, 104, 8, 8, 108, 74, 8, 38)
- sspr(0, 96, 8, 8, 84, 8, 8, 38)
- sspr(0, 104, 8, 8, 84, 74, 8, 38)
+ for valve in all(boss.valves) do
+  sw=8
+  if valve==boss.av then sw=10 end
+  sspr(valve.sx,valve.sy,8,8,valve.x,valve.y,sw,38)
+ end
  sspr(0, 64, 32, 32, 76,40, 44+c%2, 44+c%2)
  draw_eyes(boss.state, 88, 56, 4, 12, 2, 8)
  draw_lips(boss.state, 91, 72, 16, 1, 5)
