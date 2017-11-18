@@ -115,7 +115,7 @@ function heart_boss()
 end
 
 function stomach()
- boss=generic_boss(384,0,9,100,60,2)
+ boss=generic_boss(384,0,9,95,70,2)
  boss.enzymes={}
  boss.hurtboxes={}
  for p in all(players) do
