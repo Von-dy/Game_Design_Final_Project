@@ -76,6 +76,7 @@ Stomach Boss Fight
 - Boss does not have an idle state, meaning the battle begins instantly.
 
 - Fruit pieces are not being shot directly from the mouth, rather from a upper right part of the boss
+--fixed
 
 - Hard to tell what the player is supposed to do to deal damage. A player will die many times 
 before they figure out that hitting an enzyme above the corresponding fruit will cause damage.
