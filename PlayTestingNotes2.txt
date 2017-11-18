@@ -60,15 +60,16 @@ players to have unlmited lives, so there is no reason to try their best to stay 
 OverWorld
 -------------------------------------------------------------------------------------------------------------------------
 *- Stomach boss entrance from overworld lands player into a pit, which causes instant death
-
+--fixed
 
 -------------------------------------------------------------------------------------------------------------------------
 Heart Boss Fight
 -------------------------------------------------------------------------------------------------------------------------
 - A visual effect showing that the valve is about to burst with an attack would be helpful to players.
 
-- Heart could use maybe some more health, due to being able to beat it rather quickly. Subjective.
 
+- Heart could use maybe some more health, due to being able to beat it rather quickly. Subjective.
+--adjusted to 30 hp per valve
 -------------------------------------------------------------------------------------------------------------------------
 Stomach Boss Fight
 -------------------------------------------------------------------------------------------------------------------------
@@ -94,9 +95,11 @@ and hit the enzyme before it teleports elsewhere. Maybe start the red enzyme ont
 or make it go through the same sequence a second or third time to give the player more of a chance to hit it.
 
 *- Insta death from falling from the pit is difficult. This should be treated just as how the lung battle is 
+--fixed
 
 *- Stomach only fires fruit pieces at player 1. Once player 1 dies, the stomach fires at the bottom left corner of 
 the level, never at player 2.
+--fixed
 
 - Seems like there is a limit to the amount of shots/time this boss has. After hitting stage 2, roughly after a minute 
 or so, the game got harder as expected, shooting more and what not. But then after another 20-30 seconds, the boss 
@@ -105,14 +108,17 @@ same time (~100 seconds) in just phase 1, but the fight kept going. Somewhere is
 
 *- Pillars that come out of the pits no longer come up, they seem to be going down into the ground.
 Could just be the equation used to move them.
+--fixed
 
 *- Player is can walk "off the fruit platform" which appears as floating above the ground. We can either try to make 
 collision more accurate to the actual fruit, or make the ground level with the fruit so there is no "floating".
+--fixed
 
 -------------------------------------------------------------------------------------------------------------------------
 Lungs Boss Fight
 -------------------------------------------------------------------------------------------------------------------------
 *- Player will randomnly take damage. Not debris hitting him.
+--drawing safe spaces now
 
 *- The blow/suck can cause a player to get stuck in the side of a wall/platform, which then causes the player to slowly 
 move through the corner until the player is on top of the platform/ground.
