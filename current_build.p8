@@ -37,7 +37,7 @@ function _init()
    screenshake=0,
    camx=0,
    camy=0,
-   b_remaining={1,2,3} --for testing 
+   b_remaining={1,2,3} --for testing
  }
  --player list
  players = {}
@@ -188,12 +188,12 @@ function stomach_logic(s)
  if boss.hp<10 then s=0 end
  if boss.hp>=5 then s=1 end
  if boss.hp<5 then s=2 end
- 
- if boss.hp==0 then 
+
+ if boss.hp==0 then
   --kill boss
  end
- 
- for e in all(boss.enzymes) do 
+
+ for e in all(boss.enzymes) do
   move_enzyme(e)
  end
 
@@ -217,7 +217,7 @@ function hb_logic(s)
  if #boss.valves==0 then
   init_overworld() --added for overworld
  end
- 
+
  --check valve hp
  for v in all(boss.valves) do
   if v.hp<30 then s=1 end
@@ -225,17 +225,17 @@ function hb_logic(s)
  end
 
  if #boss.valves<3 then s=2 end
- 
+
  boss.state=s
 end
 
 --lungs logic
 function lungs_logic(s)
  if boss.hp==100 then s=0 end
- 
+
  if boss.hp<100 then s=1 end
- 
- if boss.hp<=66 then s=2 end 
+
+ if boss.hp<=66 then s=2 end
 
  for b in all(boss.bullets) do
   b.d=boss.d
@@ -307,7 +307,7 @@ function blow(d)
   end
   --center
   if d==2 then
-   if p.x>=64 and not solid(p.x-.1,p.y) then p.x-=.1 
+   if p.x>=64 and not solid(p.x-.1,p.y) then p.x-=.1
    elseif not solid(p.x+.1,p.y) then p.x+=.1 end
   end
  end
@@ -345,8 +345,8 @@ end
 
 function spawn_enzyme()
  local i=flr(rnd(3))+1
- if boss.state==2 then 
-  i=flr(rnd(2)) 
+ if boss.state==2 then
+  i=flr(rnd(2))
   if i==0 then i=3 end
  end
  local sp=199
@@ -368,60 +368,60 @@ end
 function move_enzyme(e)
  x,y,spd,id,state=e.x,e.y,e.spd,e.id,e.state
  hbx,hby=e.hbox.x,e.hbox.y
- --delete if out of bounds 
+ --delete if out of bounds
  if x>128 or x<0 or y<0 or y>112 then del(boss.enzymes, e) end
  --delete if hit player
  for p in all(players) do
   if p.state~=3 and hcollide(hbx,7,hby,7,p.x,p.w,p.y+8-p.h,p.h) then del(boss.enzymes,e) p.hp-=1 game.screenshake=8 end
  end
- 
+
  --move first enzyme horizontally until it matches with player
  if id==1 then
   --move along horizontally
-  if state==0 then 
+  if state==0 then
    x-=1
    hbx-=1
    for p in all(players) do
     if x<p.x+6 and x>p.x-6 then state=1 end
    end
   end
-  
+
   --if same axis as a player, attack
   if state==1 then y+=1 hby+=1 end
   if state==5 then
    y+=1
    hbx=-10
    hby=-10
-   if y==112 then 
+   if y==112 then
     if x>104 then boss.hp-=1 end
     del(boss.enzymes,e)
    end
   end
- 
- --move along vertically until on same axis as a player   
+
+ --move along vertically until on same axis as a player
  elseif id==2 then
   --move along vertically
   if state==0 then
-   y+=1 
-   hby+=1 
+   y+=1
+   hby+=1
    for p in all(players) do
     if y<p.y+6 and y>p.y-6 then state=1 end
    end
   end
-  
+
   --if on same axis as player
-  if state==1 then x-=1 hbx-=1 end 
-  if state==5 then 
-   y+=1 
-   hbx=-10 
+  if state==1 then x-=1 hbx-=1 end
+  if state==5 then
+   y+=1
+   hbx=-10
    hby=-10
-   if y==112 then 
+   if y==112 then
     if x>48 and x<88 then boss.hp-=1 end
     del(boss.enzymes,e)
    end
-  end 
- 
- --teleport above different fruit and burst occasionally  
+  end
+
+ --teleport above different fruit and burst occasionally
  elseif id==3 then
   --change spawns every so often
   if state==4 then del(boss.enzymes,e) end
@@ -432,13 +432,13 @@ function move_enzyme(e)
    y+=1
    hbx=-10
    hby=-10
-   if y==112 then 
+   if y==112 then
     if x<24 then boss.hp-=1 end
     del(boss.enzymes,e)
    end
   end
   if state~=5 then
-   if (time()-e.spawn)%3==0 then state+=1 end 
+   if (time()-e.spawn)%3==0 then state+=1 end
   end
  end
  --update vals
@@ -538,7 +538,7 @@ function move_bullets()
           --wave
    if d==11 then
     if time()-b.spawn_time>3 then del(boss.bullets,b) end
-   end 
+   end
    --thrown food
    if d==13 then x-=spd*cos(b.ang) hx-=spd*cos(b.ang) y+=spd*sin(b.ang) hy+=spd*sin(b.ang) end
    --update bullet values
@@ -895,7 +895,7 @@ function music_player(boss,state)
   --no music
   if state==0 then music(-1) end
   --start at track 0
-  if state==1 then music(0) end 
+  if state==1 then music(0) end
  end
  --stomach
  if boss.id==2 then
@@ -918,7 +918,7 @@ function boss_logic(id)
  if boss.id==3 then
   lungs_logic(s)
  end
- 
+
  --do attacks
  for a in all(boss.attacks) do
   --what boss phase
@@ -1013,7 +1013,7 @@ function update_overworld()
   --player can interact with shop
   if p.x>48 and p.x<72 then end
   --player can interact next boss
-  if p.x>88 and p.x<120 then 
+  if p.x>88 and p.x<120 then
    if p.dflag==1 then count+=1 end
    if count==#players then make_boss() end
   end
@@ -1132,6 +1132,23 @@ function draw_overworld()
  --prints for signs
  print(boss_list[prev+1], 3, 72, 11)
  print(boss_list[next+1], 88, 72, 11)
+
+ --print instructions for game, only on first entrance of overworld
+--if no previous boss, then do these
+  if game.prev_boss==0 then
+    print("controls:",40,20,7)
+    print("player 1",2,28,7)
+    print("arrows to move",2,36,7)
+    print("z to attack",2,44,7)
+    print("x to dodge",2,52,7)
+  end
+--if two players then do these too
+  if p.n==1 then
+    print("player 2",62,28,7)
+    print("esdf to move",62,36,7)
+    print("lshift to attack",62,44,7)
+    print("a to dodge",62,52,7)
+  end
 end
 
 function draw_characters(p)
@@ -1316,19 +1333,19 @@ end
 
 function draw_boss()
  if boss.id==1 then draw_heart() end
- if boss.id==2 then draw_stomach() 
-  draw_food() 
-  draw_enzymes() 
+ if boss.id==2 then draw_stomach()
+  draw_food()
+  draw_enzymes()
   for w in all(boss.hurtboxes) do
    rect(w.x,w.y,w.x+w.w,w.y+w.h,4)
   end
  end
- if boss.id==3 then 
-  draw_lungs() 
+ if boss.id==3 then
+  draw_lungs()
   if boss.safe_space then
    ss=boss.safe_space
    rect(ss.x1,ss.y1,ss.x2,ss.y2,3)
-  end 
+  end
  end
  draw_bullets()
  --if boss.id==4 then draw_brain() end
@@ -1945,4 +1962,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
