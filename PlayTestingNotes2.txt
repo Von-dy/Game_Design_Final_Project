@@ -19,9 +19,10 @@ This can stay as a feature since we are a virus and don't have work like a perso
 the player is taken out of the dodge state and crouches. Can stay if wanted as a way to break out of dodge.
 
 *- Crouching causes screen to shake
+fixed
 
 *- Crouch does not make hitbox smaller
-
+fixed
 -------------------------------------------------------------------------------------------------------------------------
 Main Menu
 -------------------------------------------------------------------------------------------------------------------------
@@ -43,7 +44,7 @@ Transitions
 -------------------------------------------------------------------------------------------------------------------------
 *- When a boss is beat, the boss will stay drawn on the screen, into the overworld, and the screen change is instant, 
 so maybe, as we mentioned before, create some form of death animation, to clear the boss off, then enter the overworld
-
+fixed
 
 -------------------------------------------------------------------------------------------------------------------------
 Game Over
@@ -66,14 +67,15 @@ OverWorld
 Heart Boss Fight
 -------------------------------------------------------------------------------------------------------------------------
 - A visual effect showing that the valve is about to burst with an attack would be helpful to players.
-
+added valve swelling
 
 - Heart could use maybe some more health, due to being able to beat it rather quickly. Subjective.
---adjusted to 30 hp per valve
+--adjusted to 20 hp per valve
 -------------------------------------------------------------------------------------------------------------------------
 Stomach Boss Fight
 -------------------------------------------------------------------------------------------------------------------------
 - Boss does not have an idle state, meaning the battle begins instantly.
+fixed
 
 - Fruit pieces are not being shot directly from the mouth, rather from a upper right part of the boss
 --fixed
@@ -94,6 +96,7 @@ alloting a split second chance of having it fall above the grape. maybe make the
 - Similar issue with the red enzyme. It starts over the apple, leaving the player little time to react 
 and hit the enzyme before it teleports elsewhere. Maybe start the red enzyme onthe otherside, 
 or make it go through the same sequence a second or third time to give the player more of a chance to hit it.
+--changed how boss takes damage
 
 *- Insta death from falling from the pit is difficult. This should be treated just as how the lung battle is 
 --fixed
