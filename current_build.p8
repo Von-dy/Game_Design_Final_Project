@@ -37,7 +37,7 @@ end
 function _init()
  music(-1)
  sfx(-1)
- quotes={"a virus is a small infectious agent that replicates only inside the living cells of other organisms. viruses can infect all types of life forms, from animals and plants to microorganisms, including bacteria and archaea","the heart is a muscular organ in most animals, which pumps blood through the blood vessels of the circulatory system. blood provides the body with oxygen and nutrients, as well as assists in the removal of metabolic wastes. in humans, the heart is located between the lungs, in the middle compartment of the chest","the brain is an organ that serves as the center of the nervous system in all vertebrate and most invertebrate animals. the brain is located in the head, usually close to the sensory organs for senses such as vision. the brain is the most complex organ in a vertebrate's body. in a human, the cerebral cortex contains approximately 15-33 billion neurons, each connected by synapses to several thousand other neurons.","the lungs are the primary organs of the respiratory system in humans and many other animals including a few fish and some snails. in mammals and most other vertebrates, two lungs are located near the backbone on either side of the heart. their function in the respiratory system is to extract oxygen from the atmosphere and transfer it into the bloodstream, and to release carbon dioxide from the bloodstream into the atmosphere, in a process of gas exchange.","the stomach is a muscular, hollow organ in the gastrointestinal tract of humans and many other animals, including several invertebrates. the stomach has a dilated structure and functions as a vital digestive organ. in the digestive system the stomach is involved in the second phase of digestion, following mastication (chewing). ","there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","viruses have no morality, no sense of good and evil, the deserving or the undeserving.... aids is not the swift sword with which the lord punishes the evil practitioners of male homosexuality and intravenous drug use. it is simply an opportunistic virus that does what it has to do to stay alive.","the fact that, with respect to size, the viruses overlapped with the organisms of the biologist at one extreme and with the molecules of the chemist at the other extreme only served to heighten the mystery regarding the nature of viruses. then too, it became obvious that a sharp line dividing living from non-living things could not be drawn and this fact served to add fuel for discussion of the age-old question of â'what is life?'","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus."}
+ quotes={"a virus is a small infectious agent that replicates only inside the living cells of other organisms. viruses can infect all types of life forms, from animals and plants to microorganisms, including bacteria and archaea","the heart is a muscular organ in most animals, which pumps blood through the blood vessels of the circulatory system. blood provides the body with oxygen and nutrients, as well as assists in the removal of metabolic wastes. in humans, the heart is located between the lungs, in the middle compartment of the chest","the brain is an organ that serves as the center of the nervous system in all vertebrate and most invertebrate animals. the brain is located in the head, usually close to the sensory organs for senses such as vision. the brain is the most complex organ in a vertebrate's body. in a human, the cerebral cortex contains approximately 15-33 billion neurons, each connected by synapses to several thousand other neurons.","the lungs are the primary organs of the respiratory system in humans and many other animals including a few fish and some snails. in mammals and most other vertebrates, two lungs are located near the backbone on either side of the heart. their function in the respiratory system is to extract oxygen from the atmosphere and transfer it into the bloodstream, and to release carbon dioxide from the bloodstream into the atmosphere, in a process of gas exchange.","the stomach is a muscular, hollow organ in the gastrointestinal tract of humans and many other animals, including several invertebrates. the stomach has a dilated structure and functions as a vital digestive organ. in the digestive system the stomach is involved in the second phase of digestion, following mastication (chewing). ","there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","viruses have no morality, no sense of good and evil, the deserving or the undeserving.... aids is not the swift sword with which the lord punishes the evil practitioners of male homosexuality and intravenous drug use. it is simply an opportunistic virus that does what it has to do to stay alive.","the fact that, with respect to size, the viruses overlapped with the organisms of the biologist at one extreme and with the molecules of the chemist at the other extreme only served to heighten the mystery regarding the nature of viruses. then too, it became obvious that a sharp line dividing living from non-living things could not be drawn and this fact served to add fuel for discussion of the age-old question of ?what is life?'","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus."}
  set_area(16,0)
  lbx,lby,z,c,going_to=0,0,0,0,0 --beat speed,count
  --game object
@@ -88,7 +88,8 @@ function generic_boss(bx,s,h,x,y,id)
   attacks={},
   bullets={},
   hitcooldown=0,
-  ct=time()
+  ct=time(),
+  dt=time()
  }
  return boss
 end
@@ -198,7 +199,6 @@ end
 
 function stomach_logic(s)
  if boss.hp==40 then s=0 
- elseif boss.hp==0 then init_transition(0)
  elseif boss.hp>20 then s=1 
  elseif boss.hp<=20 then s=2 end
  
@@ -211,8 +211,6 @@ function stomach_logic(s)
  end
  boss.state=s
 
- --added for overworld
- if boss.hp<=0 then init_transition(0) end
 end
 
 --determining what the heart boss does based on state
@@ -220,7 +218,7 @@ function hb_logic(s)
 
  --if all valves destroyed
  if #boss.valves==0 then
-  init_transition(0)
+  boss.hp=0
   --init_overworld() --added for overworld
  end
 
@@ -242,9 +240,6 @@ function lungs_logic(s)
  if boss.hp<100 then s=1 end
  
  if boss.hp<=66 then s=2 end 
- 
- if boss.hp==0 then init_transition(0) end
- 
 
  for b in all(boss.bullets) do
   b.d=boss.d
@@ -808,7 +803,7 @@ function boss_interaction(id,player)
  if id==1 then
   for v in all(boss.valves) do
    vhb=v.hbox
-   if attackcollide(player,vhb) then v.hp-=1 end
+   if attackcollide(player,vhb) then v.hp-=10 end
   end
  end
  --stomach interaction
@@ -902,6 +897,8 @@ function boss_logic(id)
  if boss.hitcooldown>0 then
   boss.hitcooldown-=1
  end
+ --check if boss is dead
+ if boss.hp<1 then boss.dt=time() game.state=6 end
 end
 
 function _update60()
@@ -913,6 +910,7 @@ function _update60()
  if game.state==3 then update_gameover() end
  if game.state==4 then update_mainmenu() end
  if game.state==5 then update_transition() end
+ if game.state==6 then update_bossdeath() end
 end
 
 function update_mainmenu()
@@ -1040,6 +1038,13 @@ function update_gameover()
  if btn(5) then _init() end
 end
 
+function update_bossdeath()
+ tick=time()
+ if tick-boss.dt>6 then
+  init_transition(0)
+ end
+end
+
 function heart_beat()
  z+=.045+(.02*boss.state)
  if z>1 then z=0 end
@@ -1055,6 +1060,7 @@ function _draw()
  if game.state==3 then draw_gameover() end
  if game.state==4 then draw_mainmenu() end
  if game.state==5 then draw_transition() end
+ if game.state==6 then draw_game() draw_explosions() end
  --print(game.state,0,0,9)
 end
 
@@ -1508,6 +1514,14 @@ function draw_gameover()
  print("x to restart",45,100,3)
 end
 
+function draw_explosions()
+ game.screenshake=5
+ for i=0,15 do
+  x,y,s=rnd(128),rnd(128),rnd(8)
+  sspr(56,24,8,8,x,y,8*s,8*s)
+ end
+end
+
 function cameffects(dur)
  local st=time()
  if game.screenshake>0 then
@@ -1543,14 +1557,14 @@ __gfx__
 06bbbb600099490000949900044999400090090000900900009499000bbbbb000000000000000000000000000000000000000000000000000000000000000000
 006bb600994949400494949999799799004009000040090049949494000000000000000000000000000000000000000000000000000000000000000000000000
 00066000409090900909090904949490004004000040040090900909000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000c10000001c0000000000000c11c0000c11c000001c000000000000000000000000000000000000000000000000000000000000000000000000000
-0007700000c11c0000c11c00000000000c111cc00c111cc000c11c00000000000000000000000000000000000000000000000000000000000000000000000000
-007777000111c1c00c1c111000000000c1711711c17117110c1c1110000000000000000000000000000000000000000000000000000000000000000000000000
-0777777017171110011171710000000001c111c001c111c0117117c1000000000000000000000000000000000000000000000000000000000000000000000000
-0777777001c111c00c111c1000c11c0000111c0000111c000c111c10000000000000000000000000000000000000000000000000000000000000000000000000
-007777000011c100001c11000cc111c00010010000100100001c1100000000000000000000000000000000000000000000000000000000000000000000000000
-0007700011c1c1c00c1c1c111171171100c0010000c00100c11c1c1c000000000000000000000000000000000000000000000000000000000000000000000000
-00000000c0101010010101010c1c1c1000c00c0000c00c0010100101000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000c10000001c0000000000000c11c0000c11c000001c000055000500000000000000000000000000000000000000000000000000000000000000000
+0007700000c11c0000c11c00000000000c111cc00c111cc000c11c00577505750000000000000000000000000000000000000000000000000000000000000000
+007777000111c1c00c1c111000000000c1711711c17117110c1c111057a957a70000000000000000000000000000000000000000000000000000000000000000
+0777777017171110011171710000000001c111c001c111c0117117c155799a750000000000000000000000000000000000000000000000000000000000000000
+0777777001c111c00c111c1000c11c0000111c0000111c000c111c10057797500000000000000000000000000000000000000000000000000000000000000000
+007777000011c100001c11000cc111c00010010000100100001c1100575aa5700000000000000000000000000000000000000000000000000000000000000000
+0007700011c1c1c00c1c1c111171171100c0010000c00100c11c1c1c557575500000000000000000000000000000000000000000000000000000000000000000
+00000000c0101010010101010c1c1c1000c00c0000c00c0010100101055057550000000000000000000000000000000000000000000000000000000000000000
 eeeeeeeeeeeeeeee99999999999999991111111c111111c13ffffffffffff333ffffffffff3333ff7777777766666666fffff33feeeeffeeffffffff99999999
 222222222222272299ffff99f9999ff9111111c111171c1133333fffff333333fffafffffbfa773f7777777766666666fffabf73eeeefeeeffffffff99999999
 e22722ee222222229999fff99fffff99117111c111717111a3333333333333aaf9fffaffb9fff7737777777766666666f9ffbaf3feefffefffffffff99999999
