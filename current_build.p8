@@ -1,7 +1,6 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
-
 --change map
 function set_area(x,y)
  for i=0,15 do
@@ -18,16 +17,6 @@ function print_quote(q,width,startx,starty,col)
   print(sub(q,i*width,(i+1)*width-1),startx,i*8+starty,col)
  end
 end
-
---[[function make_curtain()
- --column
- for i=0,128 do
-  --row
-  for j=0,128 do
-   pset(i,j,6)
-  end
- end
-end]]
 
 function make_attack(fun,t1,t2,t3,t4)
 	local a={
@@ -68,6 +57,10 @@ end
 function init_overworld()
  going_to=1
  set_area(32,16)
+ for p in all(players) do
+  p.x=8
+  p.y=104
+ end
  --set game state to overworld
  game.state=1
  if game.prev_boss then game.prev_boss=boss.id else game.prev_boss=0 end
@@ -139,7 +132,8 @@ function heart_boss()
 end
 
 function stomach()
- boss=generic_boss(384,0,9,95,70,2)
+ boss=generic_boss(384,0,40,95,70,2)
+ boss.healthbox=makehitbox(76,40,44,44)
  boss.enzymes={}
  boss.hurtboxes={}
  for p in all(players) do
@@ -148,13 +142,13 @@ function stomach()
  end
  make_attack(wave,10,0,10,0)
  make_attack(spawn_food,8,0,4,0)
- make_attack(spawn_enzyme,11,0,11,0)
+ make_attack(spawn_enzyme,11,0,6,0)
 end
 
 function lungs()
  boss=generic_boss(0,0,100,100,60,3)
  for p in all(players) do
-  p.x=8
+  p.x=14
   p.y=104
  end
  boss.d,boss.blow=3,0
@@ -179,12 +173,12 @@ function make_valve(n)
  if n==4 then lx=106 ly=74 vsx,vsy=0,104 end
  valve={
  id=n,
- hp=30,
+ hp=20,
  x=lx,
  y=ly,
- sprite=16,
+-- sprite=16,
  bullets={},
- hbox=makehitbox(lx,ly,8,38,nil),
+ hbox=makehitbox(lx,ly,8,38),
  sx=vsx,
  sy=vsy
  }
@@ -192,37 +186,29 @@ function make_valve(n)
 end
 
 --make a bullet for some owner in some direction
-function make_bullet(o,d,sp)
+function make_bullet(o,d,sp,w,h,offx,offy)
+ local sp=sp or 48
+ local w=w or 4
+ local h=h or 4
+ local offx=offx or 2
+ local offy=offy or 2
  b={
  x=o.x,
  y=o.y,
  d=d,
  sprite=sp,
  spd=1,
- hbox=makehitbox(o.x+2,o.y+2,4,4,nil)
+ hbox=makehitbox(o.x+offx,o.y+offy,w,h)
  }
  return b
 end
 
 function stomach_logic(s)
- if boss.hp<10 then s=0 end
- if boss.hp>=5 then s=1 end
- if boss.hp<5 then s=2 end
-<<<<<<< HEAD
+ if boss.hp==40 then s=0 
+ elseif boss.hp==0 then init_transition(0)
+ elseif boss.hp>20 then s=1 
+ elseif boss.hp<=20 then s=2 end
  
- if boss.hp==0 then
-  init_transition(0)
-=======
-
- if boss.hp==0 then
-  --kill boss
->>>>>>> 4979e14439f7f60b2321536c5b425b84362bf435
- end
-
- for e in all(boss.enzymes) do
-  move_enzyme(e)
- end
-
  for w in all(boss.hurtboxes) do
   if w.h<=0 then del(boss.hboxes,w)
   elseif time()-w.spawn_time<2 then w.h=2
@@ -233,7 +219,7 @@ function stomach_logic(s)
  boss.state=s
 
  --added for overworld
- if boss.hp<=0 then init_overworld() end
+ if boss.hp<=0 then init_transition(0) end
 end
 
 --determining what the heart boss does based on state
@@ -247,7 +233,7 @@ function hb_logic(s)
 
  --check valve hp
  for v in all(boss.valves) do
-  if v.hp<30 then s=1 end
+  if v.hp<20 then s=1 end
   if v.hp<=0 then del(boss.valves,v) game.screenshake=40 end
  end
 
@@ -261,17 +247,12 @@ function lungs_logic(s)
  if boss.hp==100 then s=0 end
 
  if boss.hp<100 then s=1 end
-<<<<<<< HEAD
  
  if boss.hp<=66 then s=2 end 
  
  if boss.hp==0 then init_transition(0) end
  
-=======
 
- if boss.hp<=66 then s=2 end
-
->>>>>>> 4979e14439f7f60b2321536c5b425b84362bf435
  for b in all(boss.bullets) do
   b.d=boss.d
  end
@@ -284,7 +265,7 @@ function hurt_space()
  if boss.safe_space then
   local ss=boss.safe_space
   for p in all(players) do
-   if p.hitcooldown==0 and (p.x<ss.x1 or p.x+p.w>ss.x2 or p.y<ss.y1 or p.y>ss.y2) then
+   if p.hitcooldown==0 and not hcollide(p,ss) then
      p.hp-=1
      p.hitcooldown=100
    end
@@ -303,29 +284,29 @@ end
 
 function safespace()
  local id=flr(rnd(4))
- local safe_space=make_ss(8,24,66,80)
+ local safe_space=makehitbox(8,66,16,14)
  if id==1 then
-  safe_space=make_ss(36,52,98,112)
+  safe_space=makehitbox(36,98,16,14)
  end
  if id==2 then
-  safe_space=make_ss(92,108,98,112)
+  safe_space=makehitbox(92,98,16,14)
  end
  if id==3 then
-  safe_space=make_ss(104,120,66,80)
+  safe_space=makehitbox(104,66,16,14)
  end
  --safe_space={x1=x1,x2=x2,y1=y1,y2=y2}
  boss.safe_space=safe_space
 end
 
-function make_ss(x1,x2,y1,y2)
- safe_space={x1=x1,x2=x2,y1=y1,y2=y2}
+--[[function make_ss(x1,x2,y1,y2)
+ safe_space={x=x1,x2=x2,y1=y1,y2=y2,h=y2-y1,w=x2-x1}
  return safe_space
-end
+end]]
 
 function spawn_debris()
  local tile={x=0,y=rnd(56)+48}
  if boss.d==0 then tile.x=128 end
- local c=make_bullet(tile,boss.d,48)
+ local c=make_bullet(tile,boss.d)
  c.spd=.2
  add(boss.bullets,c)
 end
@@ -379,106 +360,14 @@ function food_angle(b)
 end
 
 function spawn_enzyme()
- local i=flr(rnd(3))+1
- if boss.state==2 then
-  i=flr(rnd(2))
-  if i==0 then i=3 end
- end
+ local i=flr(rnd(2))+20
  local sp=199
- if i==2 then sp=201 end
- if i==3 then sp=200 end
- e={
-	 x=120,
-	 y=8,
-	 id=i,
-	 spd=1,
-	 sprite=sp,
-	 hbox=makehitbox(120,0,7,7),
-	 state=0,
-	 spawn=time(),
- }
- add(boss.enzymes,e)
-end
-
-function move_enzyme(e)
- x,y,spd,id,state=e.x,e.y,e.spd,e.id,e.state
- hbx,hby=e.hbox.x,e.hbox.y
- --delete if out of bounds
- if x>128 or x<0 or y<0 or y>112 then del(boss.enzymes, e) end
- --delete if hit player
- for p in all(players) do
-  if p.state~=3 and hcollide(hbx,7,hby,7,p.x,p.w,p.y+8-p.h,p.h) then del(boss.enzymes,e) p.hp-=1 game.screenshake=8 end
- end
-
- --move first enzyme horizontally until it matches with player
- if id==1 then
-  --move along horizontally
-  if state==0 then
-   x-=1
-   hbx-=1
-   for p in all(players) do
-    if x<p.x+6 and x>p.x-6 then state=1 end
-   end
-  end
-
-  --if same axis as a player, attack
-  if state==1 then y+=1 hby+=1 end
-  if state==5 then
-   y+=1
-   hbx=-10
-   hby=-10
-   if y==112 then
-    if x>104 then boss.hp-=1 end
-    del(boss.enzymes,e)
-   end
-  end
-
- --move along vertically until on same axis as a player
- elseif id==2 then
-  --move along vertically
-  if state==0 then
-   y+=1
-   hby+=1
-   for p in all(players) do
-    if y<p.y+6 and y>p.y-6 then state=1 end
-   end
-  end
-
-  --if on same axis as player
-  if state==1 then x-=1 hbx-=1 end
-  if state==5 then
-   y+=1
-   hbx=-10
-   hby=-10
-   if y==112 then
-    if x>48 and x<88 then boss.hp-=1 end
-    del(boss.enzymes,e)
-   end
-  end
-
- --teleport above different fruit and burst occasionally
- elseif id==3 then
-  --change spawns every so often
-  if state==4 then del(boss.enzymes,e) end
-  if state==1 then x,y,hbx,hby=10,60,10,60 end
-  if state==2 then x,y,hbx,hby=68,60,68,60 end
-  if state==3 then x,y,hbx,hby=116,60,116,60 end
-  if state==5 then
-   y+=1
-   hbx=-10
-   hby=-10
-   if y==112 then
-    if x<24 then boss.hp-=1 end
-    del(boss.enzymes,e)
-   end
-  end
-  if state~=5 then
-   if (time()-e.spawn)%3==0 then state+=1 end
-  end
- end
- --update vals
- e.x,e.y,e.spd,e.id,e.state=x,y,spd,id,state
- e.hbox.x,e.hbox.y=hbx,hby
+ if i==21 then sp=200 end
+ local tile={x=120,y=8}
+ e=make_bullet(tile,i,sp,6,6,1,0)
+	e.spawn=time()
+	e.state=0 
+ add(boss.bullets,e)
 end
 
 --rain clots of blood on one side of screen
@@ -489,7 +378,7 @@ function clot_attack()
   tile={x=i,y=8}
   if side==1 then tile.x+=64 end
   t=rnd(5)
-  if t<=3.5 then add(boss.bullets,make_bullet(tile,3,48)) end
+  if t<=3.5 then add(boss.bullets,make_bullet(tile,3)) end
  end
 end
 
@@ -505,7 +394,7 @@ function vb()
  id=ids[selector]
  --find which valve is the active one
  for v in all(boss.valves) do
-  if id==v.id then v.sprite=1 boss.av=v end
+  if id==v.id then boss.av=v end
  end
 end
 
@@ -525,7 +414,7 @@ function valve_burst()
  del(boss,boss.av)
  --make 8 bullets, 4 diagonals 4 straight
  for i=0,7 do
-  add(boss.bullets,make_bullet(v,i,48))
+  add(boss.bullets,make_bullet(v,i))
  end
 end
 
@@ -537,7 +426,7 @@ function move_bullets()
 
   --bullet collision with player
   for p in all(players) do
-   if p.hitcooldown==0 and p.state~=3 and hcollide(hx,hbox.w,hy,hbox.h,p.x,p.w,p.y+8-p.h,p.h) then
+   if p.hitcooldown==0 and p.state~=3 and hcollide(hbox,p) then
     p.hp-=1
     del(boss.bullets,b)
     good=false
@@ -570,12 +459,39 @@ function move_bullets()
    --special bullet movement
    --mini heart
    if d==10 then x-=spd y+=1.5*cos(.5*time()) hx-=spd hy+=1.5*cos(.5*time()) end
-          --wave
+   --wave
    if d==11 then
     if time()-b.spawn_time>3 then del(boss.bullets,b) end
    end
    --thrown food
    if d==13 then x-=spd*cos(b.ang) hx-=spd*cos(b.ang) y+=spd*sin(b.ang) hy+=spd*sin(b.ang) end
+   
+   --enzymes
+   if d==20 then 
+--    if b.state==-1 and time()-b.spawn%4==0 then b.state=0 
+    if b.state==0 then
+     x-=1
+     hx-=1
+     for p in all(players) do
+      if x<p.x+6 and x>p.x-6 then b.state=1 end
+     end
+    --if same axis as a player, attack
+    elseif b.state==1 then y+=1 hy+=1 end
+   end
+   
+   if d==21 then
+--    if b.state==-1 and time()-b.spawn+1%4==0 then b.state=0
+    --move along vertically
+    if b.state==0 then
+	    y+=1
+	    hy+=1
+	    for p in all(players) do
+	     if y<p.y+6 and y>p.y-6 then b.state=1 end
+	    end
+    --if on same axis as player
+    elseif b.state==1 then x-=1 hx-=1 end
+   end
+  
    --update bullet values
    b.x=x
    b.y=y
@@ -667,7 +583,7 @@ function scoreboard()
 end
 
 function makehitbox(x,y,w,h)
- hbox = {
+ local hbox = {
   x=x,
   y=y,
   w=w,
@@ -677,7 +593,15 @@ function makehitbox(x,y,w,h)
 end
 
 --hurt collision
-function hcollide(x1,w1,y1,h1,x2,w2,y2,h2)
+function hcollide(o1,o2)
+ local x1=o1.x
+ local w1=o1.w
+ local y1=o1.y
+ local h1=o1.h
+ local w2=o2.w
+ local x2=o2.x
+ local y2=o2.y
+ local h2=o2.h
  return (x2>x1+w1 or x2+w2<x1 or y2>y1+h1 or y2+h2<y1) == false
 end
 
@@ -738,7 +662,7 @@ function groundmovement(player)
   --start attack if not attacking
   if a==0 and ac<1 then
    player.hitbox=makehitbox(x,y,10,3)
-   a,ac=1,40
+   hbox,a,ac=player.hitbox,1,40
   end
  end
 
@@ -748,6 +672,7 @@ function groundmovement(player)
   hbox.y=y+2
   --attack right
   if d==1 then
+   --sfx(0)
    hbox.x=x+2
    if hbox.w<50 then
     hbox.w+=3
@@ -891,13 +816,10 @@ function boss_interaction(id,player)
  end
  --stomach interaction
  if id==2 then
-  for enz in all(boss.enzymes) do
-   ehb=enz.hbox
-   if attackcollide(player,ehb) then enz.state=5 end
-  end
+  if attackcollide(player,boss.healthbox) then boss.hp-=1 end
   if player.hitcooldown==0 and fget(mget(player.x/8,player.y/8),4) then player.hp-=1 player.hitcooldown=60 end
   for wave in all(boss.hurtboxes) do
-   if player.hitcooldown==0 and hcollide(player.x,player.w,player.y,player.h,wave.x,wave.w,wave.y,wave.h) then player.hp-=1 player.hitcooldown=60 end
+   if player.hitcooldown==0 and hcollide(player,wave) then player.hp-=1 player.hitcooldown=60 end
   end
  end
  --lungs interaction
@@ -911,7 +833,7 @@ end
 function attackcollide(p,hb)
  local hbp=p.hitbox
  --check for collision
- if hbp.x and boss.hitcooldown==0 and hcollide(hbp.x,hbp.w,hbp.y,hbp.h,hb.x,hb.w,hb.y,hb.h) then
+ if hbp.x and boss.hitcooldown==0 and hcollide(hbp,hb) then
    boss.hitcooldown=30
    p.a=2
    p.scores[boss.id].hitsgiven+=1
@@ -925,16 +847,22 @@ function solid(x,y)
 end
 
 function music_player(boss,state)
+ --no music in first phase
+ if state==0 then music(-1) end
+ 
  --heart boss
  if boss.id==1 then
-  --no music
-  if state==0 then music(-1) end
-  --start at track 0
   if state==1 then music(0) end
  end
+
  --stomach
  if boss.id==2 then
-  if state==0 then music(-1) end
+  if state==1 then music(5) end
+ end
+
+ --lungs
+ if boss.id==3 then
+
  end
 end
 
@@ -1118,7 +1046,7 @@ end
 function heart_beat()
  z+=.045+(.02*boss.state)
  if z>1 then z=0 end
- if cos(z)==1 then c+=1 if c==3 then c=0 sfx(0,1) end end
+ if cos(z)==1 then c+=1 if c==2 then sfx(0) end if c==3 then c=0 end end
 end
 
 function _draw()
@@ -1134,14 +1062,16 @@ function _draw()
 end
 
 function init_transition(d)
+ music(-1)
  going_to=d
  game.state=5
+ boss.ct=time()
  set_area(64,0)
  random_quote=quotes[flr(rnd(#quotes))+1]
 end
 
 function update_transition()
- if btn(5) then 
+ if btnp(5) and time()-boss.ct>1 then 
  	if going_to==0 then init_overworld()
  	else make_boss()
  	end
@@ -1150,6 +1080,7 @@ end
 
 function draw_transition()
  print_quote(random_quote,30,0,1,2)  
+ print("press x to continue",48,120,7)
 end
 
 function draw_mainmenu()
@@ -1318,6 +1249,9 @@ function draw_game()
  if game.state==1 then draw_overworld() end
  draw_players()
  draw_hud(boss.id)
+ --[[if players[1].hbox then
+  print(players[1].hbox.x,0,0,2)
+ end]]
 end
 
 function draw_players()
@@ -1365,12 +1299,12 @@ function draw_hud(id)
   for v in all(boss.valves) do
    hpleft+=v.hp
   end
-  rectfill(0,4,(hpleft/120)*128,6,10)
+  rectfill(0,4,(hpleft/80)*128,6,10)
  --end heart boss drawing
  end
  --stomach boss
  if id==2 then
-  rectfill(0,4,(boss.hp)/9*128,6,10)
+  rectfill(0,4,(boss.hp)/40*128,6,10)
  end
  for p in all(players) do
   tempx=10
@@ -1392,7 +1326,6 @@ function draw_boss()
  if boss.id==1 then draw_heart() end
  if boss.id==2 then draw_stomach()
   draw_food()
-  draw_enzymes()
   for w in all(boss.hurtboxes) do
    rect(w.x,w.y,w.x+w.w,w.y+w.h,4)
   end
@@ -1401,17 +1334,11 @@ function draw_boss()
   draw_lungs()
   if boss.safe_space then
    ss=boss.safe_space
-   rect(ss.x1,ss.y1,ss.x2,ss.y2,3)
+   rect(ss.x,ss.y,ss.x+ss.w,ss.y+ss.h,3)
   end
  end
  draw_bullets()
  --if boss.id==4 then draw_brain() end
-end
-
-function draw_enzymes()
- for e in all(boss.enzymes) do
-  spr(e.sprite,e.x,e.y)
- end
 end
 
 function draw_food()
@@ -1691,43 +1618,19 @@ deeeeeedd111111d0000000000000000dddddddddddddddd00000000000000001111111100000000
 000000000000222881112200000000000022288888222222000000000000000001ee800000000000000000000088ee1000000665555655600000000000000000
 000000000000002221222000000000000002222222222200000000000000000001e88000000000000000000000088e1000000065566550000000000000000000
 00000000000000002222000000000000000022222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-<<<<<<< HEAD
-222c1222000000bb00440000000888000009990000eeee0000ffff0000022200000888000bbbbbb0000000000000000000000000000000000000000000000000
-0221c220000000bbb44000000888ff000999aa000e8888e00f22ff400002220000088800b888888b000000000000000000000000000000000000000000000000
-002112000000000b4400000008fff00009aaa000e88ee882ff2ff2f40022022000880880b8b88b8b000000000000000000444444444444444444444444444400
-002c1200008888804008880088ff400099aa7000e8e88282ffff42f40220002208800088b888888b0000000000000000004444444444444444444444444444f0
-00211200000ff8884888888088fff40099aaa700e8e88282f2f44ff40200000208000008b8b88b8b0055555555555000004444444444444444444444444444f0
-002112000000ff888877788808ffffff09aaaaaae8822822fff22f440220002208800088b8bbbb8b0575565675675500004444444444444444444444444444f0
-0021c20000000f8888877788088ff888099aa999028882200f22f4400220002208800088b888888b05656656656657500044f0000000000000000000000044f0
-002c120000000f88888887820008880000099900002222000044440000000000000000000bbbbbb055656556656566750044f0000000000000000000000044f0
-002e820088f0ff88888888820000000000000044007777000066660000000000000000000000000057656566556566650044f0000000333300000000000044f0
-0028e20088ff88888888882200000000000000440777776006dddd6000000000000000000000000005556566566566500044f00000033bbb00005000000044f0
-0028820088888888888888200000000000000004777777766ddd6d6d00000000000000000000000005575575666555000044f000003bbcccc0050000000044f0
-00288200888888888888822000000000000000a9777766766dd66d6d00000000000000000000000000555555555550000044f00000b6cccc00050000000044f0
-002e8200088888888888220000000000000000a9777667766dd6dd6d55550000000000000000000000000000000000000044f00003b0656500500000000044f0
-0028820000888888888820000000000000000a9977767766666666dd66666555500000000000000000000000000000000044f0003330ccccc0000000000044f0
-0228e22000088888882220000000000000000a990777766006666dd066566666665555000000000000000000000000000044f0003000cc4778000000000044f0
-222e82220000088222200000400000000000a9990066660000dddd0066755656666656655500000000000000000000000044f00000cc1ccc00000000000044f0
-1122110000044000000440009a000000000a99990066660000ffff0066666675666566666665550000000000000000000044f0000ce7ccecc0000000000044f0
-01111000022222500bbbbb3099aa00000aaa9a99066776660feeefe055555665666666667566666550000000000000000044f0000ee0c1c9c0000000000044f0
-0122100022227725bbbb77b3a99aaaaaaaa99a9066727775feeffffe00000555556666675666566666500000000000000044f0001e00e19cc0000000000044f0
-0111100022222775bbbbb7730a9999999999a99062772275feffeefe00000000005555666666756656665000000000000044f000c700ccccc0000000000044f0
-0122100022222225bbbbbbb30a9aaaaaaaaaa99067772275fefeeffe00000000000000555556666665666650000000000044f000e1dededd50000000000044f0
-0111100022222255bbbbbb3300999aaa9999990066727775fffeffee00000000000000000005555667567565000000000044f00cceededed50000000000044f0
-=======
-222c1222000000bb00440000000888000009990000eeee0000ffff00088888800dddddd003333330000000000000000011111111111111111111111111111111
-0221c220000000bbb44000000888ff000999aa000e8888e00f22ff408ffffff8d222222d38888883000000000000000011111111111111111111111111111111
-002112000000000b4400000008fff00009aaa000e88ee882ff2ff2f48f8ff8f8d2d22d2d38388383000000000000000011444444444444444444444444444411
-002c1200008888804008880088ff400099aa7000e8e88282ffff42f48ffffff8d222222d388888830000000000000000114444444444444444444444444444f1
-00211200000ff8884888888088fff40099aaa700e8e88282f2f44ff48f8ff8f8d2d22d2d383883830055555555555000114444444444444444444444444444f1
-002112000000ff888877788808ffffff09aaaaaae8822822fff22f448f8888f8d2dddd2d383333830575565675675500114444444444444444444444444444f1
-0021c20000000f8888877788088ff888099aa999028882200f22f4408ffffff8d222222d3888888305656656656657501144f1111111111111111111111144f1
-002c120000000f888888878200088800000999000022220000444400088888800dddddd00333333055656556656566751144f1111111111111111111111144f1
+222c1222000000bb00440000000888000009990000eeee0000ffff0000022200000888000bbbbbb0000000000000000011111111111111111111111111111111
+0221c220000000bbb44000000888ff000999aa000e8888e00f22ff400002220000088800b888888b000000000000000011111111111111111111111111111111
+002112000000000b4400000008fff00009aaa000e88ee882ff2ff2f40022022000880880b8b88b8b000000000000000011444444444444444444444444444411
+002c1200008888804008880088ff400099aa7000e8e88282ffff42f40220002208800088b888888b0000000000000000114444444444444444444444444444f1
+00211200000ff8884888888088fff40099aaa700e8e88282f2f44ff40200000208000008b8b88b8b0055555555555000114444444444444444444444444444f1
+002112000000ff888877788808ffffff09aaaaaae8822822fff22f440220002208800088b8bbbb8b0575565675675500114444444444444444444444444444f1
+0021c20000000f8888877788088ff888099aa999028882200f22f4400220002208800088b888888b05656656656657501144f1111111111111111111111144f1
+002c120000000f88888887820008880000099900002222000044440000000000000000000bbbbbb055656556656566751144f1111111111111111111111144f1
 002e820088f0ff88888888820000000000000044007777000066660000000000000000000000000057656566556566651144f1111111333311111111111144f1
-0028e20088ff88888888882200000000000000440777776006dddd6000000000000000000000000005556566566566501144f11111133bbb11111111111144f1
-0028820088888888888888200000000000000004777777766ddd6d6d00000000000000000000000005575575666555001144f111113bbcccc1111111111144f1
-00288200888888888888822000000000000000a9777766766dd66d6d00000000000000000000000000555555555550001144f11111b6cccc11111111111144f1
-002e8200088888888888220000000000000000a9777667766dd6dd6d55550000000000000000000000000000000000001144f11113b1656511111111111144f1
+0028e20088ff88888888882200000000000000440777776006dddd6000000000000000000000000005556566566566501144f11111133bbb11115111111144f1
+0028820088888888888888200000000000000004777777766ddd6d6d00000000000000000000000005575575666555001144f111113bbcccc1151111111144f1
+00288200888888888888822000000000000000a9777766766dd66d6d00000000000000000000000000555555555550001144f11111b6cccc11151111111144f1
+002e8200088888888888220000000000000000a9777667766dd6dd6d55550000000000000000000000000000000000001144f11113b1656511511111111144f1
 0028820000888888888820000000000000000a9977767766666666dd66666555500000000000000000000000000000001144f1113331ccccc1111111111144f1
 0228e22000088888882220000000000000000a990777766006666dd066566666665555000000000000000000000000001144f1113111cc4778111111111144f1
 222e82220000088222200000400000000000a9990066660000dddd0066755656666656655500000000000000000000001144f11111cc1ccc11111111111144f1
@@ -1735,9 +1638,8 @@ deeeeeedd111111d0000000000000000dddddddddddddddd00000000000000001111111100000000
 01111000022222500bbbbb3099aa00000aaa9a99066776660feeefe055555665666666667566666550000000000000001144f1111ee1c1c9c1111111111144f1
 0122100022227725bbbb77b3a99aaaaaaaa99a9066727775feeffffe00000555556666675666566666500000000000001144f1111e11e19cc1111111111144f1
 0111100022222775bbbbb7730a9999999999a99062772275feffeefe00000000005555666666756656665000000000001144f111c711ccccc1111111111144f1
-0122100022222225bbbbbbb30a9aaaaaaaaaa99067772275fefeeffe00000000000000555556666665666650000000001144f111eedededd11111111111144f1
-0111100022222255bbbbbb3300999aaa9999990066727775fffeffee00000000000000000005555667567565000000001144f11cceededed11111111111144f1
->>>>>>> 4979e14439f7f60b2321536c5b425b84362bf435
+0122100022222225bbbbbbb30a9aaaaaaaaaa99067772275fefeeffe00000000000000555556666665666650000000001144f111e1dededd51111111111144f1
+0111100022222255bbbbbb3300999aaa9999990066727775fffeffee00000000000000000005555667567565000000001144f11cceededed51111111111144f1
 01221000022225500bbbb3300009999999999000066775550ffffee0000000000000000000000005556666560000000099999999999999999999999999999999
 12222100005555000033330000000999990000000055550000eeee00000000000000000000000000005567560000000099999999999999999999999999999999
 000000000000000000000000000000000000000000000000000000000000000000000000000000000000557660000000114555555555555555555555555554f1
