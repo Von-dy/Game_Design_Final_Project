@@ -803,7 +803,7 @@ function boss_interaction(id,player)
  if id==1 then
   for v in all(boss.valves) do
    vhb=v.hbox
-   if attackcollide(player,vhb) then v.hp-=10 end
+   if attackcollide(player,vhb) then v.hp-=1 end
   end
  end
  --stomach interaction
