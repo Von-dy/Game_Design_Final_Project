@@ -404,11 +404,15 @@ end
 --burst of bullets out
 function valve_burst()
  local v=boss.av
- del(boss,boss.av)
  --make 8 bullets, 4 diagonals 4 straight
  for i=0,7 do
-  add(boss.bullets,make_bullet(v,i))
+  if v.x then
+   local b=make_bullet(v,i) 
+   b.y+=12
+   add(boss.bullets,b)
+  end
  end
+ del(boss,boss.av)
 end
 
 function move_bullets()
