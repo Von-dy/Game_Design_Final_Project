@@ -11,6 +11,24 @@ function set_area(x,y)
  end
 end
 
+function print_quote(q,width,startx,starty,col)
+ local length=#q/width
+ --every row
+ for i=0,length do
+  print(sub(q,i*width,(i+1)*width-1),startx,i*8+starty,col)
+ end
+end
+
+--[[function make_curtain()
+ --column
+ for i=0,128 do
+  --row
+  for j=0,128 do
+   pset(i,j,6)
+  end
+ end
+end]]
+
 function make_attack(fun,t1,t2,t3,t4)
 	local a={
 		fun=fun,
@@ -25,12 +43,13 @@ end
 function _init()
  music(-1)
  sfx(-1)
+ quotes={"a virus is a small infectious agent that replicates only inside the living cells of other organisms. viruses can infect all types of life forms, from animals and plants to microorganisms, including bacteria and archaea","the heart is a muscular organ in most animals, which pumps blood through the blood vessels of the circulatory system. blood provides the body with oxygen and nutrients, as well as assists in the removal of metabolic wastes. in humans, the heart is located between the lungs, in the middle compartment of the chest","the brain is an organ that serves as the center of the nervous system in all vertebrate and most invertebrate animals. the brain is located in the head, usually close to the sensory organs for senses such as vision. the brain is the most complex organ in a vertebrate's body. in a human, the cerebral cortex contains approximately 15-33 billion neurons, each connected by synapses to several thousand other neurons.","the lungs are the primary organs of the respiratory system in humans and many other animals including a few fish and some snails. in mammals and most other vertebrates, two lungs are located near the backbone on either side of the heart. their function in the respiratory system is to extract oxygen from the atmosphere and transfer it into the bloodstream, and to release carbon dioxide from the bloodstream into the atmosphere, in a process of gas exchange.","the stomach is a muscular, hollow organ in the gastrointestinal tract of humans and many other animals, including several invertebrates. the stomach has a dilated structure and functions as a vital digestive organ. in the digestive system the stomach is involved in the second phase of digestion, following mastication (chewing). ","there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","viruses have no morality, no sense of good and evil, the deserving or the undeserving.... aids is not the swift sword with which the lord punishes the evil practitioners of male homosexuality and intravenous drug use. it is simply an opportunistic virus that does what it has to do to stay alive.","the fact that, with respect to size, the viruses overlapped with the organisms of the biologist at one extreme and with the molecules of the chemist at the other extreme only served to heighten the mystery regarding the nature of viruses. then too, it became obvious that a sharp line dividing living from non-living things could not be drawn and this fact served to add fuel for discussion of the age-old question of â'what is life?'","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus."}
  set_area(16,0)
- lbx,lby,z,c=0,0,0,0 --beat speed,count
+ lbx,lby,z,c,going_to=0,0,0,0,0 --beat speed,count
  --game object
  boss_list={"entrance","heart","stomach","lungs","brain"}
  game={
-   --0=pmenu, 1=travel, 2=boss, 3=game over, 4=main menu
+   --0=pmenu, 1=travel, 2=boss, 3=game over, 4=main menu, 5=transition
    state=4,
    frame_counter=0,
    playerct=1,
@@ -47,6 +66,7 @@ function _init()
 end
 
 function init_overworld()
+ going_to=1
  set_area(32,16)
  --set game state to overworld
  game.state=1
@@ -189,8 +209,8 @@ function stomach_logic(s)
  if boss.hp>=5 then s=1 end
  if boss.hp<5 then s=2 end
  
- if boss.hp==0 then 
-  --kill boss
+ if boss.hp==0 then
+  init_transition(0)
  end
  
  for e in all(boss.enzymes) do 
@@ -215,7 +235,8 @@ function hb_logic(s)
 
  --if all valves destroyed
  if #boss.valves==0 then
-  init_overworld() --added for overworld
+  init_transition(0)
+  --init_overworld() --added for overworld
  end
  
  --check valve hp
@@ -236,7 +257,9 @@ function lungs_logic(s)
  if boss.hp<100 then s=1 end
  
  if boss.hp<=66 then s=2 end 
-
+ 
+ if boss.hp==0 then init_transition(0) end
+ 
  for b in all(boss.bullets) do
   b.d=boss.d
  end
@@ -952,6 +975,7 @@ function _update60()
  if game.state==2 then update_game() end
  if game.state==3 then update_gameover() end
  if game.state==4 then update_mainmenu() end
+ if game.state==5 then update_transition() end
 end
 
 function update_mainmenu()
@@ -978,7 +1002,8 @@ function update_menu()
   update_player_menu(p)
   if p.syringe.ready==true then ready_count+=1 end
  end
- if ready_count==#players then init_overworld() end
+ if ready_count==#players then init_transition(0) end
+ --init_overworld() end
 end
 
 function update_player_menu(p)
@@ -1015,7 +1040,7 @@ function update_overworld()
   --player can interact next boss
   if p.x>88 and p.x<120 then 
    if p.dflag==1 then count+=1 end
-   if count==#players then make_boss() end
+   if count==#players then init_transition(1) end
   end
  end
 end
@@ -1092,7 +1117,27 @@ function _draw()
  if game.state==2 or game.state==1 then draw_game() end
  if game.state==3 then draw_gameover() end
  if game.state==4 then draw_mainmenu() end
- --print(game.state)
+ if game.state==5 then draw_transition() end
+ --print(game.state,0,0,9)
+end
+
+function init_transition(d)
+ going_to=d
+ game.state=5
+ set_area(64,0)
+ random_quote=quotes[flr(rnd(#quotes))+1]
+end
+
+function update_transition()
+ if btn(5) then 
+ 	if going_to==0 then init_overworld()
+ 	else make_boss()
+ 	end
+ end
+end
+
+function draw_transition()
+ print_quote(random_quote,30,0,1,2)  
 end
 
 function draw_mainmenu()
@@ -1617,14 +1662,14 @@ e22e28824fff7f478e8f8fe811811811666666660000000000000000000000000000000000000000
 000000000000222881112200000000000022288888222222000000000000000001ee800000000000000000000088ee1000000665555655600000000000000000
 000000000000002221222000000000000002222222222200000000000000000001e88000000000000000000000088e1000000065566550000000000000000000
 00000000000000002222000000000000000022222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-222c1222000000bb00440000000888000009990000eeee0000ffff00000222000008880000000000000000000000000000000000000000000000000000000000
-0221c220000000bbb44000000888ff000999aa000e8888e00f22ff4000022200000888000aaaa000000000000000000000000000000000000000000000000000
-002112000000000b4400000008fff00009aaa000e88ee882ff2ff2f400220220008808800aa0aa00000000000000000000444444444444444444444444444400
-002c1200008888804008880088ff400099aa7000e8e88282ffff42f4022000220880008800000aaa0000000000000000004444444444444444444444444444f0
-00211200000ff8884888888088fff40099aaa700e8e88282f2f44ff40200000208000008000000aa0055555555555000004444444444444444444444444444f0
-002112000000ff888877788808ffffff09aaaaaae8822822fff22f44022000220880008800000aaa0575565675675500004444444444444444444444444444f0
-0021c20000000f8888877788088ff888099aa999028882200f22f44002200022088000880aa0aa0005656656656657500044f0000000000000000000000044f0
-002c120000000f88888887820008880000099900002222000044440000000000000000000aaaa00055656556656566750044f0000000000000000000000044f0
+222c1222000000bb00440000000888000009990000eeee0000ffff0000022200000888000bbbbbb0000000000000000000000000000000000000000000000000
+0221c220000000bbb44000000888ff000999aa000e8888e00f22ff400002220000088800b888888b000000000000000000000000000000000000000000000000
+002112000000000b4400000008fff00009aaa000e88ee882ff2ff2f40022022000880880b8b88b8b000000000000000000444444444444444444444444444400
+002c1200008888804008880088ff400099aa7000e8e88282ffff42f40220002208800088b888888b0000000000000000004444444444444444444444444444f0
+00211200000ff8884888888088fff40099aaa700e8e88282f2f44ff40200000208000008b8b88b8b0055555555555000004444444444444444444444444444f0
+002112000000ff888877788808ffffff09aaaaaae8822822fff22f440220002208800088b8bbbb8b0575565675675500004444444444444444444444444444f0
+0021c20000000f8888877788088ff888099aa999028882200f22f4400220002208800088b888888b05656656656657500044f0000000000000000000000044f0
+002c120000000f88888887820008880000099900002222000044440000000000000000000bbbbbb055656556656566750044f0000000000000000000000044f0
 002e820088f0ff88888888820000000000000044007777000066660000000000000000000000000057656566556566650044f0000000333300000000000044f0
 0028e20088ff88888888882200000000000000440777776006dddd6000000000000000000000000005556566566566500044f00000033bbb00005000000044f0
 0028820088888888888888200000000000000004777777766ddd6d6d00000000000000000000000005575575666555000044f000003bbcccc0050000000044f0
