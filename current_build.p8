@@ -1,6 +1,11 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
+function set_pos(o,newx,newy)
+ o.x=newx
+ o.y=newy
+end
+
 --change map
 function set_area(x,y)
  for i=0,15 do
@@ -57,10 +62,7 @@ end
 function init_overworld()
  going_to=1
  set_area(32,16)
- for p in all(players) do
-  p.x=8
-  p.y=104
- end
+ foreach(p,set_pos(p,8,104))
  --set game state to overworld
  game.state=1
  if game.prev_boss then game.prev_boss=boss.id else game.prev_boss=0 end
@@ -121,10 +123,7 @@ function heart_boss()
   v=make_valve(i)
   add(boss.valves,v)
  end
- for p in all(players) do
-  p.x=8
-  p.y=104
- end
+ foreach(p,set_pos(p,8,104))
  make_attack(clot_attack,10,0,5,0)
  make_attack(vb,10,7,10,8)
  make_attack(valve_burst,10,0,10,0)
@@ -136,10 +135,7 @@ function stomach()
  boss.healthbox=makehitbox(76,40,44,44)
  boss.enzymes={}
  boss.hurtboxes={}
- for p in all(players) do
-  p.x=10
-  p.y=90
- end
+ foreach(p,set_pos(p,10,90))
  make_attack(wave,10,0,10,0)
  make_attack(spawn_food,8,0,4,0)
  make_attack(spawn_enzyme,11,0,6,0)
@@ -147,10 +143,7 @@ end
 
 function lungs()
  boss=generic_boss(0,0,100,100,60,3)
- for p in all(players) do
-  p.x=14
-  p.y=104
- end
+ foreach(p,set_pos(p,14,104))
  boss.d,boss.blow=3,0
  boss.bullets={}
  boss.hboxes= {}
