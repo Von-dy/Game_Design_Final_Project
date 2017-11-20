@@ -265,11 +265,15 @@ function hurt_space()
   local ss=boss.safe_space
   for p in all(players) do
    if p.hitcooldown==0 and not hcollide(p,ss) then
+     game.screenshake=5
      p.hp-=1
      p.hitcooldown=100
    end
   end
   boss.safe_space=nil
+  --for par in all(particles) do
+--   if par.sp==56 then del(particles,par) end
+ -- end
  end
 end
 
@@ -1365,11 +1369,11 @@ function draw_boss()
  end
  if boss.id==3 then
   draw_lungs()
+  draw_smoke(boss.safe_space)
   if boss.safe_space then
    ss=boss.safe_space
    --rect(ss.x,ss.y,ss.x+ss.w,ss.y+ss.h,3)
    sspr(0,120,8,8,ss.x-4,ss.y-4,24,24)
-   draw_smoke(ss)
   end
  end
  draw_bullets()
@@ -1556,7 +1560,7 @@ end
 
 function draw_smoke(safe)
  --make cloud
- if game.frame_counter%10==0 then
+ if game.frame_counter%10==0 and safe~=nil then
   validx=false
   while not validx do
    rx=rnd(116)
