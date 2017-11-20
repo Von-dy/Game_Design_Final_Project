@@ -312,19 +312,21 @@ end
 
 function blow(d)
  for p in all(players) do
-  --left
-  if d==0 then
-   if p.x>1 and not solid(p.x+.1,p.y) then p.x-=.1 end
-  end
-  --right
-  if d==1 then
-   if p.x<119 and not solid(p.x-.1,p.y) then p.x+=.1 end
-  end
-  --center
-  if d==2 then
-   if p.x>=64 and not solid(p.x-.1,p.y) then p.x-=.1
-   elseif not solid(p.x+.1,p.y) then p.x+=.1 end
-  end
+  if p.state~=3 then
+	  --left
+	  if d==0 then
+	   if p.x>1 and not solid(p.x+1,p.y) then p.x-=.1 end
+	  end
+	  --right
+	  if d==1 then
+	   if p.x<119 and not solid(p.x-1,p.y) then p.x+=.1 end
+	  end
+	  --center
+	  if d==2 then
+	   if p.x>=64 and not solid(p.x-1,p.y) then p.x-=.1
+	   elseif not solid(p.x+1,p.y) then p.x+=.1 end
+	  end
+	 end
  end
 end
 
@@ -414,8 +416,9 @@ function valve_burst()
  for i=0,7 do
   if v.x then
    local b=make_bullet(v,i) 
-   b.y+=12
-   b.hbox.y+=12
+   local seed=flr(rnd(32))
+   b.y+=seed
+   b.hbox.y+=seed
    add(boss.bullets,b)
   end
  end
@@ -1103,7 +1106,7 @@ function update_transition()
 end
 
 function draw_transition()
- print_quote(random_quote,30,0,1,2)  
+ print_quote(random_quote,30,0,1,9)  
  print("press x to continue",48,120,7)
 end
 
@@ -1349,7 +1352,7 @@ function draw_hud(id)
  if id==3 then
   rectfill(0,4,(boss.hp/100)*128,6,10)
  end
- print(#boss.bullets,100,60)
+ --print(#boss.bullets,100,60)
 end
 
 function draw_boss()
