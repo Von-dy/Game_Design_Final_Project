@@ -50,7 +50,7 @@ function _init()
    screenshake=0,
    camx=0,
    camy=0,
-   b_remaining={2} --for testing
+   b_remaining={1,2,3} --for testing
  }
  --player list
  players = {}
