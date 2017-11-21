@@ -24,14 +24,14 @@ function print_quote(q,width,startx,starty,col)
 end
 
 function make_attack(fun,t1,t2,t3,t4)
-	local a={
-		fun=fun,
-	 t1=t1,
-	 t2=t2,
-	 t3=t3,
-	 t4=t4
-	}
-	add(boss.attacks,a)
+ local a={
+  fun=fun,
+  t1=t1,
+  t2=t2,
+  t3=t3,
+  t4=t4
+ }
+ add(boss.attacks,a)
 end
 
 function _init()
@@ -62,9 +62,9 @@ function _init()
 end
 
 function init_overworld()
- music(16)
  going_to=1
  set_area(32,16)
+ music(16)
  for p in all(players) do
   if p.hp>0 then set_pos(p,8,104) end
  end
@@ -317,20 +317,20 @@ end
 function blow(d)
  for p in all(players) do
   if p.state~=3 then
-	  --left
-	  if d==0 then
-	   if p.x>1 and not solid(p.x+1,p.y) then p.x-=.3 end
-	  end
-	  --right
-	  if d==1 then
-	   if p.x<119 and not solid(p.x-1,p.y) then p.x+=.3 end
-	  end
-	  --center
-	  if d==2 then
-	   if p.x>=64 and not solid(p.x-1,p.y) then p.x-=.3
-	   elseif not solid(p.x+1,p.y) then p.x+=.3 end
-	  end
-	 end
+   --left
+   if d==0 then
+    if p.x>1 and not solid(p.x+1,p.y) then p.x-=.3 end
+   end
+   --right
+   if d==1 then
+    if p.x<119 and not solid(p.x-1,p.y) then p.x+=.3 end
+   end
+   --center
+   if d==2 then
+    if p.x>=64 and not solid(p.x-1,p.y) then p.x-=.3
+    elseif not solid(p.x+1,p.y) then p.x+=.3 end
+   end
+  end
  end
 end
 
@@ -370,8 +370,8 @@ function spawn_enzyme()
  if i==21 then sp=200 end
  local tile={x=112,y=16}
  local e=make_bullet(tile,i,sp,6,6,1,0)
-	e.spawn=time()
-	e.state=0
+ e.spawn=time()
+ e.state=0
  add(boss.bullets,e)
 end
 
@@ -406,9 +406,9 @@ end
 --shoot a mini heart across the screen
 function mini_heart()
  for i=0,3 do
-	 local y=flr(rnd(104))+8
-	 tile={x=128, y=y}
-	 add(boss.bullets,make_bullet(tile,10,23))
+  local y=flr(rnd(104))+8
+  tile={x=128, y=y}
+  add(boss.bullets,make_bullet(tile,10,23))
  end
 end
 
@@ -499,11 +499,11 @@ function move_bullets()
 --    if b.state==-1 and time()-b.spawn+1%4==0 then b.state=0
     --move along vertically
     if b.state==0 then
-	    y+=1
-	    hy+=1
-	    for p in all(players) do
-	     if y<p.y+6 and y>p.y-6 then b.state=1 end
-	    end
+     y+=1
+     hy+=1
+     for p in all(players) do
+      if y<p.y+6 and y>p.y-6 then b.state=1 end
+     end
     --if on same axis as player
     elseif b.state==1 then x-=1 hx-=1 end
    end
@@ -738,15 +738,15 @@ function groundmovement(player)
  --interact
  if btnp(5,n) then
   if game.state~=1 then
-	  --dodge
-	  if dcl==0 then
-	   dflag=1
-	   state=3
-	   dcl=100
-	  end
-	 else
-	  if dflag==0 then dflag=1 else dflag=0 end
-	 end
+   --dodge
+   if dcl==0 then
+    dflag=1
+    state=3
+    dcl=100
+   end
+  else
+   if dflag==0 then dflag=1 else dflag=0 end
+  end
  end
 
  --if invuln
@@ -1117,9 +1117,9 @@ end
 
 function update_transition()
  if btnp(5) and time()-boss.ct>1 then
- 	if going_to==0 then init_overworld()
- 	else make_boss()
- 	end
+  if going_to==0 then init_overworld()
+  else make_boss()
+  end
  end
 end
 
@@ -1289,11 +1289,11 @@ function draw_instructions(p)
   --print("x=attack", x+5, y+38)
   --print("o=dodge", x+5, y+46)
 
-	--changes start screen design to menu screen design
-	for n=0, 128 do
-		spr(89,n,56)
-		pal(15,6,0)
-	end
+ --changes start screen design to menu screen design
+ for n=0, 128 do
+  spr(89,n,56)
+  pal(15,6,0)
+ end
 end
 
 function draw_game()
@@ -1478,13 +1478,11 @@ function draw_eyes(m, e_x, e_y, e_r, d, p_col, s_col)
  --angry eyebrows
  if m==1 then
   --left brow
- line(l_e_x-4, e_y-7, l_e_x+2, e_y-3, p_col)
- line(l_e_x-3, e_y-6, l_e_x+4, e_y-2, p_col)
- line(l_e_x-3, e_y-5, l_e_x+5, e_y-1, s_col)
+ line(l_e_x-e_r, e_y-e_r-2, l_e_x+e_r, e_y-(e_r/2)-1, p_col)
+ line(l_e_x-e_r, e_y-e_r-1, l_e_x+e_r, e_y-(e_r/2), s_col)
  --right brow
- line(r_e_x+1, e_y-7, r_e_x-2, e_y-3, p_col)
- line(r_e_x+3, e_y-6, r_e_x-4, e_y-2, p_col)
- line(r_e_x+3, e_y-5, r_e_x+5, e_y-1, s_col)
+ line(r_e_x+e_r, e_y-e_r-2, r_e_x-e_r, e_y-(e_r/2)-1, p_col)
+ line(r_e_x+e_r, e_y-e_r-1, r_e_x-e_r, e_y-(e_r/2), s_col)
  elseif m==2 then -- sad / eyelids
   for i=0, e_r do
    if i==e_r then
@@ -1651,14 +1649,14 @@ __gfx__
 06bbbb600099490000949900044999400090090000900900009499000bbbbb000699996000000000000000000000000000000000000000000000000000000000
 006bb600994949400494949999799799004009000040090049949494000000000069960000000000000000000000000000000000000000000000000000000000
 00066000409090900909090904949490004004000040040090900909000000000006600000000000000000000000000000000000000000000000000000000000
-00000000000c10000001c0000000000000c11c0000c11c000001c000055000500550550500777700000000000000000000000000000000000000000000000000
-0007700000c11c0000c11c00000000000c111cc00c111cc000c11c00577505755555055007777770000000000000000000000000000000000000000000000000
-00f7f7000111c1c00c1c111000000000c1711711c17117110c1c111057a957a70505555577777777000000000000000000000000000000000000000000000000
-077fff7017171110011171710000000001c111c001c111c0117117c155799a7505555050097979b0000000000000000000000000000000000000000000000000
-07fff77001c111c00c111c1000c11c0000111c0000111c000c111c10057797505550555509999990000000000000000000000000000000000000000000000000
-007f7f000011c100001c11000cc111c00010010000100100001c1100575aa57005055550099a9a90000000000000000000000000000000000000000000000000
-0007700011c1c1c00c1c1c111171171100c0010000c00100c11c1c1c557575505555050509a99990000000000000000000000000000000000000000000000000
-00000000c0101010010101010c1c1c1000c00c0000c00c001010010105505755050555000b99b990000000000000000000000000000000000000000000000000
+00000000000c10000001c0000000000000c11c0000c11c000001c000055000500550550566666666000000000000000000000000000000000000000000000000
+0007700000c11c0000c11c00000000000c111cc00c111cc000c11c00577505755555055069993336000000000000000000000000000000000000000000000000
+00f7f7000111c1c00c1c111000000000c1711711c17117110c1c111057a957a70505555569aa3996000000000000000000000000000000000000000000000000
+077fff7017171110011171710000000001c111c001c111c0117117c155799a750555505069393936000000000000000000000000000000000000000000000000
+07fff77001c111c00c111c1000c11c0000111c0000111c000c111c10057797505550555563333336000000000000000000000000000000000000000000000000
+007f7f000011c100001c11000cc111c00010010000100100001c1100575aa57005055550693a3a36000000000000000000000000000000000000000000000000
+0007700011c1c1c00c1c1c111171171100c0010000c00100c11c1c1c557575505555050569a33996000000000000000000000000000000000000000000000000
+00000000c0101010010101010c1c1c1000c00c0000c00c0010100101055057550505550069999396000000000000000000000000000000000000000000000000
 eeeeeeeeeeeeeeee99999999999999991111111c111111c13ffffffffffff333ffffffffff3333ff7777777766666666fffff33feeeeffeeffffffff99999999
 222222222222272299ffff99f9999ff9111111c111171c1133333fffff333333fffafffffbfa773f7777777766666666fffabf73eeeefeeeffffffff99999999
 e22722ee222222229999fff99fffff99117111c111717111a3333333333333aaf9fffaffb9fff7737777777766666666f9ffbaf3feefffefffffffff99999999
