@@ -37,7 +37,7 @@ end
 function _init()
  music(-1)
  sfx(-1)
- quotes={"a virus is a small infectious agent that replicates only inside the living cells of other organisms. viruses can infect all types of life forms, from animals and plants to microorganisms, including bacteria and archaea","the heart is a muscular organ in most animals, which pumps blood through the blood vessels of the circulatory system. blood provides the body with oxygen and nutrients, as well as assists in the removal of metabolic wastes. in humans, the heart is located between the lungs, in the middle compartment of the chest","the brain is an organ that serves as the center of the nervous system in all vertebrate and most invertebrate animals. the brain is located in the head, usually close to the sensory organs for senses such as vision. the brain is the most complex organ in a vertebrate's body. in a human, the cerebral cortex contains approximately 15-33 billion neurons, each connected by synapses to several thousand other neurons.","the lungs are the primary organs of the respiratory system in humans and many other animals including a few fish and some snails. in mammals and most other vertebrates, two lungs are located near the backbone on either side of the heart. their function in the respiratory system is to extract oxygen from the atmosphere and transfer it into the bloodstream, and to release carbon dioxide from the bloodstream into the atmosphere, in a process of gas exchange.","the stomach is a muscular, hollow organ in the gastrointestinal tract of humans and many other animals, including several invertebrates. the stomach has a dilated structure and functions as a vital digestive organ. in the digestive system the stomach is involved in the second phase of digestion, following mastication (chewing). ","there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","viruses have no morality, no sense of good and evil, the deserving or the undeserving.... aids is not the swift sword with which the lord punishes the evil practitioners of male homosexuality and intravenous drug use. it is simply an opportunistic virus that does what it has to do to stay alive.","the fact that, with respect to size, the viruses overlapped with the organisms of the biologist at one extreme and with the molecules of the chemist at the other extreme only served to heighten the mystery regarding the nature of viruses. then too, it became obvious that a sharp line dividing living from non-living things could not be drawn and this fact served to add fuel for discussion of the age-old question of ?what is life?'","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus."}
+ quotes={"a virus is a small infectious agent that replicates only inside the living cells of other organisms. viruses can infect all types of life forms, from animals and plants to microorganisms, including bacteria and archaea","the heart is a muscular organ in most animals, which pumps blood through the blood vessels of the circulatory system. blood provides the body with oxygen and nutrients, as well as assists in the removal of metabolic wastes. in humans, the heart is located between the lungs, in the middle compartment of the chest","the brain is an organ that serves as the center of the nervous system in all vertebrate and most invertebrate animals. the brain is located in the head, usually close to the sensory organs for senses such as vision. the brain is the most complex organ in a vertebrate's body. in a human, the cerebral cortex contains approximately 15-33 billion neurons, each connected by synapses to several thousand other neurons.","the lungs are the primary organs of the respiratory system in humans and many other animals including a few fish and some snails. in mammals and most other vertebrates, two lungs are located near the backbone on either side of the heart. their function in the respiratory system is to extract oxygen from the atmosphere and transfer it into the bloodstream, and to release carbon dioxide from the bloodstream into the atmosphere, in a process of gas exchange.","the stomach is a muscular, hollow organ in the gastrointestinal tract of humans and many other animals, including several invertebrates. the stomach has a dilated structure and functions as a vital digestive organ. in the digestive system the stomach is involved in the second phase of digestion, following mastication (chewing). ","there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","viruses have no morality, no sense of good and evil, the deserving or the undeserving.... aids is not the swift sword with which the lord punishes the evil practitioners of male homosexuality and intravenous drug use. it is simply an opportunistic virus that does what it has to do to stay alive.","the fact that, with respect to size, the viruses overlapped with the organisms of the biologist at one extreme and with the molecules of the chemist at the other extreme only served to heighten the mystery regarding the nature of viruses. then too, it became obvious that a sharp line dividing living from non-living things could not be drawn and this fact served to add fuel for discussion of the age-old question of ?what is life?'","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus.","the average adult heart beats 72 times a minute; 100,000 times a day; 3,600,000 times a year; and 2.5 billion times during a lifetime.","every day, the heart creates enough energy to drive a truck 20 miles. in a lifetime, that is equivalent to driving to the moon and back.","the stomach serves as a first line of defense for your immune system. it contains hydrochloric acid, which helps to kill off bacteria and viruses that may enter with the food you eat."}
  set_area(16,0)
  lbx,lby,z,c,going_to=0,0,0,0,0 --beat speed,count
  --game object
@@ -50,7 +50,7 @@ function _init()
    screenshake=0,
    camx=0,
    camy=0,
-   b_remaining={2} --for testing
+   b_remaining={1,2,3} --for testing
  }
  --player list
  players = {}
@@ -65,8 +65,7 @@ function init_overworld()
  going_to=1
  set_area(32,16)
  for p in all(players) do
-  set_pos(p,8,104)
-  p.hp=3
+  if p.hp>0 then set_pos(p,8,104) end
  end
  --set game state to overworld
  game.state=1
@@ -139,7 +138,7 @@ function heart_boss()
 end
 
 function stomach()
- boss=generic_boss(384,0,0,40,95,70,2)
+ boss=generic_boss(384,0,0,60,95,70,2)
  boss.healthbox=makehitbox(76,40,44,44)
  boss.enzymes={}
  boss.hurtboxes={}
@@ -209,9 +208,9 @@ function make_bullet(o,d,sp,w,h,offx,offy)
 end
 
 function stomach_logic(s)
- if boss.hp==40 then s=0
- elseif boss.hp>20 then s=1
- elseif boss.hp<=20 then s=2 end
+ if boss.hp==60 then s=0
+ elseif boss.hp>30 then s=1
+ elseif boss.hp<=30 then s=2 end
 
  for w in all(boss.hurtboxes) do
   if w.h<=0 then del(boss.hboxes,w)
@@ -264,7 +263,7 @@ function hurt_space()
  if boss.safe_space then
   local ss=boss.safe_space
   for p in all(players) do
-   if p.hitcooldown==0 and not hcollide(p,ss) then
+   if p.hitcooldown==0 and not (p.state==3 or hcollide(p,ss)) then
      game.screenshake=5
      p.hp-=1
      p.hitcooldown=100
@@ -319,16 +318,16 @@ function blow(d)
   if p.state~=3 then
 	  --left
 	  if d==0 then
-	   if p.x>1 and not solid(p.x+1,p.y) then p.x-=.1 end
+	   if p.x>1 and not solid(p.x+1,p.y) then p.x-=.3 end
 	  end
 	  --right
 	  if d==1 then
-	   if p.x<119 and not solid(p.x-1,p.y) then p.x+=.1 end
+	   if p.x<119 and not solid(p.x-1,p.y) then p.x+=.3 end
 	  end
 	  --center
 	  if d==2 then
-	   if p.x>=64 and not solid(p.x-1,p.y) then p.x-=.1
-	   elseif not solid(p.x+1,p.y) then p.x+=.1 end
+	   if p.x>=64 and not solid(p.x-1,p.y) then p.x-=.3
+	   elseif not solid(p.x+1,p.y) then p.x+=.3 end
 	  end
 	 end
  end
@@ -836,7 +835,7 @@ function boss_interaction(id,player)
  --lungs interaction
  if id==3 then
   for hb in all(boss.hboxes) do
-   if attackcollide(player,hb) then boss.hp-=10 end
+   if attackcollide(player,hb) then boss.hp-=1 end
   end
  end
 end
@@ -880,10 +879,11 @@ function music_player(boss,state)
 end
 
 function boss_logic(id)
- timer=time()-boss.ct+1
- t=players[1]
+ if boss.ct%30==0 then boss.ct=time() end
+ local boss_timer=time()-boss.ct+1
+ local t=players[1]
 
- s=boss.state
+ local s=boss.state
  if boss.id==1 then
   hb_logic(s)
   heart_beat()
@@ -899,12 +899,12 @@ function boss_logic(id)
  for a in all(boss.attacks) do
   --what boss phase
   if boss.state==1 then
-   if timer%a.t1==a.t2 then
+   if boss_timer%a.t1==a.t2 then
     a.fun()
    end
   end
   if boss.state==2 then
-   if timer%a.t3==a.t4 then
+   if boss_timer%a.t3==a.t4 then
     a.fun()
    end
   end
@@ -993,13 +993,21 @@ end
 function update_overworld()
  local count=0
  for p in all(players) do
+  text=nil
   groundmovement(p)
   update_player_sprite(p)
   --player can interact with shop
-  if p.x>48 and p.x<72 then end
+  if p.x>48 and p.x<72 then 
+   if btn(5,p.id) then
+    text="it would be sick if i had a minigame for you, enjoy some health instead"
+    for p in all(players) do
+     if p.hp==0 then p.hp=3 set_pos(p,8,60) else p.hp=3 end
+    end
+   end
+  end
   --player can interact next boss
   if p.x>88 and p.x<120 then
-   if p.dflag==1 then count+=1 end
+   if btn(5,p.id) then count+=1 end
    if count==#players then init_transition(1) end
   end
  end
@@ -1147,6 +1155,7 @@ function draw_overworld()
  circfill(101,98,11,8)
 
  --spr of sign planks
+ if text then print_quote(text,20,35,35,7) end
 
  --prints for signs
  print(boss_list[prev+1], 3, 72, 11)
@@ -1154,7 +1163,7 @@ function draw_overworld()
 
  --print instructions for game, only on first entrance of overworld
 --if no previous boss, then do these
-  if game.prev_boss==0 then
+  if game.prev_boss==0 and not text then
     print("controls:",40,20,7)
     print("player 1",2,28,7)
     print("arrows to move",2,36,7)
@@ -1162,7 +1171,7 @@ function draw_overworld()
     print("x to dodge",2,52,7)
   end
 --if two players then do these too
-  if p.n==1 then
+  if p.n==1 and not text then
     print("player 2",62,28,7)
     print("esdf to move",62,36,7)
     print("lshift to attack",62,44,7)
@@ -1347,7 +1356,7 @@ function draw_hud(id)
  if id==2 then
    if game.state!=1 then
      rectfill(0,4,128,6,8)
-     rectfill(0,4,(boss.hp)/40*128,6,3)
+     rectfill(0,4,(boss.hp)/60*128,6,3)
      rect(0, 3, 128, 7, 0)
    end
  end
