@@ -117,7 +117,9 @@ function make_boss()
   lungs()
  end
  set_area(lbx/8,lby/8)
- scoreboard()
+ for p in all(players) do
+  p.scores[boss.id]=scoreboard()
+ end
 end
 
 --create the heart boss
@@ -432,18 +434,19 @@ end
 
 function move_items()
  for p in all(players) do
-  for i in all(p.items) do
-   if i.x<0 or i.x>128 then del(p.items,i) end
-   if i.isgrabbable==true then 
-    i.x,i.y,i.hbox.x,i.hbox.y=p.x,p.y,p.x,p.y
-   end
-   if i.isgrabbable==false then
-    local ispd=-1
-    if i.d==1 then ispd=1 end
-    i.x+=ispd
-    i.hbox.x+=ispd 
-   end
-  end
+  if p.item then
+	  local i=p.item
+	  if i.x<0 or i.x>128 then i=nil
+	  elseif i.isgrabbable==true then 
+	   i.x,i.y,i.hbox.x,i.hbox.y=p.x,p.y,p.x,p.y
+	  elseif i.isgrabbable==false then
+	   local ispd=-1
+	   if i.d==1 then ispd=1 end
+	   i.x+=ispd
+	   i.hbox.x+=ispd 
+	  end
+	  p.item=i
+	 end
  end
 end
 
@@ -463,8 +466,8 @@ function move_bullets()
     p.scores[boss.id].hitstaken+=1
     game.screenshake=8
    end
-   if attackcollide(p,hbox) and b.isgrabbable==true and #p.items==0 then
-    add(p.items,b)
+   if attackcollide(p,hbox) and b.isgrabbable==true then
+    p.item=b
     del(boss.bullets,b)
    end
   end
@@ -579,8 +582,7 @@ function makeplayer(slot)
    dflag=0,
    hp=3,
    hitcooldown=0,
-   hitbox={},
-   items={}
+   hitbox={}
  }
  if slot==1 then p.x=12 end
  --add player to list
@@ -589,7 +591,6 @@ end
 
 --track stats for score
 function scoreboard()
- --sorry for the token count, but there's no easy way to clone tables in pico 8
  thisboard={
   bossid=boss.id,
   lasttime=time(),
@@ -598,17 +599,7 @@ function scoreboard()
   hitstaken=0,
   hitsgiven=0
  }
- players[1].scores[boss.id]=thisboard
- if game.playerct==2 then
-  thatboard={
-   bossid=boss.id,
-   lasttime=time(),
-   timer=0,
-   hitstaken=0,
-   hitsgiven=0
-  }
-  players[2].scores[boss.id]=thatboard
- end
+ return thisboard
 end
 
 function makehitbox(x,y,w,h)
@@ -689,13 +680,13 @@ function groundmovement(player)
  --attack
  if btn(4,n) then
   --start attack if not attacking
-  if a==0 and ac<1 and #(player.items)==0 then
+  if a==0 and ac<1 and not player.item then
    player.hitbox=makehitbox(x,y,10,3)
    hbox,a,ac,player.last_action=player.hitbox,1,40,4
   end
-  if #(player.items)==1 and player.last_action==0 and player.items[1].isgrabbable==true then
-   player.items[1].isgrabbable=false
-   player.items[1].d=player.d
+  if player.item and player.last_action==0 and player.item.isgrabbable==true then
+   player.item.isgrabbable=false
+   player.item.d=player.d
   end
  else 
   player.last_action=0
@@ -1336,11 +1327,8 @@ function draw_players()
   local p_hb=p.hitbox
   local pcol=0
   local scol=0
-
- for i in all(p.items) do
-  spr(i.sprite,i.x,i.y)
- end
-
+  if p.item then spr(p.item.sprite,p.item.x,p.item.y) end 
+  
   if p_cc==0 then
    pcol=2
    scol=8
