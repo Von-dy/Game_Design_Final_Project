@@ -50,7 +50,7 @@ function _init()
    screenshake=0,
    camx=0,
    camy=0,
-   b_remaining={1,2,3} --for testing
+   b_remaining={2} --for testing
  }
  --player list
  players = {}
@@ -216,7 +216,7 @@ function stomach_logic(s)
  for w in all(boss.hurtboxes) do
   if w.h<=0 then del(boss.hboxes,w)
   elseif time()-w.spawn_time<2 then w.h=2
-  elseif time()-w.spawn_time<5 then w.h+=.4 w.y-=.4
+  elseif time()-w.spawn_time<5 then w.h+=.5 w.y-=.5
   elseif time()-w.spawn_time>5 then w.h-=.4 w.y+=.4
   end
  end
@@ -372,6 +372,7 @@ function spawn_enzyme()
  local e=make_bullet(tile,i,sp,6,6,1,0)
  e.spawn=time()
  e.state=0
+ e.isgrabbable=true
  add(boss.bullets,e)
 end
 
@@ -429,6 +430,23 @@ function valve_burst()
  del(boss,boss.av)
 end
 
+function move_items()
+ for p in all(players) do
+  for i in all(p.items) do
+   if i.x<0 or i.x>128 then del(p.items,i) end
+   if i.isgrabbable==true then 
+    i.x,i.y,i.hbox.x,i.hbox.y=p.x,p.y,p.x,p.y
+   end
+   if i.isgrabbable==false then
+    local ispd=-1
+    if i.d==1 then ispd=1 end
+    i.x+=ispd
+    i.hbox.x+=ispd 
+   end
+  end
+ end
+end
+
 function move_bullets()
  for b in all(boss.bullets) do
   --save tokens
@@ -444,6 +462,10 @@ function move_bullets()
     p.hitcooldown=120
     p.scores[boss.id].hitstaken+=1
     game.screenshake=8
+   end
+   if attackcollide(p,hbox) and b.isgrabbable==true and #p.items==0 then
+    add(p.items,b)
+    del(boss.bullets,b)
    end
   end
 
@@ -484,7 +506,6 @@ function move_bullets()
 
    --enzymes
    if d==20 then
---    if b.state==-1 and time()-b.spawn%4==0 then b.state=0
     if b.state==0 then
      x-=1
      hx-=1
@@ -496,7 +517,6 @@ function move_bullets()
    end
 
    if d==21 then
---    if b.state==-1 and time()-b.spawn+1%4==0 then b.state=0
     --move along vertically
     if b.state==0 then
      y+=1
@@ -518,14 +538,6 @@ function move_bullets()
   end
  end
 end
-
---[[function col_collision(p,c)
- for i=p.x+3,p.x+6 do
-  for j=p.y+3,p.y+6 do
-   if pget(i,j)==c then p.hp-=1 end
-  end
- end
-end]]
 
 function makeplayer(slot)
  p={
@@ -567,7 +579,8 @@ function makeplayer(slot)
    dflag=0,
    hp=3,
    hitcooldown=0,
-   hitbox={}
+   hitbox={},
+   items={}
  }
  if slot==1 then p.x=12 end
  --add player to list
@@ -676,10 +689,16 @@ function groundmovement(player)
  --attack
  if btn(4,n) then
   --start attack if not attacking
-  if a==0 and ac<1 then
+  if a==0 and ac<1 and #(player.items)==0 then
    player.hitbox=makehitbox(x,y,10,3)
-   hbox,a,ac=player.hitbox,1,40
+   hbox,a,ac,player.last_action=player.hitbox,1,40,4
   end
+  if #(player.items)==1 and player.last_action==0 and player.items[1].isgrabbable==true then
+   player.items[1].isgrabbable=false
+   player.items[1].d=player.d
+  end
+ else 
+  player.last_action=0
  end
 
  --extend hitbox
@@ -916,6 +935,7 @@ function boss_logic(id)
   end
  end
  move_bullets()
+ move_items()
  --if phase change
  if s~=boss.state then
   if s==0 then game.screenshake=60 end
@@ -1316,6 +1336,10 @@ function draw_players()
   local p_hb=p.hitbox
   local pcol=0
   local scol=0
+
+ for i in all(p.items) do
+  spr(i.sprite,i.x,i.y)
+ end
 
   if p_cc==0 then
    pcol=2
