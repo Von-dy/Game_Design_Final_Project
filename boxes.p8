@@ -67,15 +67,15 @@ taken from dank tombs cart, author = krajzeg
 function kind(kob)
  kob=kob or {}
  setmetatable(kob,{__index=kob.extends})
-
+ 
  kob.new=function(self,ob)
   ob=set(ob,{kind=kob})
   setmetatable(ob,{__index=kob})
   if (kob.create) ob:create()
   return ob
  end
-
- return kob
+ 
+ return kob 
 end
 
 --------------------
@@ -108,7 +108,7 @@ end
 
 -- returns smallest element
 -- of seq, according to key
--- function
+-- function 
 function min_of(seq,key)
  local me,mk=nil,32767
  for e in all(seq) do
@@ -133,22 +133,22 @@ box=kind()
    self.xr+v.x,self.yb+v.y
   )
  end
-
+ 
  function box:overlaps(b)
-  return
-   self.xr>=b.xl and
+  return 
+   self.xr>=b.xl and 
    b.xr>=self.xl and
-   self.yb>=b.yt and
+   self.yb>=b.yt and 
    b.yb>=self.yt
  end
-
+ 
  function box:contains(pt)
   return pt.x>=self.xl and
    pt.y>=self.yt and
    pt.x<=self.xr and
    pt.y<=self.yb
  end
-
+ 
  --direction and value, 1 == left, 2 == right, 3 == up, 4 == down
  function box:extend(d, val)
   if d==1 then return make_box(self.xl-val, self.yt, self.xr, self.yb) end
@@ -162,7 +162,7 @@ box=kind()
   local v2=v(flr(self.xr), flr(self.yb))
   return vec_box(v1, v2)
  end
-
+    
  function box:sepv(b)
   local candidates={
    v(b.xl-self.xr-1,0),
@@ -170,7 +170,7 @@ box=kind()
    v(0,b.yt-self.yb-1),
    v(0,b.yb-self.yt+1)
   }
-  return min_of(candidates,vec.__len)
+  return min_of(candidates,vec.__len)   
  end
 
 function make_box(xl,yt,xr,yb)
@@ -250,7 +250,7 @@ function vec:split()
 end
 -- has to be there so
 -- our metatable works
--- for both operators
+-- for both operators 
 -- and methods
 vec.__index = vec
 
@@ -274,8 +274,14 @@ dirs={
 -----------------------------
 curr_game=kind()
 function curr_game:update_game(state)
- --overworld/boss
- if state<2 then
+ --overworld
+ if state==0 then
+  return function()
+   update_players()
+   update_boss()
+  end
+ --boss
+ elseif state==1 then
   return function()
    update_players()
    update_boss()
@@ -283,12 +289,14 @@ function curr_game:update_game(state)
  --transition
  elseif state==2 then
   return function()
-   if btnp(5) then init_boss() end
+   if btnp(4) then init_boss() end
+   --update_players()
+   --update_boss()
   end
  --game over
  elseif state==3 then
   return function()
-   if btnp(5) then _init() end
+   update_players()
   end
  --menu
  elseif state==4 then
@@ -303,7 +311,10 @@ end
 -----------------------------
 boss_hit_boxes={
  { --heart
-
+  {88,17,96,64},
+  {112,17,120,64},
+  {88,64,96,111},
+  {112,64,120,111}
  },
  { --stomach
   {88, 48, 120, 96}
@@ -320,7 +331,17 @@ boss_hit_boxes={
   {96, 79, 112, 111} -- next_boss
  }
 }
-
+------------------------------
+-- boss health boxes
+------------------------------
+boss_health_boxes={
+ {20,20,20,20}, --heart
+ {70}, --stomach
+ {80,80,80}, --lungs
+ { --brain
+ },
+ {0,0}--overworld
+}
 ------------------------------
 -- boss hurt boxes
 ------------------------------
@@ -450,8 +471,8 @@ function _init()
  debug=false
  lbx,lby,mode=0,0,0
  --state: 0=overworld, 1=boss, 2=transition, 3=gameover, 4=menu
- game={ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={1,2,3}, difficulty=1, menu=0, menuchoice=0, scores={}}
- quotes={"a virus is a small infectious agent that replicates only inside the living cells of other organisms. viruses can infect all types of life forms, from animals and plants to microorganisms, including bacteria and archaea","the heart is a muscular organ in most animals, which pumps blood through the blood vessels of the circulatory system. blood provides the body with oxygen and nutrients, as well as assists in the removal of metabolic wastes. in humans, the heart is located between the lungs, in the middle compartment of the chest","the brain is an organ that serves as the center of the nervous system in all vertebrate and most invertebrate animals. the brain is located in the head, usually close to the sensory organs for senses such as vision. the brain is the most complex organ in a vertebrate's body. in a human, the cerebral cortex contains approximately 15-33 billion neurons, each connected by synapses to several thousand other neurons.","the lungs are the primary organs of the respiratory system in humans and many other animals including a few fish and some snails. in mammals and most other vertebrates, two lungs are located near the backbone on either side of the heart. their function in the respiratory system is to extract oxygen from the atmosphere and transfer it into the bloodstream, and to release carbon dioxide from the bloodstream into the atmosphere, in a process of gas exchange.","the stomach is a muscular, hollow organ in the gastrointestinal tract of humans and many other animals, including several invertebrates. the stomach has a dilated structure and functions as a vital digestive organ. in the digestive system the stomach is involved in the second phase of digestion, following mastication (chewing). ","there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","viruses have no morality, no sense of good and evil, the deserving or the undeserving.... aids is not the swift sword with which the lord punishes the evil practitioners of male homosexuality and intravenous drug use. it is simply an opportunistic virus that does what it has to do to stay alive.","the fact that, with respect to size, the viruses overlapped with the organisms of the biologist at one extreme and with the molecules of the chemist at the other extreme only served to heighten the mystery regarding the nature of viruses. then too, it became obvious that a sharp line dividing living from non-living things could not be drawn and this fact served to add fuel for discussion of the age-old question of ?what is life?'","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus.","the average adult heart beats 72 times a minute; 100,000 times a day; 3,600,000 times a year; and 2.5 billion times during a lifetime.","every day, the heart creates enough energy to drive a truck 20 miles. in a lifetime, that is equivalent to driving to the moon and back.","the stomach serves as a first line of defense for your immune system. it contains hydrochloric acid, which helps to kill off bacteria and viruses that may enter with the food you eat."}
+ game={ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={3}, difficulty=1, menu=0, menuchoice=0, scores={}}
+ quotes={"a virus is a small infectious agent that replicates only inside the living cells of other organisms. viruses can infect all types of life forms, from animals and plants to microorganisms, including bacteria and archaea","the heart is a muscular organ in most animals, which pumps blood through the blood vessels of the circulatory system. blood provides the body with oxygen and nutrients, as well as assists in the removal of metabolic wastes. in humans, the heart is located between the lungs, in the middle compartment of the chest","the brain is an organ that serves as the center of the nervous system in all vertebrate and most invertebrate animals. the brain is located in the head, usually close to the sensory organs for senses such as vision. the brain is the most complex organ in a vertebrate's body. in a human, the cerebral cortex contains approximately 15-33 billion neurons, each connected by synapses to several thousand other neurons.","the lungs are the primary organs of the respiratory system in humans and many other animals including a few fish and some snails. in mammals and most other vertebrates, two lungs are located near the backbone on either side of the heart. their function in the respiratory system is to extract oxygen from the atmosphere and transfer it into the bloodstream, and to release carbon dioxide from the bloodstream into the atmosphere, in a process of gas exchange.","the stomach is a muscular, hollow organ in the gastrointestinal tract of humans and many other animals, including several invertebrates. the stomach has a dilated structure and functions as a vital digestive organ. in the digestive system the stomach is involved in the second phase of digestion, following mastication (chewing). ","there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","viruses have no morality, no sense of good and evil, the deserving or the undeserving.... aids is not the swift sword with which the lord punishes the evil practitioners of male homosexuality and intravenous drug use. it is simply an opportunistic virus that does what it has to do to stay alive.","the fact that, with respect to size, the viruses overlapped with the organisms of the biologist at one extreme and with the molecules of the chemist at the other extreme only served to heighten the mystery regarding the nature of viruses. then too, it became obvious that a sharp line dividing living from non-living things could not be drawn and this fact served to add fuel for discussion of the age-old question of ?what is life?'","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus.","the average adult heart beats 72 times a minute; 100,000 times a day; 3,600,000 times a year; and 2.5 billion times during a lifetime.","every day, the heart creates enough energy to drive a truck 20 miles. in a lifetime, that is equivalent to driving to the moon and back.","the stomach serves as a first line of defense for your immune system. it contains hydrochloric acid, which helps to kill off bacteria and viruses that may enter with the food you eat."} 
  players={}
  game.update=curr_game:update_game(game.state)
  --init_boss()
@@ -486,7 +507,7 @@ function init_boss()
   p.hit_box=make_box(0,104,6,111)
  end
  local n=game.next_boss
- boss={id=n, hp=200,hit_cooldown=0,state=0,hit_boxes={}, col_boxes={}, hurt_boxes={}, bullets={}, anim_boxes={}, attacks={},spawn=time(),d=0}
+ boss={id=n, attack_counter=1,counter=0, health_boxes={},hp=200,hit_cooldown=0,state=0,hit_boxes={}, col_boxes={}, hurt_boxes={}, bullets={}, anim_boxes={}, attacks={},spawn=time(),d=0}
  -- n=1 for heart
  -- n=2 for stomach
  -- n=3 for lungs
@@ -503,16 +524,10 @@ function init_boss()
  --4. init anim boxes
  init_boss_boxes(boss.anim_boxes, boss_anim_boxes[n])
  --3. init hp
- if n==1 then
-  boss.valves={}
-  for i=0,3 do
-   make_valve(i)
-  end
- boss.hp=80
- elseif n==2 then boss.hp=70 boss.wave={}
- elseif n==3 then boss.hp=100 end
- boss.max_hp=boss.hp
-
+ init_boss_health(boss.health_boxes,boss_health_boxes[n])
+ boss.max_hp=80
+ if n==2 then boss.max_hp=70 end
+ 
  --4. game_state and overworld check
  if n==5 then game.state=0
   local r=#game.b_remaining
@@ -525,8 +540,8 @@ function init_boss()
  boss = curr_boss:new(boss)
  boss.funcs=init_boss_functions(n)
  --6 init boss attacks
- init_boss_attacks(n)
-
+ boss.attacks=init_boss_attacks(n)
+ 
  --7 set map area
  init_area(n)
 
@@ -538,9 +553,17 @@ function init_boss_functions(n)
  return { -- controls functions boss has access to
   curr_boss:platform_movement(n),
   curr_boss:boss_logic(n),
+  curr_boss:update_health(),
   curr_boss:update_bullets(),
   curr_boss:death_condition(n)
  }
+end
+
+function init_boss_health(to_table,from_table)
+ for i=1,#from_table do
+  local cur_box=from_table[i]
+  add(to_table, cur_box)
+ end
 end
 
 function init_boss_boxes(to_table, from_table)
@@ -553,22 +576,14 @@ end
 function init_boss_attacks(id)
  --heart
  if id==1 then
-  make_attack(clot_attack,10,5)
-  make_attack(vb,10,10,6,7)
-  make_attack(valve_burst,10,10)
-  make_attack(mini_heart,10,10)
-
+  return {clot_attack,vb,valve_burst,mini_heart}
  --stomach
  elseif id==2 then
-  make_attack(spawn_food,8,4)
-  make_attack(wave,10,10)
-  make_attack(spawn_enzyme,12,8)
+  return {spawn_food,wave,spawn_enzyme}
  --lungs
- elseif id==3 then
-  make_attack(spawn_debris,3,2)
-  make_attack(change_direction,10,10)
-  make_attack(safespace,999,30,0,24)
-  make_attack(hurt_space,999,30)
+ elseif id==3 then 
+  return {spawn_debris,change_direction,safespace,hurt_space}
+ else return {}
  end
 end
 
@@ -606,7 +621,7 @@ end
 
 function draw_transition()
  print_quote(random_quote,30,0,1,9)
- print("press x to continue",48,120,7)
+ print("press z to continue",48,120,7)
 end
 -----------------------------
 -- menu functions
@@ -631,7 +646,7 @@ function update_menu()
  -- elseif game.menu==1 then
  --  for p in all(players) do
  --   if btnp(0,p.n) or btnp(1,p.n) then if p.menuselect>0 then p.menuselect-=1 else p.menuselect+=1 end end
- --   if btnp(4,p.n) then
+ --   if btnp(4,p.n) then 
  --    p.n=p.menuselect
  --    game.menu=2
  --   end
@@ -655,23 +670,28 @@ end
 curr_boss=kind()
 
 function update_boss()
-	if boss.hit_cooldown>0 then boss.hit_cooldown-=1 end
+ if boss.hit_cooldown>0 then boss.hit_cooldown-=1 end
  local s=boss.state
  for f in all(boss.funcs) do f() end
-
  --if boss is active, do attacks
- if s>0 then
-  for a in all(boss.attacks) do
-   local timer=(time()-boss.spawn)%60
-   if s==1 then
-   	if timer%a.t1==a.t2 then a.fun() end
-   elseif s==2 then
-    if timer%a.t3==a.t4 then a.fun() end
-   end
-  end
+ boss.counter+=1
+ if boss.counter>240 then boss.counter=0 boss.attack_counter+=1 end
+ if s>0 and boss.counter==0 and boss.id!=5 then --do attacks here
+  boss.attacks[boss.attack_counter]()
  end
+ if boss.attack_counter==#boss.attacks then boss.attack_counter=0 end
  --if change in boss state
  if s~=boss.state then music_player(boss.id,boss.state) end
+end
+
+function curr_boss:update_health()
+ return function()
+  local count=0
+  for i=1,#(boss.health_boxes) do
+   count+=boss.health_boxes[i]
+  end
+  if boss.id~=3 then boss.hp=count else boss.hp=count/3 end
+ end
 end
 
 function curr_boss:platform_movement(id)
@@ -695,14 +715,14 @@ function curr_boss:platform_movement(id)
      --player col with moving plats
      moving_plat_collision(plats[i],vec/s)
      boss.col_boxes[i+3]=plats[i] --update boss table here
-   end
+   end 
   end
  end
 end
 
 function curr_boss:death_condition(id)
- if id==5 then
-  return function()
+ if id==5 then 
+  return function() 
    game.ready_count=0
    for p in all(players) do if p.ready==true then game.ready_count+=1 end end
    if game.ready_count==#players then init_transition() end
@@ -713,63 +733,66 @@ function curr_boss:death_condition(id)
 end
 
 function curr_boss:boss_logic(id)
-	local s=boss.state
-	--heart
-	if id==1 then
-	 return function()
-	  local count=0
-	  for v in all(boss.valves) do
-	   count+=v.hp
-	   if v.hp<=20 then s=1 end
-	   if v.hp<=0 then del(boss.valves,v) end
-	  end
-	  if count==80 then s=0 end
-	  boss.hp=count
-	  if #boss.valves<3 then s=2 end
-	  boss.state=s
-	 end
-	--stomach
-	elseif id==2 then
-		return function()
-			if hpcheck(70) then s=0 end
-			if hpcheck(69) then s=1 end
-			if hpcheck(40) then s=2 end
-			--wave movement
-			if boss.wave.hbox then
-			 local w=boss.wave.hbox
-			 local timer=time()-boss.wave.spawn_time
-			 if timer<=2 then w=w:extend(3,.6) end
-			 if timer>2 then w=w:extend(3,-.3) end
-			 if timer>5 then boss.wave={}
-			 else boss.wave.hbox=w
-			 end
-			end
-		 boss.state=s
-		end
-	--lungs
-	elseif id==3 then
-	 return function()
-	  if hpcheck(100) then s=0 end
-	  if hpcheck(99) then s=1 end
-	  if hpcheck(66) then s=2 end
-	  boss.state=s
-	  if s>0 then
-		  for p in all(players) do
-				 local move=v(-.1,0)
-				 if boss.d==1 then move=v(.1,0) end
-				 p.hit_box=p.hit_box:translate(move)
-				end
-			end
-			for b in all(boss.bullets) do
-	   b.t=boss.d
+ local s=boss.state 
+ --heart
+ if id==1 then
+  return function()
+   local count=0
+   s=0
+   for i=1,#boss.health_boxes do
+    local v=boss.health_boxes[i]
+    count+=1
+    if v<20 then s=1 end
+    if v==0 then count-=1 end
+   end
+   --check valves
+   if count<3 then s=2 end
+   boss.state=s
+  end
+ --stomach
+ elseif id==2 then
+  return function()
+   if hpcheck(70) then s=0 end
+   if hpcheck(69) then s=1 end
+   if hpcheck(40) then s=2 end
+   --wave movement
+   if boss.wave then
+    if boss.wave.hbox then
+     local w=boss.wave.hbox
+     local timer=time()-boss.wave.spawn_time
+     if timer<=2 then w=w:extend(3,.6) end
+     if timer>2 then w=w:extend(3,-.3) end
+     if timer>5 then boss.wave={} 
+     else boss.wave.hbox=w 
+     end    
+    end
+   end
+   boss.state=s
+  end
+ --lungs
+ elseif id==3 then 
+  return function()
+   if hpcheck(100) then s=0 end
+   if hpcheck(99) then s=1 end
+   if hpcheck(66) then s=2 end
+   boss.state=s
+   if s>0 then
+    for p in all(players) do
+     local move=v(-.1,0)
+     if boss.d==1 then move=v(.1,0) end
+     p.hit_box=p.hit_box:translate(move)
+    end
+   end
+   for b in all(boss.bullets) do
+    b.t=boss.d
    end
   end
-	--brain
-	elseif id==4 then
-	 return function()
-
-	 end
-	end
+ --brain
+ elseif id==4 then
+  return function()
+  
+  end
+ end 
 end
 
 function curr_boss:update_bullets()
@@ -780,9 +803,9 @@ function curr_boss:update_bullets()
    local x=0
    local y=0
    local hbox=b.hbox
-  	--8 directions
-  	if d==0 then
-  	 x=-spd
+   --8 directions
+   if d==0 then
+    x=-spd
    elseif d==1 then
     x+=spd
    elseif d==2 then
@@ -793,26 +816,26 @@ function curr_boss:update_bullets()
     x-=spd
     y-=spd
    elseif d==5 then
-  	 x-=spd
-  	 y+=spd
+    x-=spd
+    y+=spd
    elseif d==6 then
-  	 x+=spd
-  	 y-=spd
+    x+=spd
+    y-=spd
    elseif d==7 then
-  	 x+=spd
-  	 y+=spd
-
+    x+=spd
+    y+=spd
+   
    --special bullets
    --mini heart
    elseif d==10 then
-    x-=spd
+    x-=spd 
     y+=1.5*cos(.5*time())
-
+   
    --thrown food
    elseif d==11 then
     x-=spd*cos(b.ang)
     y+=spd*sin(-b.ang)
-
+   
    --enzymes
    elseif d==20 then
     if b.state==0 then
@@ -833,7 +856,7 @@ function curr_boss:update_bullets()
     --if on same axis as player
     elseif b.state==1 then x-=1 end
    end
-
+   
    b.hbox=hbox:translate(v(x,y))
    --wall collision
    if box_collide(b.hbox,boss.col_boxes) then
@@ -852,49 +875,19 @@ function hpcheck(n)
  if boss.hp<=n then return true end
 end
 
-function make_valve(i)
- local x1=88
- local x2=96
- local y1=17
- local y2=64
- if i==1 then
-  x1,x2=112,120
- end
- if i==2 then
-  y1,y2=64,111
- end
- if i==3 then
-  x1,y1,x2,y2=112,64,120,111
- end
- local v={
-  hbox=make_box(x1,y1,x2,y2),
-  hp=20
- }
- add(boss.valves,v)
-end
-
 ------------------------------
 -- attack functions
 ------------------------------
-function make_attack(fun,t1,t3,t2,t4)
- local a={
-  fun=fun,
-  t1=t1,
-  t2=t2 or 0,
-  t3=t3,
-  t4=t4 or 0
- }
- add(boss.attacks,a)
-end
 
 --make a bullet given a startx, starty, length(dx), height(dy), and type(d)
-function make_bullet(t,sx,sy,dx,dy)
- local dx=dx or sx+2
- local dy=dy or sy+2
+function make_bullet(t,sx,sy,dx,dy,sprite)
+ local dx=dx or sx+6
+ local dy=dy or sy+6
  local b={
   hbox=make_box(sx,sy,dx,dy),
   t=t,
-  spd=1
+  spd=1,
+  sprite=sprite or 48
  }
  return b
 end
@@ -918,7 +911,7 @@ function spawn_enzyme()
  local i=flr(rnd(2))+20
  local x=112
  local y=16
- local e=make_bullet(i,x,y)
+ local e=make_bullet(i,x,y,x+6,y+6,179+i)
  e.spawn=time()
  e.state=0
  add(boss.bullets,e)
@@ -931,9 +924,9 @@ function wave()
  local x=32
  local y=120
  if side==1 then x=80 end
- local w=make_box(x,y,x+8,y+1)
- boss.wave.hbox=w
- boss.wave.spawn_time=time()
+ local w={hbox=make_box(x,y,x+8,y+1),
+ spawn_time=time()}
+ boss.wave=w
 end
 
 --lung attacks
@@ -951,7 +944,7 @@ end
 --changes the direction of bullets on the map
 function change_direction()
  local direction=boss.d
- if direction==0 then direction=1
+ if direction==0 then direction=1 
  else direction=0
  end
  boss.d=direction
@@ -991,39 +984,42 @@ function clot_attack()
   local y=10
   if side==1 then x+=64 end
   local t=rnd(5)
-  if t<=3.5 then add(boss.bullets,make_bullet(3,x,y)) end
+  if t<3 then add(boss.bullets,make_bullet(3,x,y)) end
  end
 end
 
 --determines what random valve
 --bursts
 function vb()
- local selector=flr(rnd(#boss.valves))+1
- boss.av=boss.valves[selector]
+ local selector=flr(rnd(#boss.hit_boxes))+1
+ while boss.health_boxes[selector]==0 do
+  selector=flr(rnd(#boss.hit_boxes))+1
+ end 
+ boss.av=boss.hit_boxes[selector]
 end
 
 --shoot a burst of bullets out
 --of the active valve
 function valve_burst()
  if boss.av then
-	 local v=boss.av.hbox
-	 --make 8 bullets, 4 diagonals 4 straight
-	 for i=0,7 do
+  local v=boss.av
+  --make 8 bullets, 4 diagonals 4 straight
+  for i=0,7 do
    local b=make_bullet(i,v.xl,v.yt)
-	  local seed=flr(rnd(32))
-	  b.hbox.yt+=seed
-	  b.hbox.yb+=seed
+   local seed=flr(rnd(32))
+   b.hbox.yt+=seed
+   b.hbox.yb+=seed
    add(boss.bullets,b)
-	 end
-	 boss.av=nil
-	end
+  end
+  boss.av=nil
+ end
 end
 
 --shoot some mini hearts across the screen
 function mini_heart()
  for i=0,4 do
   local y=flr(rnd(104))+8
-  add(boss.bullets,make_bullet(10,125,y))
+  add(boss.bullets,make_bullet(10,120,y,126,y+6,23))
  end
 end
 
@@ -1031,28 +1027,28 @@ end
 -- player functions
 ------------------------------
 function update_players()
- local count=0
+ local count=0 
  for p in all(players) do
   --see if player is dead
   if p.hp<=0 then count+=1 p.hit_box.xl=-20
   --else player is alive
-  else
+  else 
    if p.hit_cooldown>0 then p.hit_cooldown-=1 end
    local n=p.n
    --different actions based on game state
-   if p.state==4 then
+   if p.state==4 then 
     if game.state==0 then player_interact(p,n) end
     if game.state==1 then player_dodge(p,n) end -- x dodges during boss fights
     if game.state==2 and btn(5,n) and time()-ttk>2 then init_boss() end
     if game.state==3 and btn(5) then _init() end
    else
-    player_movement(p,n)
+    player_movement(p,n) 
     player_attack(p,n)
     player_hit(p,n)
    end
   end
   --see if all players are dead
-  if count==#players then game.state=3 game.update=curr_game:update_game(3) end
+  if count==#players then game.state=3 end
  end
 end
 
@@ -1075,8 +1071,8 @@ function player_hit(p,n)
   if box_collide(p.hit_box,{hurtbox}) then
    p.d_vec.y=-3
    p.jumped=0
-   if p.hit_cooldown==0 then
-    p.hp-=1
+   if p.hit_cooldown==0 then 
+    p.hp-=1 
     p.hit_cooldown=120
    end
   end
@@ -1100,11 +1096,11 @@ function player_movement(p,n)
  if box_collide(box_down, boxes) then state=0 j=0 else state=1 end
  --1. moving horizontally
  --1a. moving left or right
- if btn(0,n) then
+ if btn(0,n) then 
   if a_state==0 then p.d=1 end
   if x>0 then x=0 end --if turning
   if state==0 then x-=.05 else x-=.025 end --if ground or air
- elseif btn(1,n) then
+ elseif btn(1,n) then 
   if a_state==0 then p.d=2 end
   if x<0 then x=0 end --if turning
   if state==0 then x+=.05 else x+=.025 end -- if ground or air
@@ -1122,7 +1118,7 @@ function player_movement(p,n)
  if btnp(2,n) and j<2 then j+=2 p.jump_time=time()+.5 y=-2.1 end
  if p.jump_time<=time() and j==2 then j=1 end --ready second jump
  if box_collide(box_up, boxes) then state=1 y=.1 end
-
+ 
  --3b. if player is now falling
  if box_collide(box_down, boxes) then state=0 else state=1 end
  --if floor -> flr box and reset jumps, else -> decrement y
@@ -1131,7 +1127,7 @@ function player_movement(p,n)
  --if box_collide(box_down, boxes) then state=0 else state=1 end
  if j==0 and state==0 then y=0 p_hb:flr() end
  --push out if inside block afterwards
- if state==0 and box_collide(p_hb, boxes) then p_hb=p_hb:translate(v(0,-1)) end
+ if state==0 and box_collide(p_hb, boxes) then p_hb=p_hb:translate(v(0,-1)) end 
 
  -- 4. crouching changes
  -- 4a. check height
@@ -1141,11 +1137,11 @@ function player_movement(p,n)
  if btn(3,n) then crouching=true end
  if height==3 and crouching==false then p_hb=p_hb:extend(3, 4) end
  if height==7 and crouching==true then p_hb=p_hb:extend(3, -4) end
-
+ 
  --5. init dodge
  if btnp(5,n) and p.dodge_meter>=25 and a_state==0 then state=4 x=0 y=0 end
-
- --set player values
+ 
+ --set player values 
  p.jumped=j
  p.state=state
  p.d_vec=v(x,y)
@@ -1156,19 +1152,33 @@ function player_attack(p,n)
  local p_hb=p.hit_box
  local p_ab=p.attack_box
  local p_as=p.attack_state
-
+ 
  --1. can attack/press attack check
  if btnp(4,n) and p_as==0 then
   if p.d==1 then p_ab=vec_box(v(p_hb.xl, p_hb.yt+2), v(p_hb.xl, p_hb.yb-2)) end
   if p.d==2 then p_ab=vec_box(v(p_hb.xr, p_hb.yt+2), v(p_hb.xr, p_hb.yb-2)) end
   p_as=1
  end
-
+ 
  --2. collision checks
  --check for hit, cycle through boss hit boxes, make each box a table to re-use the box_collide function
  local damage=1 --suggested stat
- for b in all(boss.hit_boxes) do if box_collide(p_ab, {b}) and p_as==1 and boss.hit_cooldown==0 then boss.hp-=damage p.dodge_meter+=25 p_as=2 boss.hit_cooldown=30 end end
- for v in all(boss.valves) do if box_collide(p_ab, {v.hbox}) and p_as==1 and boss.hit_cooldown==0 then v.hp-=damage p.dodge_meter+=25 p_as=2 boss.hit_cooldown=30 end end
+ for i=1,#boss.hit_boxes do
+  b=boss.hit_boxes[i]
+  if box_collide(p_ab,{b}) and p_as==1 and boss.hit_cooldown==0 and boss.health_boxes[i]>0 then 
+   if boss.id==3 then 
+    for j=1,#boss.health_boxes do
+     boss.health_boxes[j]-=damage
+    end
+   else 
+    boss.health_boxes[i]-=damage
+   end 
+   p.dodge_meter+=25 
+   p_as=2 
+   boss.hit_cooldown=30
+  end 
+ end
+ 
  local dodge_meter_max=100 --suggested stat
  if p.dodge_meter>=dodge_meter_max then p.dodge_meter=dodge_meter_max end
  --3. hitbox movement
@@ -1177,7 +1187,7 @@ function player_attack(p,n)
  if p_as==1 then p_ab=p_ab:extend(p.d, 1) if p_ab.xl<p_hb.xl-attack_length or p_ab.xr>p_hb.xr+attack_length then p_as=2 end end
  --reel in
  if p_as==2 then p_ab=p_ab:extend(p.d, -2) if p_ab.xl>p_hb.xl-1 and p_ab.xr<p_hb.xr+1 then p_as=0 end end
-
+ 
 --4. connection to player
  if p.d==1 then p_ab.xr=p_hb.xl end
  if p.d==2 then p_ab.xl=p_hb.xr end
@@ -1187,7 +1197,7 @@ function player_attack(p,n)
  --update player tables and translate box onto player
  p.attack_state=p_as
  p.attack_box=p_ab:translate(v(p.d_vec.x,0))
-end
+end 
 
 function player_dodge(p,n)
  local p_hb=p.hit_box
@@ -1198,7 +1208,7 @@ function player_dodge(p,n)
    if btn(i,n) then p.d_vec=dirs[i+1]*dodge_speed p_hb=p_hb:translate(dirs[i+1]*dodge_speed) end
   end
    meter-=3
- else
+ else 
   meter-=1
  end
  if meter<=0 or btnp(5,n) then meter=0 p.state=1 end
@@ -1210,7 +1220,7 @@ function player_interact(p,n)
  local p_hb=p.hit_box
  --check if in interact bounds
  -- if in pox_box bounds
- if box_collide(p_hb, {boss.hit_boxes[1]}) then --pox code goes here
+ if box_collide(p_hb, {boss.hit_boxes[1]}) then --pox code goes here 
  elseif box_collide(p_hb, {boss.hit_boxes[2]}) then p.ready=true
  else p.state=1 end
 
@@ -1261,7 +1271,7 @@ function box_collide(c_box, table)
  return bool
 end
 
-function moving_plat_collision(plat, plat_vec)
+function moving_plat_collision(plat, plat_vec) 
  for p in all(players) do
   local p_hb=p.hit_box
   local box_down=p_hb:translate(v(0,1))
@@ -1288,45 +1298,49 @@ function _draw()
  print(game.state,0,10)
  if game.state<2 then
   if debug==true then
-	 -- draw player test
+  -- draw player test
   for player in all(players) do
-	 if player.state==4 then draw_box(15, make_box(player.hit_box.xl+2, player.hit_box.yt+2, player.hit_box.xr-2, player.hit_box.yb-2)) end
-	 draw_box(7, player.hit_box)
-	 if player.attack_state>=1 then draw_box(9, player.attack_box) end
-	 end
-	 for b in all(boss.col_boxes) do
-	  draw_box(3,b)
-	 end
-	 for b in all(boss.hit_boxes) do
-	  draw_box(8,b)
-	 end
-	 for b in all(boss.bullets) do
-	  draw_box(15,b.hbox)
-	 end
-	 for v in all(boss.valves) do
-	  draw_box(8,v.hbox)
-	 end
-	 if boss.safe_space then
-	  draw_box(14,boss.safe_space)
-	 end
-	 if boss.av then
-	  draw_box(14,boss.av.hbox)
-	 end
-	 if boss.id==2 and boss.wave.hbox then
-	   draw_box(14,boss.wave.hbox)
-	 end
-	 --if #boss.bullets>0 then print(boss.bullets[1].t,100,6,7) end
-	 print(boss.hp,0,8,2)
-	 --print(boss.state,0,0,2)
-	 print(boss.hit_cooldown,0,0,2)
-	 --print(players[1].hp,0,0,7)
-	 --print(,0,0,7)
-	 else
+  if player.state==4 then draw_box(15, make_box(player.hit_box.xl+2, player.hit_box.yt+2, player.hit_box.xr-2, player.hit_box.yb-2)) end
+  draw_box(7, player.hit_box)
+  if player.attack_state>=1 then draw_box(9, player.attack_box) end
+  end
+  for b in all(boss.col_boxes) do
+   draw_box(3,b)
+  end
+  for b in all(boss.hit_boxes) do
+   draw_box(8,b)
+  end
+  for b in all(boss.bullets) do
+   draw_box(15,b.hbox)
+  end
+  for v in all(boss.valves) do
+   draw_box(8,v.hbox)
+  end 
+  if boss.safe_space then
+   draw_box(14,boss.safe_space)
+  end
+  if boss.av then
+   draw_box(14,boss.av.hbox)
+  end
+  if boss.id==2 and boss.wave.hbox then
+    draw_box(14,boss.wave.hbox)
+  end
+  --if #boss.bullets>0 then print(boss.bullets[1].t,100,6,7) end
+  print(boss.hp,0,8,2)
+  --print(boss.state,0,0,2)
+  print(boss.hit_cooldown,0,0,2)
+  --print(players[1].hp,0,0,7)
+  --print(,0,0,7)
+  else
    draw_hud()
    draw_boss(boss.id)
+   draw_bullets()
    draw_platforms(boss.id)
    draw_players()
-	  show_performance()
+   show_performance()
+   if boss.id==2 and boss.wave and boss.wave.hbox then
+    draw_box(14,boss.wave.hbox)
+   end
   end
  elseif game.state==2 then
   draw_transition()
@@ -1334,6 +1348,12 @@ function _draw()
   draw_gameover()
  elseif game.state==4 then
   draw_menu()
+ end
+end
+
+function draw_bullets()
+ for b in all(boss.bullets) do
+  spr(b.sprite,b.hbox.xl,b.hbox.yt)
  end
 end
 
@@ -1440,8 +1460,8 @@ function draw_players()
   else
    if p.h<7 then s=3
    elseif p.jumped>0 then s=4
-   elseif x<0 then s=1
-   elseif x>0 then s=2
+   elseif x<0 then s=1 
+   elseif x>0 then s=2 
    else s=6 end
   end
   if p.n==1 then s+=32 p_col=1 s_col=12 end
@@ -1473,7 +1493,7 @@ function draw_boss(id)
 end
 
 function draw_platforms(id)
- if id!=5 then
+ if id!=5 then 
  local start=2
  if id==1 then start=3 end
  if id==3 then start=4 end
@@ -1624,12 +1644,6 @@ function spr_vec_to_box(box, spr_vec, spr_size_vec, flip_x, flip_y)
  sspr(spr_x, spr_y, spr_w, spr_h, scr_x, scr_y, scr_w+1, scr_h+1, flip_x, flip_y)
 end
 
-function draw_gameover()
- cls()
- print("game over",50,30,3)
- line(50,36,84,36,3)
- print("x to restart",45,100,3)
-end
 
 __gfx__
 00000000000820000002800000000000008228000082280000028000000077000777777777777777777777777770000009900090022000200000000000000000
