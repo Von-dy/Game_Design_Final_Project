@@ -387,10 +387,19 @@ boss_anim_boxes={
 boss_anim_sprites={
  {192,192,208,208,128}, --heart
  {132,241,241}, --stomach
- {138,224,136}, --lungs
+ {136,138,224}, --lungs
  {140}, --brain
  {204} --overworld
 }
+
+boss_anim_size_vecs={
+ {v(8,8), v(8,8), v(8,8), v(8,8), v(32,32)},
+ {v(32,32), v(8,8), v(8,8)},
+ {v(16, 32), v(16, 32), v(8,8)},
+ {v(32, 32)},
+ {v(32,32)}
+}
+
 
 -----------------------------
 -- boss face_points
@@ -1460,14 +1469,9 @@ end
 
 function draw_boss(id)
  for i=1, #boss.anim_boxes do
-  local size_vec=0
+  local size_vec=boss_anim_size_vecs[id][i]
   local spr_vec=get_spr_pixels(boss_anim_sprites[id][i])
   local b=boss.anim_boxes[i]
-  if i==#boss.anim_boxes and id!=3 then size_vec=v(32,32)
-  elseif boss.id==3 and i>=1 then size_vec=v(16,32)
-  else
-   size_vec=v(8,8) 
-  end 
   spr_vec_to_box(b, spr_vec, size_vec)
   if id!=5 then
    draw_eyes(boss.state, boss_eye_points[id])
