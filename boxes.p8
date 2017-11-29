@@ -274,14 +274,8 @@ dirs={
 -----------------------------
 curr_game=kind()
 function curr_game:update_game(state)
- --overworld
- if state==0 then
-  return function()
-   update_players()
-   update_boss()
-  end
- --boss
- elseif state==1 then
+ --overworld/boss
+ if state<2 then
   return function()
    update_players()
    update_boss()
@@ -289,14 +283,12 @@ function curr_game:update_game(state)
  --transition
  elseif state==2 then
   return function()
-   if btnp(4) then init_boss() end
-   --update_players()
-   --update_boss()
+   if btnp(5) then init_boss() end
   end
  --game over
  elseif state==3 then
   return function()
-   update_players()
+   if btnp(5) then _init() end
   end
  --menu
  elseif state==4 then
@@ -1060,7 +1052,7 @@ function update_players()
    end
   end
   --see if all players are dead
-  if count==#players then game.state=3 end
+  if count==#players then game.state=3 game.update=curr_game:update_game(3) end
  end
 end
 
@@ -1632,6 +1624,12 @@ function spr_vec_to_box(box, spr_vec, spr_size_vec, flip_x, flip_y)
  sspr(spr_x, spr_y, spr_w, spr_h, scr_x, scr_y, scr_w+1, scr_h+1, flip_x, flip_y)
 end
 
+function draw_gameover()
+ cls()
+ print("game over",50,30,3)
+ line(50,36,84,36,3)
+ print("x to restart",45,100,3)
+end
 
 __gfx__
 00000000000820000002800000000000008228000082280000028000000077000777777777777777777777777770000009900090022000200000000000000000
