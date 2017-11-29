@@ -270,6 +270,43 @@ dirs={
 }
 
 -----------------------------
+-- game
+-----------------------------
+curr_game=kind()
+function curr_game:update_game(state)
+ --overworld
+ if state==0 then
+  return function()
+   update_players()
+   update_boss()
+  end
+ --boss
+ elseif state==1 then
+  return function()
+   update_players()
+   update_boss()
+  end
+ --transition
+ elseif state==2 then
+  return function()
+   if btnp(4) then init_boss() end
+   --update_players()
+   --update_boss()
+  end
+ --game over
+ elseif state==3 then
+  return function()
+   update_players()
+  end
+ --menu
+ elseif state==4 then
+  return function()
+   update_menu()
+  end
+ end
+end
+
+-----------------------------
 -- boss hit boxes
 -----------------------------
 boss_hit_boxes={
@@ -411,10 +448,12 @@ function _init()
  cls()
  debug=false
  lbx,lby,mode=0,0,0
- game={ready_count=0,frame_counter=0, state=0, next_boss=5, b_remaining={1}}
+ --state: 0=overworld, 1=boss, 2=transition, 3=gameover, 4=menu
+ game={ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={1,2,3}, difficulty=1, menu=0, menuchoice=0, scores={}}
  quotes={"a virus is a small infectious agent that replicates only inside the living cells of other organisms. viruses can infect all types of life forms, from animals and plants to microorganisms, including bacteria and archaea","the heart is a muscular organ in most animals, which pumps blood through the blood vessels of the circulatory system. blood provides the body with oxygen and nutrients, as well as assists in the removal of metabolic wastes. in humans, the heart is located between the lungs, in the middle compartment of the chest","the brain is an organ that serves as the center of the nervous system in all vertebrate and most invertebrate animals. the brain is located in the head, usually close to the sensory organs for senses such as vision. the brain is the most complex organ in a vertebrate's body. in a human, the cerebral cortex contains approximately 15-33 billion neurons, each connected by synapses to several thousand other neurons.","the lungs are the primary organs of the respiratory system in humans and many other animals including a few fish and some snails. in mammals and most other vertebrates, two lungs are located near the backbone on either side of the heart. their function in the respiratory system is to extract oxygen from the atmosphere and transfer it into the bloodstream, and to release carbon dioxide from the bloodstream into the atmosphere, in a process of gas exchange.","the stomach is a muscular, hollow organ in the gastrointestinal tract of humans and many other animals, including several invertebrates. the stomach has a dilated structure and functions as a vital digestive organ. in the digestive system the stomach is involved in the second phase of digestion, following mastication (chewing). ","there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","viruses have no morality, no sense of good and evil, the deserving or the undeserving.... aids is not the swift sword with which the lord punishes the evil practitioners of male homosexuality and intravenous drug use. it is simply an opportunistic virus that does what it has to do to stay alive.","the fact that, with respect to size, the viruses overlapped with the organisms of the biologist at one extreme and with the molecules of the chemist at the other extreme only served to heighten the mystery regarding the nature of viruses. then too, it became obvious that a sharp line dividing living from non-living things could not be drawn and this fact served to add fuel for discussion of the age-old question of ?what is life?'","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus.","the average adult heart beats 72 times a minute; 100,000 times a day; 3,600,000 times a year; and 2.5 billion times during a lifetime.","every day, the heart creates enough energy to drive a truck 20 miles. in a lifetime, that is equivalent to driving to the moon and back.","the stomach serves as a first line of defense for your immune system. it contains hydrochloric acid, which helps to kill off bacteria and viruses that may enter with the food you eat."} 
- players={init_player(0), init_player(1)}
- init_boss()
+ players={}
+ game.update=curr_game:update_game(game.state)
+ --init_boss()
 end
 
 function init_player(num)
@@ -435,7 +474,8 @@ function init_player(num)
   dodge_time=0,
   dodge_meter=100,
   attack_state=0,
-  attack_box=make_box(0,0,0,0)
+  attack_box=make_box(0,0,0,0),
+  menuselect=1
  }
 end
 
@@ -473,7 +513,7 @@ function init_boss()
  boss.max_hp=boss.hp
 
  --4. game_state and overworld check
- if n==5 then game.state=0 
+ if n==5 then game.state=0
   local r=#game.b_remaining
   music(16)
   if r>0 then game.next_boss=game.b_remaining[flr(rnd(r))+1] del(game.b_remaining, game.next_boss)
@@ -488,6 +528,9 @@ function init_boss()
  
  --7 set map area
  init_area(n)
+
+ --8 set game start
+ game.update=curr_game:update_game(game.state)
 end
 
 function init_boss_functions(n)
@@ -552,6 +595,7 @@ end
 ------------------------------
 function init_transition()
  music(-1)
+ game.update=curr_game:update_game(2)
  lbx,lby=0,0
  init_area(6)
  random_quote=quotes[flr(rnd(#quotes))+1]
@@ -562,6 +606,47 @@ end
 function draw_transition()
  print_quote(random_quote,30,0,1,9)
  print("press x to continue",48,120,7)
+end
+-----------------------------
+-- menu functions
+------------------------------
+function update_menu()
+ --main
+ if game.menu==0 or game.menu==2 then
+  if btn(2) then
+   game.menuchoice=0
+  elseif btn(3) then
+   game.menuchoice=1
+  end
+ end
+ if game.menu==0 then
+  if btnp(4) or btnp(5) then
+   add(players,init_player(0))
+   if game.menuchoice>0 then add(players,init_player(1)) end
+   players[1].menuselect=0
+   game.menu=2
+  end
+ --player select
+ -- elseif game.menu==1 then
+ --  for p in all(players) do
+ --   if btnp(0,p.n) or btnp(1,p.n) then if p.menuselect>0 then p.menuselect-=1 else p.menuselect+=1 end end
+ --   if btnp(4,p.n) then 
+ --    p.n=p.menuselect
+ --    game.menu=2
+ --   end
+ --  end
+ --difficulty select
+ elseif game.menu==2 then
+  if btnp(4) or btnp(5) then
+   if game.menuchoice==0 then game.difficulty=0 else game.difficulty=1 end
+   game.ready_count=0
+   game.state=2
+   game.update=curr_game:update_game(game.state)
+   init_transition()
+   --init_boss()
+   --game.state=0
+  end
+ end
 end
 ------------------------------
 -- boss functions
@@ -957,7 +1042,8 @@ function update_players()
    if p.state==4 then 
     if game.state==0 then player_interact(p,n) end
     if game.state==1 then player_dodge(p,n) end -- x dodges during boss fights
-   if game.state==2 and btn(5,n) and time()-ttk>2 then init_boss() end
+    if game.state==2 and btn(5,n) and time()-ttk>2 then init_boss() end
+    if game.state==3 and btn(5) then _init() end
    else
     player_movement(p,n) 
     player_attack(p,n)
@@ -965,7 +1051,7 @@ function update_players()
    end
   end
   --see if all players are dead
-  if count==#players then _init() end
+  if count==#players then game.state=3 end
  end
 end
 
@@ -1189,15 +1275,17 @@ end
 
 function _update60()
  game.frame_counter+=1 if game.frame_counter>59 then game.frame_counter=0 end
- update_players()
- if game.state~=2 then update_boss() end
+ game.update()
+ --update_players()
+ --if game.state%2~=0 then update_boss() end
 end
 
 
 function _draw()
  cls()
  map(0,0,0,0,16,16)
- if game.state~=2 then
+ print(game.state,0,10)
+ if game.state<2 then
   if debug==true then
 	 -- draw player test
   for player in all(players) do
@@ -1239,8 +1327,12 @@ function _draw()
    draw_players()
 	  show_performance()
   end
- else 
+ elseif game.state==2 then
   draw_transition()
+ elseif game.state==3 then
+  draw_gameover()
+ elseif game.state==4 then
+  draw_menu()
  end
 end
 
@@ -1263,6 +1355,37 @@ end
 -----------------------
 -- render functions
 -----------------------
+
+--menu
+function draw_menu()
+ local sely
+ map(16,16,0,0,64,64)
+ --main
+ if game.menu==0 then
+  sspr(80,24,40,8,16,20,96,24)
+  print("1 player",20,90,11)
+  print("2 players",20,100)
+  if game.menuchoice==0 then sely=89 else sely=99 end
+  spr(39,12,sely)
+ --player select
+ -- elseif game.menu==1 then
+ --  rect(20,40,60,100,5)
+ --  spr(12,22,42)
+ --  if players[1].menuselect>0 then spr(38,37,64) else spr(6,37,64) end
+ --  if #players>1 then
+ --   rect(70,40,110,100)
+ --   spr(13,72,42)
+ --   if players[2].menuselect>0 then spr(38,87,64) else spr(6,87,64) end
+ --  end
+
+ --difficulty
+ elseif game.menu==2 then
+  print("easy",40,50)
+  print("viral",40,60)
+  if game.menuchoice==0 then sely=48 else sely=58 end
+  spr(39,30,sely)
+ end
+end
 
 --dodge_meter
 function draw_hud()
@@ -1507,14 +1630,14 @@ end
 
 
 __gfx__
-00000000000820000002800000000000008228000082280000028000000077000777777777777777777777777770000000000000000000000000000000000000
-00000000008228000082280000000000082228800822288000822800000770007000000000000000000000000070000000000000000000000000000000000000
-00700700022282800828222000000000827227228272272208282220000770007000000000000000000000000007000000000000000000000000000000000000
-00077000272722200222727200000000028222800282228022722782000777777000000000000000000000000000700000000000000000000000000000000000
-00077000028222800822282000822800002228000022280008222820000777777000000000000000000000000000555500000000000000000000000000000000
+00000000000820000002800000000000008228000082280000028000000077000777777777777777777777777770000009900090022000200000000000000000
+00000000008228000082280000000000082228800822288000822800000770007000000000000000000000000070000009090990020202020000000000000000
+00700700022282800828222000000000827227228272272208282220000770007000000000000000000000000007000009900090022000020000000000000000
+00077000272722200222727200000000028222800282228022722782000777777000000000000000000000000000700009000090020000200000000000000000
+00077000028222800822282000822800002228000022280008222820000777777000000000000000000000000000555509000999020002220000000000000000
 00700700002282000028220008822280002002000020020000282200000770007000000000000000000000000007000000000000000000000000000000000000
-00000000228282800828282222722722008002000080020082282828000770007000000000000000000000000070000000000000000000000000000000000000
-00000000802020200202020208282820008008000080080020200202000770007777777777777777777777777700000000000000000000000000000000000000
+00000000228282800828282222722722008002000080020082282828000770007000000000000000000000000070000000099900000222000000000000000000
+00000000802020200202020208282820008008000080080020200202000770007777777777777777777777777700000000009000000020000000000000000000
 00076000000000000000000000000000050500500999595090950909000000000666666006666660000000000007700077777777777777777777777777000000
 00677600000880000000000000000000505005055955559509099590000000000066660000666600000000000007700070000000000000000000000000700000
 06767770008228000599880000088000055555509559959059988909088088000622226006cccc60000000000007700070000000000000000000000000070000
@@ -1531,14 +1654,14 @@ __gfx__
 06bbbb600011c100001c11000cc111c00010010000100100001c11000bbbbb000699996000000000000000000000000000000000000000000000000000000000
 006bb60011c1c1c00c1c1c111171171100c0010000c00100c11c1c1c000000000069960000000000000000000000000000000000000000000000000000000000
 00066000c0101010010101010c1c1c1000c00c0000c00c0010100101000000000006600000000000000000000000000000000000000000000000000000000000
-0000000007c7cc7007c7c70000cccc00007070000070000700000000055000500550550566666666000000000000000000000000000000000000000000000000
-000770007ccc7cc77c7cccc70cccccc0070007007007070066666660577505755555055069993336000000000000000000000000000000000000000000000000
-00f7f7000c1117700c111cc70c111cc000070007070000706c6c6c6057a957a70505555569aa3996000000000000000000000000000000000000000000000000
-077fff70717171c7717171100171711070000700700000006c6c6c6055799a750555505069393936000000000000000000000000000000000000000000000000
-07fff7700c1c11c00c1c1cc70c1c1cc00007000000070070686c6c60057797505550555563333336000000000000000000000000000000000000000000000000
-007f7f007c111cc77c1117c00c1117c0070007070700070068686c60575aa57005055550693a3a36000000000000000000000000000000000000000000000000
-000770000c1c1cc00c1c1c77cc1c1ccc000000000000000068686860557575505555050569a33996000000000000000000000000000000000000000000000000
-00000000c1ccc1c7c1ccc17cc1ccc1cc700700700000700766666660055057550505550069999396000000000000000000000000000000000000000000000000
+0000000007c7cc7007c7c70000cccc00007070000070000700000000055000500550550566666666550000550005000055555000005555005500000000000000
+000770007ccc7cc77c7cccc70cccccc00700070070070700666666605775057555550550699933365b5005b5055555005b333550053333505b50000000000000
+00f7f7000c1117700c111cc70c111cc000070007070000706c6c6c6057a957a70505555569aa399653500535056665005355b335053553505b50000000000000
+077fff70717171c7717171100171711070000700700000006c6c6c6055799a75055550506939393605b55b50056665005333355053bbbb355350000000000000
+07fff7700c1c11c00c1c1cc70c1c1cc00007000000070070686c6c60057797505550555563333336053553500533350053b55000535555355350000000000000
+007f7f007c111cc77c1117c00c1117c0070007070700070068686c60575aa57005055550693a3a36005bb50005bbb500533b5000535005355355550000000000
+000770000c1c1cc00c1c1c77cc1c1ccc000000000000000068686860557575505555050569a3399600533500005550005b55b500535005355333bb5000000000
+00000000c1ccc1c7c1ccc17cc1ccc1cc700700700000700766666660055057550505550069999396000550000005000055505550555005555555550000000000
 eeeeeeeeeeeeeeee99999999999999991111111c111111c13ffffffffffff333ffffffffff3333ff7777777766666666fffff33feeeeffeeffffffff99999999
 222222222222272299ffff99f9999ff9111111c111171c1133333fffff333333fffafffffbfa773f7777777766666666fffabf73eeeefeeeffffffff99999999
 e22722ee222222229999fff99fffff99117111c111717111a3333333333333aaf9fffaffb9fff7737777777766666666f9ffbaf3feefffefffffffff99999999
