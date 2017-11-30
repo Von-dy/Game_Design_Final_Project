@@ -303,17 +303,21 @@ end
 -----------------------------
 boss_hit_boxes={
  { --heart
-  {88,17,96,64},
-  {112,17,120,64},
+  {88,8,96,64},
+  {112,8,120,64},
   {88,64,96,111},
-  {112,64,120,111}
+  {112,64,120,111},
+  {80, 40, 124, 88}
  },
  { --stomach
-  {88, 48, 120, 96}
+  {77, 48, 127, 97},
+  {90, 5, 112, 48},
+  {75, 96, 95, 127}
  },
  { --lungs
   {30, 50, 58, 96},
-  {66, 50, 94, 96}
+  {66, 50, 94, 96},
+  {54, 8, 75, 80}
  },
  { --brain
 
@@ -329,59 +333,9 @@ boss_hit_boxes={
 boss_health_boxes={
  {20,20,20,20}, --heart
  {70}, --stomach
- {80,80,80}, --lungs
- { --brain
- },
- {0,0}--overworld
-}
-------------------------------
--- boss hurt boxes
-------------------------------
-boss_hurt_boxes={
- { --heart
-   --none
- },
- { --stomach
-   {24,120,48,128},
-   {80,120,104,128},
-   {112,120,128,128}
- },
- { --lungs
-   {24,120,104,128}
- },
- { --brain
-   --none
- },
- { --overworld
-   --none
- }
-}
-------------------------------
--- boss anim boxes
-------------------------------
-boss_anim_boxes={
- { --heart
-  {88,8,96,64},
-  {112,8,120,64},
-  {88,64,96,111},
-  {112,64,120,111},
-  {80, 40, 124, 88}
- },
- { --stomach
-  {88, 48, 120, 96}
- },
- { --lung
-  {54,8,75,80},
-  {30, 50, 58, 96},
-  {66, 50, 94, 96}
-
- },
- { --brain
-  {64, 64, 80, 90}
- },
- { --overworld
-  {40, 79, 76, 111}
- }
+ {80,80}, --lungs
+ {}, --brain
+ {}--overworld
 }
 
 ------------------------------
@@ -392,19 +346,18 @@ boss_anim_boxes={
 boss_anim_sprites={
  {192,192,208,208,128}, --heart
  {132,241,241}, --stomach
- {224,136,138}, --lungs
+ {136,138,224}, --lungs
  {140}, --brain
- {204} --overworld
+ {204, 140} --overworld
 }
 
 boss_anim_size_vecs={
  {v(8,8), v(8,8), v(8,8), v(8,8), v(32,32)},
  {v(32,32), v(8,8), v(8,8)},
- {v(8, 8), v(16, 32), v(16, 32)},
+ {v(16, 32), v(16, 32), v(8, 8)},
  {v(32, 32)},
- {v(32,32)}
+ {v(32,32), v(32,32)}
 }
-
 
 -----------------------------
 -- boss face_points
@@ -425,6 +378,27 @@ boss_lip_points={
 }
 
 ------------------------------
+-- boss hurt boxes
+------------------------------
+boss_hurt_boxes={
+ { --heart
+   --none
+ },
+ { --stomach
+   {0,120,127,127}
+ },
+ { --lungs
+   {24,120,104,128}
+ },
+ { --brain
+   --none
+ },
+ { --overworld
+   --none
+ }
+}
+
+------------------------------
 -- boss rooms
 ------------------------------
 boss_rooms={
@@ -434,9 +408,9 @@ boss_rooms={
   {48, 40, 72, 47} --plt 2 boss_rooms[1][3]
   },
  { --stomach
-  {0, 112, 24, 127}, --fruit 1
-  {48, 112, 72, 127}, --fruit 2
-  {96,112,112,127} --fruit 3
+  {0, 104, 24, 120}, --fruit 1
+  {48, 104, 72, 120}, --fruit 2
+  {96, 104, 112, 120} --fruit 3
   },
  { --lungs
   {0, 112, 24, 127}, --left flr
@@ -463,11 +437,10 @@ function _init()
  debug=false
  lbx,lby,mode=0,0,0
  --state: 0=overworld, 1=boss, 2=transition, 3=gameover, 4=menu
- game={ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={3}, difficulty=1, menu=0, menuchoice=0, scores={}}
+ game={ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={1,2,3}, difficulty=1, menu=0, menuchoice=0, scores={}}
  quotes={"a virus is a small infectious agent that replicates only inside the living cells of other organisms. viruses can infect all types of life forms, from animals and plants to microorganisms, including bacteria and archaea","the heart is a muscular organ in most animals, which pumps blood through the blood vessels of the circulatory system. blood provides the body with oxygen and nutrients, as well as assists in the removal of metabolic wastes. in humans, the heart is located between the lungs, in the middle compartment of the chest","the brain is an organ that serves as the center of the nervous system in all vertebrate and most invertebrate animals. the brain is located in the head, usually close to the sensory organs for senses such as vision. the brain is the most complex organ in a vertebrate's body. in a human, the cerebral cortex contains approximately 15-33 billion neurons, each connected by synapses to several thousand other neurons.","the lungs are the primary organs of the respiratory system in humans and many other animals including a few fish and some snails. in mammals and most other vertebrates, two lungs are located near the backbone on either side of the heart. their function in the respiratory system is to extract oxygen from the atmosphere and transfer it into the bloodstream, and to release carbon dioxide from the bloodstream into the atmosphere, in a process of gas exchange.","the stomach is a muscular, hollow organ in the gastrointestinal tract of humans and many other animals, including several invertebrates. the stomach has a dilated structure and functions as a vital digestive organ. in the digestive system the stomach is involved in the second phase of digestion, following mastication (chewing). ","there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","viruses have no morality, no sense of good and evil, the deserving or the undeserving.... aids is not the swift sword with which the lord punishes the evil practitioners of male homosexuality and intravenous drug use. it is simply an opportunistic virus that does what it has to do to stay alive.","the fact that, with respect to size, the viruses overlapped with the organisms of the biologist at one extreme and with the molecules of the chemist at the other extreme only served to heighten the mystery regarding the nature of viruses. then too, it became obvious that a sharp line dividing living from non-living things could not be drawn and this fact served to add fuel for discussion of the age-old question of ?what is life?'","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus.","the average adult heart beats 72 times a minute; 100,000 times a day; 3,600,000 times a year; and 2.5 billion times during a lifetime.","every day, the heart creates enough energy to drive a truck 20 miles. in a lifetime, that is equivalent to driving to the moon and back.","the stomach serves as a first line of defense for your immune system. it contains hydrochloric acid, which helps to kill off bacteria and viruses that may enter with the food you eat."} 
  players={}
  game.update=curr_game:update_game(game.state)
- --init_boss()
 end
 
 function init_player(num)
@@ -496,10 +469,11 @@ end
 function init_boss()
  for p in all(players) do
   p.ready=false
+  p.state=1
   p.hit_box=make_box(0,104,6,111)
  end
  local n=game.next_boss
- boss={id=n, attack_counter=1,counter=0, health_boxes={},hp=200,hit_cooldown=0,state=0,hit_boxes={}, col_boxes={}, hurt_boxes={}, bullets={}, anim_boxes={}, attacks={},spawn=time(),d=0}
+ boss={id=n, attack_counter=1,counter=0, health_boxes={},hp=200,hit_cooldown=0,state=0,hit_boxes={}, col_boxes={}, hurt_boxes={}, bullets={}, attacks={},spawn=time(),d=0}
  -- n=1 for heart
  -- n=2 for stomach
  -- n=3 for lungs
@@ -513,8 +487,6 @@ function init_boss()
  init_boss_boxes(boss.col_boxes, boss_rooms[n])
  --3. init hurt_boxes
  init_boss_boxes(boss.hurt_boxes, boss_hurt_boxes[n])
- --4. init anim boxes
- init_boss_boxes(boss.anim_boxes, boss_anim_boxes[n])
  --3. init hp
  init_boss_health(boss.health_boxes,boss_health_boxes[n])
  boss.max_hp=80
@@ -682,13 +654,25 @@ function curr_boss:update_health()
   for i=1,#(boss.health_boxes) do
    count+=boss.health_boxes[i]
   end
-  if boss.id~=3 then boss.hp=count else boss.hp=count/3 end
+  --if boss.id==3 then boss.health_boxes[1]=count/2 boss.health_boxes[2]=count/2  end
+  boss.hp=count
  end
 end
 
 function curr_boss:platform_movement(id)
  local col_boxes=boss.col_boxes
- if id==2 then return function() end end-- return stomach movement
+ if id==2 then
+  local plats={col_boxes[2], col_boxes[3], col_boxes[4]} 
+  return function() -- return stomach movement
+   for i=1, #plats do
+    local p=plats[i]
+    p=p:translate(v(-.25,0))
+    if p.xr<0 then p=p:translate(v(128,0)) end
+    plats[i]=p
+    boss.col_boxes[i+1]=p
+   end
+  end 
+ end
  if id==3 then --return lung movement
   local plats={col_boxes[4], col_boxes[5], col_boxes[6], col_boxes[7]}
   local plat_vecs={v(0,-1), v(0,1), v(-1,0), v(1,0)}
@@ -1022,7 +1006,7 @@ function update_players()
  local count=0 
  for p in all(players) do
   --see if player is dead
-  if p.hp<=0 then count+=1 p.hit_box.xl=-20 p.hit_box.xr=-20
+  if p.hp<=0 then count+=1 p.hit_box.xl=-20
   --else player is alive
   else 
    if p.hit_cooldown>0 then p.hit_cooldown-=1 end
@@ -1147,8 +1131,8 @@ function player_attack(p,n)
  
  --1. can attack/press attack check
  if btnp(4,n) and p_as==0 then
-  if p.d==1 then p_ab=vec_box(v(p_hb.xl, p_hb.yt+2), v(p_hb.xl, p_hb.yb-2)) end
-  if p.d==2 then p_ab=vec_box(v(p_hb.xr, p_hb.yt+2), v(p_hb.xr, p_hb.yb-2)) end
+  if p.d==1 then p_ab=make_box(p_hb.xl, p_hb.yt+2, p_hb.xl, p_hb.yb-2) end
+  if p.d==2 then p_ab=make_box(p_hb.xr, p_hb.yt+2, p_hb.xr, p_hb.yb-2) end
   p_as=1
  end
  
@@ -1157,15 +1141,9 @@ function player_attack(p,n)
  local damage=1 --suggested stat
  for i=1,#boss.hit_boxes do
   b=boss.hit_boxes[i]
-  if box_collide(p_ab,{b}) and p_as==1 and boss.hit_cooldown==0 and boss.health_boxes[i]>0 then 
-   if boss.id==3 then 
-    for j=1,#boss.health_boxes do
-     boss.health_boxes[j]-=damage
-    end
-   else 
-    boss.health_boxes[i]-=damage
-   end 
-   p.dodge_meter+=25 
+  if box_collide(p_ab,{b}) and p_as==1 and boss.hit_cooldown==0 and boss.health_boxes[i] and boss.health_boxes[i]>0 then 
+   boss.health_boxes[i]-=damage
+   p.dodge_meter+=10 
    p_as=2 
    boss.hit_cooldown=30
   end 
@@ -1194,16 +1172,20 @@ end
 function player_dodge(p,n)
  local p_hb=p.hit_box
  local meter=p.dodge_meter
+ local pressing_button=false
  if n==0 then
   for i=0, 3 do
    local dodge_speed=1.25 --suggested stat
    if btn(i,n) then p.d_vec=dirs[i+1]*dodge_speed p_hb=p_hb:translate(dirs[i+1]*dodge_speed) end
   end
-   meter-=3
- else 
-  meter-=1
+   meter-=.5
+ else
+  meter-=.25
+  if p.ready==false then p_hb=make_box(p_hb.xl-2, p_hb.yt-2, p_hb.xr+2, p_hb.yb) end
+  p.ready=true
  end
- if meter<=0 or btnp(5,n) then meter=0 p.state=1 end
+ if btn(5, n) then pressing_button=true end
+ if meter<=0 or pressing_button==false then p.state=1 if n==1 then p_hb=make_box(p_hb.xl+2, p_hb.yt+2, p_hb.xr-2, p_hb.yb) end p.ready=false end
  p.hit_box=player_bounds(p_hb)
  p.dodge_meter=meter
 end
@@ -1375,11 +1357,14 @@ function draw_menu()
  map(16,16,0,0,64,64)
  --main
  if game.menu==0 then
-  sspr(80,24,40,8,16,20,96,24)
+  --draw_lips(0, {48,64,25,2,5})
+  --sspr(96,0,32,32,0,0,127,127)
+  sspr(56,0,40,8,16,20,96,24)
   print("1 player",20,90,11)
   print("2 players",20,100)
-  if game.menuchoice==0 then sely=89 else sely=99 end
+  if game.menuchoice==0 then sely=89 spr(17, 64, 90) spr(1, 64, 100) spr(33, 72, 100) else sely=99 spr(1, 64, 90) spr(17, 64, 100) spr(49, 72, 100) end
   spr(39,12,sely)
+
  --player select
  -- elseif game.menu==1 then
  --  rect(20,40,60,100,5)
@@ -1449,6 +1434,7 @@ function draw_players()
    end
    if y>0 then flip_y=true end
    if x<0 then flip_x=true end
+   if p.n==1 then spr(make_box(p.hit_box.x))
   else
    if p.h<7 then s=3
    elseif p.jumped>0 then s=4
@@ -1472,11 +1458,13 @@ function draw_players()
 end
 
 function draw_boss(id)
- for i=1, #boss.anim_boxes do
+ for i=1, #boss.hit_boxes do
+  local draw=true
+  if boss.health_boxes[i] and boss.health_boxes[i]<=0 then draw=false end
   local size_vec=boss_anim_size_vecs[id][i]
   local spr_vec=get_spr_pixels(boss_anim_sprites[id][i])
-  local b=boss.anim_boxes[i]
-  spr_vec_to_box(b, spr_vec, size_vec)
+  local b=boss.hit_boxes[i]
+  if draw==true then spr_vec_to_box(b, spr_vec, size_vec) end
   if id!=5 then
    draw_eyes(boss.state, boss_eye_points[id])
    draw_lips(boss.state, boss_lip_points[id])
@@ -1485,18 +1473,27 @@ function draw_boss(id)
 end
 
 function draw_platforms(id)
- if id!=5 then 
- local start=2
- if id==1 then start=3 end
- if id==3 then start=4 end
- for i=start, #boss.col_boxes do
-  local p=boss.col_boxes[i]
-  local spr_vec=get_spr_pixels(110+(2*id))
-  local size_vec=v(16,8)
-  spr_vec_to_box(p, spr_vec, size_vec)
+ if id==2 then 
+  local apple_vec=v(8,96)
+  local banana_vec=v(24,104)
+  local plum_vec=v(8,112)
+  spr_vec_to_box(boss.col_boxes[2], apple_vec, v(16,16))
+  spr_vec_to_box(boss.col_boxes[3], banana_vec, v(16,16))
+  spr_vec_to_box(boss.col_boxes[4], plum_vec, v(8,8))
+ else 
+  if id!=5 then 
+   local start=2
+   if id==1 then start=3 end
+   if id==3 then start=4 end
+   for i=start, #boss.col_boxes do
+    local p=boss.col_boxes[i]
+    local spr_vec=get_spr_pixels(110+(2*id))
+    local size_vec=v(16,8)
+    spr_vec_to_box(p, spr_vec, size_vec)
+   end
+  end
  end
- end
- end
+end
 
  --mood, eye_x, eye_y, eye_r, distance, primary color, secondary color
 function draw_eyes(m, pts_table)
@@ -1601,6 +1598,13 @@ function draw_lips(m, pts_table)
  end
 end
 
+function draw_gameover()
+ cls()
+ print("game over",50,30,3)
+ line(50,36,84,36,3)
+ print("x to restart",45,100,3)
+end
+
 -----------------------
 -- render engine/helpers
 -----------------------
@@ -1636,46 +1640,40 @@ function spr_vec_to_box(box, spr_vec, spr_size_vec, flip_x, flip_y)
  sspr(spr_x, spr_y, spr_w, spr_h, scr_x, scr_y, scr_w+1, scr_h+1, flip_x, flip_y)
 end
 
-function draw_gameover()
- cls()
- print("game over",50,30,3)
- line(50,36,84,36,3)
- print("x to restart",45,100,3)
-end
 
 __gfx__
-00000000000820000002800000000000008228000082280000028000000077000777777777777777777777777770000009900090022000200000000000000000
-00000000008228000082280000000000082228800822288000822800000770007000000000000000000000000070000009090990020202020000000000000000
-00700700022282800828222000000000827227228272272208282220000770007000000000000000000000000007000009900090022000020000000000000000
-00077000272722200222727200000000028222800282228022722782000777777000000000000000000000000000700009000090020000200000000000000000
-00077000028222800822282000822800002228000022280008222820000777777000000000000000000000000000555509000999020002220000000000000000
-00700700002282000028220008822280002002000020020000282200000770007000000000000000000000000007000000000000000000000000000000000000
-00000000228282800828282222722722008002000080020082282828000770007000000000000000000000000070000000099900000222000000000000000000
-00000000802020200202020208282820008008000080080020200202000770007777777777777777777777777700000000009000000020000000000000000000
-00076000000000000000000000000000050500500999595090950909000000000666666006666660000000000007700077777777777777777777777777000000
-00677600000880000000000000000000505005055955559509099590000000000066660000666600000000000007700070000000000000000000000000700000
-06767770008228000599880000088000055555509559959059988909088088000622226006cccc60000000000007700070000000000000000000000000070000
-778778670082280009982280008228000059950595988955908888958ee8ee800622226006cccc60000000000007777770000000000000000000000000007000
-067776700098890059982280098228005059950055988959598888908eeeee800622226006cccc60000000000007777770000000000000000000000000005555
-0076770000999900059988005998800005555550955995909598895508eee8000622226006cccc60000000000007700070000000000000000000000000070000
-67767676005995000000000005990000505005055955559509509599008e800000622600006cc600000000000007700070000000000000000000000000700000
-70700707000500000000000000500000050050500090595090955095000800000006600000066000000000000007700077777777777777777777777777000000
-06666660000c10000001c0000000000000c11c0000c11c000001c000000000000666666000000000000000000000000000000000000000000000000000000000
-0066660000c11c0000c11c00000000000c111cc00c111cc000c11c00000000000066660000000000000000000000000000000000000000000000000000000000
-06bbbb600111c1c00c1c111000000000c1711711c17117110c1c11100bbbbb000699996000000000000000000000000000000000000000000000000000000000
-06bbbb6017171110011171710000000001c111c001c111c0117117c1003333b00699996000000000000000000000000000000000000000000000000000000000
-06bbbb6001c111c00c111c1000c11c0000111c0000111c000c111c10003333b00699996000000000000000000000000000000000000000000000000000000000
-06bbbb600011c100001c11000cc111c00010010000100100001c11000bbbbb000699996000000000000000000000000000000000000000000000000000000000
-006bb60011c1c1c00c1c1c111171171100c0010000c00100c11c1c1c000000000069960000000000000000000000000000000000000000000000000000000000
-00066000c0101010010101010c1c1c1000c00c0000c00c0010100101000000000006600000000000000000000000000000000000000000000000000000000000
-0000000007c7cc7007c7c70000cccc00007070000070000700000000055000500550550566666666550000550005000055555000005555005500000000000000
-000770007ccc7cc77c7cccc70cccccc00700070070070700666666605775057555550550699933365b5005b5055555005b333550053333505b50000000000000
-00f7f7000c1117700c111cc70c111cc000070007070000706c6c6c6057a957a70505555569aa399653500535056665005355b335053553505b50000000000000
-077fff70717171c7717171100171711070000700700000006c6c6c6055799a75055550506939393605b55b50056665005333355053bbbb355350000000000000
-07fff7700c1c11c00c1c1cc70c1c1cc00007000000070070686c6c60057797505550555563333336053553500533350053b55000535555355350000000000000
-007f7f007c111cc77c1117c00c1117c0070007070700070068686c60575aa57005055550693a3a36005bb50005bbb500533b5000535005355355550000000000
-000770000c1c1cc00c1c1c77cc1c1ccc000000000000000068686860557575505555050569a3399600533500005550005b55b500535005355333bb5000000000
-00000000c1ccc1c7c1ccc17cc1ccc1cc700700700000700766666660055057550505550069999396000550000005000055505550555005555555550000000000
+066666600008200000028000000000000082280000822800000280005500005500050000555550000055550005500000fffffffff4fffffff4fffffff6667577
+006666000082280000822800000000000822288008222880008228005b5005b5055555005b3335500533335005b50000ffffffff44fffffff44ffffff0077767
+0622226002228280082822200000000082722722827227220828222053500535056665005355b3350535535005b50000ffffffff44fffffff44ffff766000777
+0622226027272220022272720000000002822280028222802272278205b55b50056665005333355053bbbb3505350000ffffffff44fff4fff444fff777667770
+06222260028222800822282000822800002228000022280008222820053553500533350053b550005355553505350000fffffff44fff4ffffff4ffffff706670
+06222260002282000028220008822280002002000020020000282200005bb50005bbb500533b50005350053505355550fffffff4fff44ffffff44fff76665707
+0062260022828280082828222272272200800200008002008228282800533500005550005b55b5005350053505333bb5ffffff44f0004ffff00f4ffff6667767
+000660008020202002020202082828200080080000800800202002020005500000050000555055505550055505555550ffffff440000444440004fffff765766
+022000200000000000000000000000000505005009995950909509090000000000000000000000000000000000000000fffffffffffffffffffffffffff76776
+020202200008800000000000000000005050050559555595090995900000000000000000000000000000000000000000fffffffffffffffffffffffffff76766
+022000200082280005998800000880000555555095599590599889090bbbbb0000000000000000000000000000000000ffffffffffffffffffffffffffffffff
+02000020008228000998228000822800005995059598895590888895003333b000000000000000000000000000000000ffffffffffeeefffeeeffffffff77fff
+02000222009889005998228009822800505995005598895959888890003333b000000000000000000000000000000000fffffffffeeeeeeeeeeefffff7777fff
+000000000099990005998800599880000555555095599590959889550bbbbb0000000000000000000000000000000000ffffffffeeee777777eeefff7777ffff
+000222000059950000000000059900005050050559555595095095990000000000000000000000000000000000000000ffffffffee777777777eee77777fffff
+000020000005000000000000005000000500505000905950909550950000000000000000000000000000000000000000fffffffee7777777777745577fffffff
+06666660000c10000001c0000000000000c11c0000c11c000001c0000000000000000000000000000000000000000000ffffffee0000000000044457ffffffff
+0066660000c11c0000c11c00000000000c111cc00c111cc000c11c000000000000000000000000000000000000000000fffffee000000000004444eeffffffff
+06cccc600111c1c00c1c111000000000c1711711c17117110c1c11100880880008808800000000000000000000000000fffffee777777777777777eeffffffff
+06cccc6017171110011171710000000001c111c001c111c0117117c18ee8ee808ee8ee80000000000000000000000000ffffffee7777777777777eefffffffff
+06cccc6001c111c00c111c1000c11c0000111c0000111c000c111c108eeeee808eeeee80000000000000000000000000fffffffee77777777777eeffffffffff
+06cccc600011c100001c11000cc111c00010010000100100001c110008eee80008eee800000000000000000000000000ffffffffeeeeeeeeeeeeefffffffffff
+006cc60011c1c1c00c1c1c111171171100c0010000c00100c11c1c1c008e8000008e8000000000000000000000000000fffffffffeeeeeeeeeeeffffffffffff
+00066000c0101010010101010c1c1c1000c00c0000c00c00101001010008000000080000000000000000000000000000fffffffffffeeeeeeeefffffffffffff
+0cc000c007c7cc7007c7c70000cccc000070700000700007000000000550005005505505666666660000000000000000ffffffffffffffffffffffffffffffff
+0c0c0c0c7ccc7cc77c7cccc70cccccc00700070070070700666666605775057555550550699933360000000000000000ffffffffffffffffffffffffffffffff
+0cc0000c0c1117700c111cc70c111cc000070007070000706c6c6c6057a957a70505555569aa39960000000000000000ffffffffffffffffffffffffffffffff
+0c0000c0717171c7717171100171711070000700700000006c6c6c6055799a7505555050693939360000000000000000ffffffffff44444444444fffffffffff
+0c000ccc0c1c11c00c1c1cc70c1c1cc00007000000070070686c6c600577975055505555633333360000000000000000ffffffffff4fffffffff4fffffffffff
+000000007c111cc77c1117c00c1117c0070007070700070068686c60575aa57005055550693a3a360000000000000000fffffffff4fffffffffff4ffffffffff
+000ccc000c1c1cc00c1c1c77cc1c1ccc000000000000000068686860557575505555050569a339960000000000000000ffffffffffffffffffffffffffffffff
+0000c000c1ccc1c7c1ccc17cc1ccc1cc7007007000007007666666600550575505055500699993960000000000000000ffffffffffffffffffffffffffffffff
 eeeeeeeeeeeeeeee99999999999999991111111c111111c13ffffffffffff333ffffffffff3333ff7777777766666666fffff33feeeeffeeffffffff99999999
 222222222222272299ffff99f9999ff9111111c111171c1133333fffff333333fffafffffbfa773f7777777766666666fffabf73eeeefeeeffffffff99999999
 e22722ee222222229999fff99fffff99117111c111717111a3333333333333aaf9fffaffb9fff7737777777766666666f9ffbaf3feefffefffffffff99999999
@@ -2068,3 +2066,4 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
