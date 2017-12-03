@@ -29,6 +29,16 @@ function music_player(id,state)
  end
 end
 
+function cameffects(dur)
+ local st=time()
+ if game.screenshake>0 then
+  game.camx,game.camy=rnd(2)-1,rnd(2)-1
+  game.screenshake-=1
+ else
+  game.camx,game.camy=0,0
+ end
+ camera(game.camx,game.camy)
+end
 
 --prints some string (q) based on how long
 --you want a row and where you start printing
@@ -437,7 +447,7 @@ function _init()
  debug=false
  lbx,lby,mode=0,0,0
  --state: 0=overworld, 1=boss, 2=transition, 3=gameover, 4=menu
- game={ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={1,2,3}, difficulty=1, menu=0, menuchoice=0, scores={}}
+ game={ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={1,2,3}, difficulty=1, menu=0, menuchoice=0, scores={}, activescores={}, screenshake=0, camx=0, camy=0}
  quotes={"a virus is a small infectious agent that replicates only inside the living cells of other organisms. viruses can infect all types of life forms, from animals and plants to microorganisms, including bacteria and archaea","the heart is a muscular organ in most animals, which pumps blood through the blood vessels of the circulatory system. blood provides the body with oxygen and nutrients, as well as assists in the removal of metabolic wastes. in humans, the heart is located between the lungs, in the middle compartment of the chest","the brain is an organ that serves as the center of the nervous system in all vertebrate and most invertebrate animals. the brain is located in the head, usually close to the sensory organs for senses such as vision. the brain is the most complex organ in a vertebrate's body. in a human, the cerebral cortex contains approximately 15-33 billion neurons, each connected by synapses to several thousand other neurons.","the lungs are the primary organs of the respiratory system in humans and many other animals including a few fish and some snails. in mammals and most other vertebrates, two lungs are located near the backbone on either side of the heart. their function in the respiratory system is to extract oxygen from the atmosphere and transfer it into the bloodstream, and to release carbon dioxide from the bloodstream into the atmosphere, in a process of gas exchange.","the stomach is a muscular, hollow organ in the gastrointestinal tract of humans and many other animals, including several invertebrates. the stomach has a dilated structure and functions as a vital digestive organ. in the digestive system the stomach is involved in the second phase of digestion, following mastication (chewing). ","there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","viruses have no morality, no sense of good and evil, the deserving or the undeserving.... aids is not the swift sword with which the lord punishes the evil practitioners of male homosexuality and intravenous drug use. it is simply an opportunistic virus that does what it has to do to stay alive.","the fact that, with respect to size, the viruses overlapped with the organisms of the biologist at one extreme and with the molecules of the chemist at the other extreme only served to heighten the mystery regarding the nature of viruses. then too, it became obvious that a sharp line dividing living from non-living things could not be drawn and this fact served to add fuel for discussion of the age-old question of ?what is life?'","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus.","the average adult heart beats 72 times a minute; 100,000 times a day; 3,600,000 times a year; and 2.5 billion times during a lifetime.","every day, the heart creates enough energy to drive a truck 20 miles. in a lifetime, that is equivalent to driving to the moon and back.","the stomach serves as a first line of defense for your immune system. it contains hydrochloric acid, which helps to kill off bacteria and viruses that may enter with the food you eat."} 
  players={}
  game.update=curr_game:update_game(game.state)
@@ -464,6 +474,18 @@ function init_player(num)
   attack_box=make_box(0,0,0,0),
   menuselect=1
  }
+end
+
+function scoreboard()
+ thisboard={
+  bossid=boss.id,
+  lasttime=time(),
+  timer=0,
+  total=0,
+  hitstaken=0,
+  hitsgiven=0
+ }
+ return thisboard
 end
 
 function init_boss()
@@ -499,6 +521,10 @@ function init_boss()
   if r>0 then game.next_boss=game.b_remaining[flr(rnd(r))+1] del(game.b_remaining, game.next_boss)
   else game.next_boss=4 end
  else game.state=1 game.next_boss=5 end
+ --4,5 scires and stuff
+ for p in all(players) do
+  game.activescores[p.n]=scoreboard()
+ end
 
  --5. init boss functions
  boss = curr_boss:new(boss)
@@ -944,6 +970,8 @@ function hurt_space()
   for p in all(players) do
     if box_collide(boss.safe_space,{p.hit_box})==false then
      p.hp-=1
+     game.screenshake=7
+     game.activescores[p.n].hitstaken+=1
     end
   end
  end
@@ -1026,21 +1054,32 @@ function update_players()
   --see if all players are dead
   if count==#players then game.state=3 game.update=curr_game:update_game(3) end
  end
+ update_timers()
+end
+
+function update_timers()
+ local t=time()
+ local currboss=boss.id
+ for p in all(players) do
+  if t-game.activescores[p.n].lasttime>2 and p.hp>0 then
+   game.activescores[p.n].timer+=1
+   game.activescores[p.n].lasttime=t
+   game.activescores[p.n].total=(100*game.activescores[p.n].hitsgiven)-(50*game.activescores[p.n].hitstaken)-game.activescores[p.n].timer
+  end
+ end
 end
 
 function player_hit(p,n)
  for b in all(boss.bullets) do
   if p.hit_cooldown==0 and box_collide(p.hit_box,{b.hbox}) then
    del(boss.bullets,b)
-   p.hp-=1
-   p.hit_cooldown=120
+   player_hurt(p)
   end
  end
  --see if hit by boss wave
  if boss.wave then
   if p.hit_cooldown==0 and box_collide(p.hit_box,{boss.wave.hbox}) then
-   p.hp-=1
-   p.hit_cooldown=120
+   player_hurt(p)
   end
  end
  for hurtbox in all(boss.hurt_boxes) do
@@ -1048,11 +1087,17 @@ function player_hit(p,n)
    p.d_vec.y=-3
    p.jumped=0
    if p.hit_cooldown==0 then 
-    p.hp-=1 
-    p.hit_cooldown=120
+    player_hurt(p)
    end
   end
  end
+end
+
+function player_hurt(p) 
+ p.hp-=1
+ game.screenshake=7
+ p.hit_cooldown=120
+ game.activescores[p.n].hitstaken+=1
 end
 
 function player_movement(p,n)
@@ -1146,6 +1191,7 @@ function player_attack(p,n)
    p.dodge_meter+=10 
    p_as=2 
    boss.hit_cooldown=30
+   game.activescores[p.n].hitsgiven+=1
   end 
  end
  
@@ -1270,6 +1316,7 @@ function _draw()
  cls()
  map(0,0,0,0,16,16)
  print(game.state,0,10)
+ cameffects()
  if game.state<2 then
   if debug==true then
   -- draw player test
@@ -1434,7 +1481,7 @@ function draw_players()
    end
    if y>0 then flip_y=true end
    if x<0 then flip_x=true end
-   if p.n==1 then spr(make_box(p.hit_box.x))
+   --if p.n==1 then spr(make_box(p.hit_box.x)) end
   else
    if p.h<7 then s=3
    elseif p.jumped>0 then s=4
@@ -1602,6 +1649,19 @@ function draw_gameover()
  cls()
  print("game over",50,30,3)
  line(50,36,84,36,3)
+ print("time",24,42,11)
+ print("hits",44,42)
+ print("flubs",64,42)
+ print("score",92,42)
+ local ypos=56
+ for p in all(players) do
+  if p.n<1 then spr(6,12,ypos) else spr(38,12,ypos) end
+  print(game.activescores[p.n].timer,30,ypos)
+  print(game.activescores[p.n].hitsgiven,50,ypos)
+  print(game.activescores[p.n].hitstaken,70,ypos)
+  print(game.activescores[p.n].total,96,ypos)
+  ypos+=16
+ end
  print("x to restart",45,100,3)
 end
 
