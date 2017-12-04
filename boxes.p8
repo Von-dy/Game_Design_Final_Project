@@ -333,8 +333,8 @@ boss_hit_boxes={
   {40, 40, 86, 76}
  },
  { -- overworld
-  {56, 79, 72, 111}, -- pox_box
-  {96, 79, 112, 111} -- next_boss
+  {40, 79, 72, 111}, -- pox_box
+  {88, 79, 120, 111} -- next_boss
  }
 }
 ------------------------------
@@ -444,6 +444,14 @@ boss_rooms={
 }
 
 ------------------------------
+-- pox box options stuff
+------------------------------
+
+pox_option={"sold","health","damage","length", "charge"}
+pox_option_sprites={23,198,197,230,229}
+pox_option_cost={0,1,3,2,2}
+
+------------------------------
 -- init calls
 ------------------------------
 
@@ -452,7 +460,7 @@ function _init()
  debug=false
  lbx,lby,mode=0,0,0
  --state: 0=overworld, 1=boss, 2=transition, 3=gameover, 4=menu
- game={ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={1,2,3}, b_faught={}, difficulty=1, menu=0, menuchoice=0, scores={}, activescores={}, screenshake=0, camx=0, camy=0}
+ game={ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={}, b_faught={}, difficulty=1, menu=0, menuchoice=0, scores={}, activescores={}, screenshake=0, camx=0, camy=0}
  quotes={"there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus.","the average adult heart beats 72 times a minute; 100,000 times a day; 3,600,000 times a year; and 2.5 billion times during a lifetime.","every day, the heart creates enough energy to drive a truck 20 miles. in a lifetime, that is equivalent to driving to the moon and back.","the stomach serves as a first line of defense for your immune system. it contains hydrochloric acid, which helps to kill off bacteria and viruses that may enter with the food you eat.","try interacting with pox box at the overworld, he may have something for you.","when fighting the heart, aim for the valves attached to it.","scarlet fever and commander cold have different abilities. commander cold stops bullets in their tracks while scarlet fever moves faster.","when fighting the lungs, be careful as they will try to blow you in all sorts of directions.","when fighting the stomach, try to avoid the stomach acid.","every player has two jumps. use them wisely!","if you see smoke while fighting the lungs, find a safe area to wait until it clears up."} 
  players={}
  game.update=curr_game:update_game(game.state)
@@ -477,6 +485,9 @@ function init_player(num)
   dodge_meter=100,
   attack_state=0,
   attack_box=make_box(0,0,0,0),
+  mutation_tokens=3,
+  shopping=false,
+  shop_option=1,
   menuselect=1
  }
 end
@@ -494,13 +505,8 @@ function scoreboard()
 end
 
 function init_boss()
- for p in all(players) do
-  p.ready=false
-  p.state=1
-  p.hit_box=make_box(0,104,6,111)
- end
  local n=game.next_boss
- boss={id=n, timer=180,attack_counter=1,counter=0, health_boxes={},hp=200,hit_cooldown=0,state=0,hit_boxes={}, col_boxes={}, hurt_boxes={}, bullets={}, attacks={},spawn=time(),d=0}
+ boss={id=n, timer=180,attack_counter=1,counter=0, health_boxes={},hp=200,hit_cooldown=0,state=0,hit_boxes={}, col_boxes={}, hurt_boxes={}, bullets={}, attacks={},spawn=time(),d=0,pox_box_options={}}
  -- n=1 for heart
  -- n=2 for stomach
  -- n=3 for lungs
@@ -521,6 +527,7 @@ function init_boss()
  
  --4. game_state and overworld check
  if n==5 then game.state=0
+  init_pox_box_options() -- get new options in overworld
   local r=#game.b_remaining
   music(16)
   if r>0 then game.next_boss=game.b_remaining[flr(rnd(r))+1] del(game.b_remaining, game.next_boss)
@@ -529,7 +536,12 @@ function init_boss()
  else game.state=1 game.next_boss=5 end
  --4,5 scires and stuff
  for p in all(players) do
+  p.ready=false
+  p.shopping=false
+  p.state=1
+  p.hit_box=make_box(0,104,6,111)
   game.activescores[p.n]=scoreboard()
+  if game.next_boss==5 then p.mutation_tokens+=3 end --give players 3 tokens
  end
 
  --5. init boss functions
@@ -543,6 +555,12 @@ function init_boss()
 
  --8 set game start
  game.update=curr_game:update_game(game.state)
+end
+
+function init_pox_box_options()
+ local current_options={}
+ for i=1,3 do add(current_options, flr(rnd(#pox_option-1))+2) end
+ boss.pox_box_options=current_options
 end
 
 function init_boss_functions(n)
@@ -1334,12 +1352,30 @@ function player_interact(p,n)
  local p_hb=p.hit_box
  --check if in interact bounds
  -- if in pox_box bounds
- if box_collide(p_hb, {boss.hit_boxes[1]}) then --pox code goes here 
+ if box_collide(p_hb, {boss.hit_boxes[1]}) then p.shopping=true--pox code goes here 
  elseif box_collide(p_hb, {boss.hit_boxes[2]}) then p.ready=true
  else p.state=1 end
 
- if p.ready==true and btnp(5,n) then p.ready=false p.state=1 end
+ if p.shopping==true then 
+  if btnp(0,n) then p.shop_option-=1 end
+  if btnp(1,n) then p.shop_option+=1 end
+  if p.shop_option<1 then p.shop_option=1 end
+  if p.shop_option>3 then p.shop_option=3 end
+  if btnp(4,n) then player_purchase(p,n) end
+ end
+
+ if (p.ready==true or p.shopping==true) and btnp(5,n) then p.ready=false p.shopping=false p.state=1 end
  p.dodge_meter=100
+end
+
+function player_purchase(p,n)
+ local option_index=boss.pox_box_options[p.shop_option]
+ local cost=pox_option_cost[option_index]
+ if p.mutation_tokens>=cost then 
+  boss.pox_box_options[p.shop_option]=1
+  p.mutation_tokens-=cost
+  p.shopping=false
+ end
 end
 
 --mid update function for player bounds
@@ -1603,7 +1639,33 @@ function draw_boss(id)
   if id!=5 then
    draw_eyes(boss.state, boss_eye_points[id])
    draw_lips(boss.state, boss_lip_points[id])
+  else
+   draw_pox_box()
   end
+ end
+end
+
+function draw_pox_box()
+ print("item:",1,32)
+ print("cost:",1,50)
+
+ for i=1,3 do
+  local option_index=boss.pox_box_options[i]
+  local name=pox_option[option_index]
+  local sprite=pox_option_sprites[option_index]
+  local cost=pox_option_cost[option_index]
+  local x=(i*32)-#name-4
+  print(name, x, 32, 7)
+  print(cost, x, 50)
+  spr(sprite, x, 40)
+
+  for p in all(players) do
+   if p.shopping==true then
+    print(p.mutation_tokens,8, 96) --print player tokens
+    if p.shop_option==i then spr(16+(32*p.n),x,23) end --print player option selection icon
+   end
+  end
+
  end
 end
 
