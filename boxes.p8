@@ -77,15 +77,15 @@ taken from dank tombs cart, author = krajzeg
 function kind(kob)
  kob=kob or {}
  setmetatable(kob,{__index=kob.extends})
-
+ 
  kob.new=function(self,ob)
   ob=set(ob,{kind=kob})
   setmetatable(ob,{__index=kob})
   if (kob.create) ob:create()
   return ob
  end
-
- return kob
+ 
+ return kob 
 end
 
 --------------------
@@ -118,7 +118,7 @@ end
 
 -- returns smallest element
 -- of seq, according to key
--- function
+-- function 
 function min_of(seq,key)
  local me,mk=nil,32767
  for e in all(seq) do
@@ -143,22 +143,22 @@ box=kind()
    self.xr+v.x,self.yb+v.y
   )
  end
-
+ 
  function box:overlaps(b)
-  return
-   self.xr>=b.xl and
+  return 
+   self.xr>=b.xl and 
    b.xr>=self.xl and
-   self.yb>=b.yt and
+   self.yb>=b.yt and 
    b.yb>=self.yt
  end
-
+ 
  function box:contains(pt)
   return pt.x>=self.xl and
    pt.y>=self.yt and
    pt.x<=self.xr and
    pt.y<=self.yb
  end
-
+ 
  --direction and value, 1 == left, 2 == right, 3 == up, 4 == down
  function box:extend(d, val)
   if d==1 then return make_box(self.xl-val, self.yt, self.xr, self.yb) end
@@ -172,7 +172,7 @@ box=kind()
   local v2=v(flr(self.xr), flr(self.yb))
   return vec_box(v1, v2)
  end
-
+    
 --[[ function box:sepv(b)
   local candidates={
    v(b.xl-self.xr-1,0),
@@ -180,7 +180,7 @@ box=kind()
    v(0,b.yt-self.yb-1),
    v(0,b.yb-self.yt+1)
   }
-  return min_of(candidates,vec.__len)
+  return min_of(candidates,vec.__len)   
  end]]
 
 function make_box(xl,yt,xr,yb)
@@ -260,7 +260,7 @@ function vec:split()
 end
 -- has to be there so
 -- our metatable works
--- for both operators
+-- for both operators 
 -- and methods
 vec.__index = vec
 
@@ -460,8 +460,8 @@ function _init()
  debug=false
  lbx,lby,mode=0,0,0
  --state: 0=overworld, 1=boss, 2=transition, 3=gameover, 4=menu
- game={ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={}, b_faught={}, difficulty=1, menu=0, menuchoice=0, scores={}, activescores={}, screenshake=0, camx=0, camy=0}
- quotes={"there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus.","the average adult heart beats 72 times a minute; 100,000 times a day; 3,600,000 times a year; and 2.5 billion times during a lifetime.","every day, the heart creates enough energy to drive a truck 20 miles. in a lifetime, that is equivalent to driving to the moon and back.","the stomach serves as a first line of defense for your immune system. it contains hydrochloric acid, which helps to kill off bacteria and viruses that may enter with the food you eat.","try interacting with pox box at the overworld, he may have something for you.","when fighting the heart, aim for the valves attached to it.","scarlet fever and commander cold have different abilities. commander cold stops bullets in their tracks while scarlet fever moves faster.","when fighting the lungs, be careful as they will try to blow you in all sorts of directions.","when fighting the stomach, try to avoid the stomach acid.","every player has two jumps. use them wisely!","if you see smoke while fighting the lungs, find a safe area to wait until it clears up."}
+ game={ready_count=0,frame_counter=0,state=4,next_boss=3,b_remaining={},b_faught={},difficulty=1,menu=0,menuchoice=0,scores={},activescores={},screenshake=0,camx=0,camy=0,particles={}}
+ quotes={"there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus.","the average adult heart beats 72 times a minute; 100,000 times a day; 3,600,000 times a year; and 2.5 billion times during a lifetime.","every day, the heart creates enough energy to drive a truck 20 miles. in a lifetime, that is equivalent to driving to the moon and back.","the stomach serves as a first line of defense for your immune system. it contains hydrochloric acid, which helps to kill off bacteria and viruses that may enter with the food you eat.","try interacting with pox box at the overworld, he may have something for you.","when fighting the heart, aim for the valves attached to it.","scarlet fever and commander cold have different abilities. commander cold stops bullets in their tracks while scarlet fever moves faster.","when fighting the lungs, be careful as they will try to blow you in all sorts of directions.","when fighting the stomach, try to avoid the stomach acid.","every player has two jumps. use them wisely!","if you see smoke while fighting the lungs, find a safe area to wait until it clears up."} 
  players={}
  game.update=curr_game:update_game(game.state)
 end
@@ -524,7 +524,7 @@ function init_boss()
  init_boss_health(boss.health_boxes,boss_health_boxes[n])
  boss.max_hp=80
  if n==2 then boss.max_hp=70 elseif n==4 then boss.max_hp=100 end
-
+ 
  --4. game_state and overworld check
  if n==5 then game.state=0
   init_pox_box_options() -- get new options in overworld
@@ -549,7 +549,7 @@ function init_boss()
  boss.funcs=init_boss_functions(n)
  --6 init boss attacks
  boss.attacks=init_boss_attacks(n,0)
-
+ 
  --7 set map area
  init_area(n)
 
@@ -599,15 +599,15 @@ function init_boss_attacks(id,state)
   return {throw_item,wave,spawn_enzyme}
 
  --lungs
- elseif id==3 and state==0 then
+ elseif id==3 and state==0 then 
   return {spawn_debris,change_direction}
  elseif id==3 and state==2 then
   return {spawn_debris,change_direction,safespace,hurt_space}
-
+ 
  --brain
- elseif id==4 and state==0 then
+ elseif id==4 and state==0 then 
   return {throw_item,bouncing_lightning,smart_shot,shockspace,shock_space}
-
+ 
  --overworld
  else
   return {}
@@ -674,19 +674,14 @@ function update_menu()
   end
  end
  if game.menu==0 then
-  if btnp(5) then
+  if btnp(4) or btnp(5) then
    add(players,init_player(0))
    if game.menuchoice>0 then add(players,init_player(1)) end
    players[1].menuselect=0
    game.menu=2
   end
-  instructions = false
-  if btn(4) then --hold it
-    instructions = true
-    --draw instructions window
-  end
  elseif game.menu==2 then
-  if btnp(5) then
+  if btnp(4) or btnp(5) then
    if game.menuchoice==0 then game.difficulty=0 else game.difficulty=1 end
    game.ready_count=0
    game.state=2
@@ -729,7 +724,7 @@ end
 function curr_boss:platform_movement(id)
  local col_boxes=boss.col_boxes
  if id==2 then
-  local plats={col_boxes[2], col_boxes[3], col_boxes[4]}
+  local plats={col_boxes[2], col_boxes[3], col_boxes[4]} 
   return function() -- return stomach movement
    for i=1, #plats do
     local p=plats[i]
@@ -740,7 +735,7 @@ function curr_boss:platform_movement(id)
     plats[i]=p
     boss.col_boxes[i+1]=p
    end
-  end
+  end 
  end
  if id==3 then --return lung movement
   local plats={col_boxes[4], col_boxes[5], col_boxes[6], col_boxes[7]}
@@ -760,14 +755,14 @@ function curr_boss:platform_movement(id)
      --player col with moving plats
      moving_plat_collision(plats[i],vec/s)
      boss.col_boxes[i+3]=plats[i] --update boss table here
-   end
+   end 
   end
  end
 end
 
 function curr_boss:death_condition(id)
- if id==5 then
-  return function()
+ if id==5 then 
+  return function() 
    game.ready_count=0
    for p in all(players) do if p.ready==true then game.ready_count+=1 end end
    if game.ready_count==#players then init_transition() end
@@ -778,7 +773,7 @@ function curr_boss:death_condition(id)
 end
 
 function curr_boss:boss_logic(id)
- local s=boss.state
+ local s=boss.state 
  --heart
  if id==1 then
   return function()
@@ -808,19 +803,19 @@ function curr_boss:boss_logic(id)
      local timer=time()-boss.wave.spawn_time
      if timer<=2 then w=w:extend(3,.6) end
      if timer>2 then w=w:extend(3,-.3) end
-     if timer>5 then boss.wave={}
-     else boss.wave.hbox=w
-     end
+     if timer>5 then boss.wave={} 
+     else boss.wave.hbox=w 
+     end    
     end
    end
    boss.state=s
   end
  --lungs
- elseif id==3 then
+ elseif id==3 then 
   return function()
-   if hpcheck(80) then s=0 end
+   if hpcheck(80) then s=0 boss.attacks=init_boss_attacks(id,2) end
    if hpcheck(79) then s=1 end
-   if hpcheck(40) then s=2 boss.timer=180  boss.attacks=init_boss_attacks(id,2) end
+   if hpcheck(40) then s=2 boss.timer=180 end
    boss.state=s
    if s>0 then
     for p in all(players) do
@@ -842,7 +837,7 @@ function curr_boss:boss_logic(id)
    if hpcheck(20) then s=3 end
    boss.state=s
   end
- end
+ end 
 end
 
 function curr_boss:update_bullets()
@@ -874,18 +869,18 @@ function curr_boss:update_bullets()
    elseif d==7 then
     x+=spd
     y+=spd
-
+   
    --special bullets
    --mini heart
    elseif d==10 then
-    x-=spd
+    x-=spd 
     y+=1.5*cos(.5*time())
-
+   
    --thrown food
    elseif d==11 then
     x-=spd*cos(b.ang)
     y+=spd*sin(-b.ang)
-
+   
    --enzymes
    elseif d==20 then
     if b.state==0 then
@@ -905,19 +900,19 @@ function curr_boss:update_bullets()
      end
     --if on same axis as player
     elseif b.state==1 then x-=1 end
-
+   
    --smart bullets
    elseif d==42 then
     if hbox.yt<b.target.hit_box.yt then y+=.2 else y-=.2 end
-    if hbox.xl<b.target.hit_box.xl then x+=.3 else x-=.3 end
+    if hbox.xl<b.target.hit_box.xl then x+=.3 else x-=.3 end   
    end
-
-   if d~=41 then
+   
+   if d~=41 then 
     b.hbox=hbox:translate(v(x,y))
    else
     b.hbox=hbox:translate(b.d_vec)
    end
-
+   
    --wall collision
    if box_collide(b.hbox,boss.col_boxes) then
     --bouncing bullets
@@ -948,13 +943,13 @@ end
 ------------------------------
 -- attack functions
 ------------------------------
---makes a bullet with an angle
+--makes a bullet with an angle 
 function targeted_attack(bt,tx,ty,sx,sy,o,sprite)
  local b=make_bullet(bt,sx,sy,sx+6,sy+6,sprite)
  local offset=o or 0
  b.ang=atan2(sx-tx+offset,sy-ty)
  return b
-end
+end 
 
 --make a bullet given a startx, starty, length(dx), height(dy), and type(d)
 function make_bullet(t,sx,sy,dx,dy,sprite)
@@ -1023,20 +1018,18 @@ end
 --changes the direction of bullets on the map
 function change_direction()
  local direction=boss.d
- if direction==0 then direction=1
+ if direction==0 then direction=1 
  else direction=0
  end
  boss.d=direction
 end
 
---spawns one of three safe spaces
+--spawns one of two safe spaces
 function safespace()
- local id=flr(rnd(3))
- local s=make_box(16,0,108,127)
- if id==0 then
-  s=make_box(0,0,24,127)
- elseif id==1 then
-  s=make_box(100,0,127,127)
+ local id=flr(rnd(2))
+ local s=make_box(0,0,108,127)
+ if id>0 then
+  s=make_box(24,0,127,127)
  end
  boss.safe_space=s
 end
@@ -1075,7 +1068,7 @@ function vb()
  local selector=flr(rnd(#boss.hit_boxes))+1
  while boss.health_boxes[selector]==0 do
   selector=flr(rnd(#boss.hit_boxes))+1
- end
+ end 
  boss.av=boss.hit_boxes[selector]
 end
 
@@ -1106,7 +1099,7 @@ end
 function shockspace()
  local id=boss.col_boxes[flr(rnd(#boss.col_boxes-2))+2]
  local s=make_box(id.xl-5,id.yt-5,id.xr+5,id.yb+5)
-
+	
 	boss.shock_space=s
 end
 
@@ -1114,7 +1107,7 @@ function shock_space()
  if boss.shock_space then
   for p in all(players) do
    if box_collide(boss.shock_space,{p.hit_box}) then
-    p.hp-=1
+    p.hp-=1 
    end
   end
  end
@@ -1148,22 +1141,22 @@ end
 -- player functions
 ------------------------------
 function update_players()
- local count=0
+ local count=0 
  for p in all(players) do
   --see if player is dead
   if p.hp<=0 then count+=1 p.hit_box.xl=-20
   --else player is alive
-  else
+  else 
    if p.hit_cooldown>0 then p.hit_cooldown-=1 end
    local n=p.n
    --different actions based on game state
-   if p.state==4 then
+   if p.state==4 then 
     if game.state==0 then player_interact(p,n) end
     if game.state==1 then player_dodge(p,n) end -- x dodges during boss fights
     if game.state==2 and btn(5,n) and time()-ttk>2 then init_boss() end
     if game.state==3 and btn(5) then _init() end
    else
-    player_movement(p,n)
+    player_movement(p,n) 
     player_attack(p,n)
     player_hit(p,n)
    end
@@ -1203,14 +1196,14 @@ function player_hit(p,n)
   if box_collide(p.hit_box,{hurtbox}) then
    p.d_vec.y=-3
    p.jumped=0
-   if p.hit_cooldown==0 then
+   if p.hit_cooldown==0 then 
     player_hurt(p)
    end
   end
  end
 end
 
-function player_hurt(p)
+function player_hurt(p) 
  p.hp-=1
  game.screenshake=7
  p.hit_cooldown=120
@@ -1234,14 +1227,14 @@ function player_movement(p,n)
  if box_collide(box_down, boxes) then state=0 j=0 else state=1 end
  --1. moving horizontally
  --1a. moving left or right
- if btn(0,n) then
+ if btn(0,n) then 
   if a_state==0 then p.d=1 end
   if x>0 then x=0 end --if turning
-  if state==0 then x-=.05 else x-=.025 end --if ground or air
- elseif btn(1,n) then
+  if state==0 then x-=.05 else x-=.04 end --if ground or air
+ elseif btn(1,n) then 
   if a_state==0 then p.d=2 end
   if x<0 then x=0 end --if turning
-  if state==0 then x+=.05 else x+=.025 end -- if ground or air
+  if state==0 then x+=.05 else x+=.04 end -- if ground or air
  else x=0 end
 
  --1b. horizontal velocity bounds
@@ -1256,7 +1249,7 @@ function player_movement(p,n)
  if btnp(2,n) and j<2 then j+=2 p.jump_time=time()+.5 y=-2.1 end
  if p.jump_time<=time() and j==2 then j=1 end --ready second jump
  if box_collide(box_up, boxes) then state=1 y=.1 end
-
+ 
  --3b. if player is now falling
  if box_collide(box_down, boxes) then state=0 else state=1 end
  --if floor -> flr box and reset jumps, else -> decrement y
@@ -1265,7 +1258,7 @@ function player_movement(p,n)
  --if box_collide(box_down, boxes) then state=0 else state=1 end
  if j==0 and state==0 then y=0 p_hb:flr() end
  --push out if inside block afterwards
- if state==0 and box_collide(p_hb, boxes) then p_hb=p_hb:translate(v(0,-1)) end
+ if state==0 and box_collide(p_hb, boxes) then p_hb=p_hb:translate(v(0,-1)) end 
 
  -- 4. crouching changes
  -- 4a. check height
@@ -1275,11 +1268,11 @@ function player_movement(p,n)
  if btn(3,n) then crouching=true end
  if height==3 and crouching==false then p_hb=p_hb:extend(3, 4) end
  if height==7 and crouching==true then p_hb=p_hb:extend(3, -4) end
-
+ 
  --5. init dodge
  if btnp(5,n) and p.dodge_meter>=25 and a_state==0 then state=4 x=0 y=0 end
-
- --set player values
+ 
+ --set player values 
  p.jumped=j
  p.state=state
  p.d_vec=v(x,y)
@@ -1290,28 +1283,28 @@ function player_attack(p,n)
  local p_hb=p.hit_box
  local p_ab=p.attack_box
  local p_as=p.attack_state
-
+ 
  --1. can attack/press attack check
  if btnp(4,n) and p_as==0 then
   if p.d==1 then p_ab=make_box(p_hb.xl, p_hb.yt+2, p_hb.xl, p_hb.yb-2) end
   if p.d==2 then p_ab=make_box(p_hb.xr, p_hb.yt+2, p_hb.xr, p_hb.yb-2) end
   p_as=1
  end
-
+ 
  --2. collision checks
  --check for hit, cycle through boss hit boxes, make each box a table to re-use the box_collide function
  local damage=1 --suggested stat
  for i=1,#boss.hit_boxes do
   b=boss.hit_boxes[i]
-  if box_collide(p_ab,{b}) and p_as==1 and boss.hit_cooldown==0 and boss.health_boxes[i] and boss.health_boxes[i]>0 then
+  if box_collide(p_ab,{b}) and p_as==1 and boss.hit_cooldown==0 and boss.health_boxes[i] and boss.health_boxes[i]>0 then 
    if boss.id==3 then for j=1,#boss.health_boxes do boss.health_boxes[j]-=1 end else boss.health_boxes[i]-=damage end
-   p.dodge_meter+=10
-   p_as=2
+   p.dodge_meter+=10 
+   p_as=2 
    boss.hit_cooldown=30
    game.activescores[p.n].hitsgiven+=1
-  end
+  end 
  end
-
+ 
  local dodge_meter_max=100 --suggested stat
  if p.dodge_meter>=dodge_meter_max then p.dodge_meter=dodge_meter_max end
  --3. hitbox movement
@@ -1320,7 +1313,7 @@ function player_attack(p,n)
  if p_as==1 then p_ab=p_ab:extend(p.d, 1) if p_ab.xl<p_hb.xl-attack_length or p_ab.xr>p_hb.xr+attack_length then p_as=2 end end
  --reel in
  if p_as==2 then p_ab=p_ab:extend(p.d, -2) if p_ab.xl>p_hb.xl-1 and p_ab.xr<p_hb.xr+1 then p_as=0 end end
-
+ 
 --4. connection to player
  if p.d==1 then p_ab.xr=p_hb.xl end
  if p.d==2 then p_ab.xl=p_hb.xr end
@@ -1330,7 +1323,7 @@ function player_attack(p,n)
  --update player tables and translate box onto player
  p.attack_state=p_as
  p.attack_box=p_ab:translate(v(p.d_vec.x,0))
-end
+end 
 
 function player_dodge(p,n)
  local p_hb=p.hit_box
@@ -1357,11 +1350,11 @@ function player_interact(p,n)
  local p_hb=p.hit_box
  --check if in interact bounds
  -- if in pox_box bounds
- if box_collide(p_hb, {boss.hit_boxes[1]}) then p.shopping=true--pox code goes here
+ if box_collide(p_hb, {boss.hit_boxes[1]}) then p.shopping=true--pox code goes here 
  elseif box_collide(p_hb, {boss.hit_boxes[2]}) then p.ready=true
  else p.state=1 end
 
- if p.shopping==true then
+ if p.shopping==true then 
   if btnp(0,n) then p.shop_option-=1 end
   if btnp(1,n) then p.shop_option+=1 end
   if p.shop_option<1 then p.shop_option=1 end
@@ -1376,7 +1369,7 @@ end
 function player_purchase(p,n)
  local option_index=boss.pox_box_options[p.shop_option]
  local cost=pox_option_cost[option_index]
- if p.mutation_tokens>=cost then
+ if p.mutation_tokens>=cost then 
   boss.pox_box_options[p.shop_option]=1
   p.mutation_tokens-=cost
   p.shopping=false
@@ -1426,7 +1419,7 @@ function box_collide(c_box, table)
  return bool
 end
 
-function moving_plat_collision(plat, plat_vec)
+function moving_plat_collision(plat, plat_vec) 
  for p in all(players) do
   local p_hb=p.hit_box
   local box_down=p_hb:translate(v(0,1))
@@ -1468,7 +1461,7 @@ function _draw()
   end
   for v in all(boss.valves) do
    draw_box(8,v.hbox)
-  end
+  end 
   if boss.safe_space then
    draw_box(14,boss.safe_space)
   end
@@ -1499,7 +1492,6 @@ function _draw()
  elseif game.state==4 then
   draw_menu()
  end
- draw_instructions()
 end
 
 function draw_bullets()
@@ -1530,6 +1522,7 @@ end
 
 --menu
 function draw_menu()
+ cls()
  local sely
  map(16,16,0,0,64,64)
  --main
@@ -1539,7 +1532,6 @@ function draw_menu()
   sspr(56,0,40,8,16,20,96,24)
   print("1 player",20,90,11)
   print("2 players",20,100)
-  print("hold z for instructions",20,110)
   if game.menuchoice==0 then sely=89 spr(17, 64, 90) spr(1, 64, 100) spr(33, 72, 100) else sely=99 spr(1, 64, 90) spr(17, 64, 100) spr(49, 72, 100) end
   spr(41,12,sely)
 
@@ -1560,14 +1552,6 @@ function draw_menu()
   print("viral",40,60)
   if game.menuchoice==0 then sely=48 else sely=58 end
   spr(41,30,sely)
- end
-end
-
-function draw_instructions()
- if instructions == true then
-   rect(4,4,123,123,11)
-   rectfill(10,10,118,118,7)
-   print("player one:",20,20,12)
  end
 end
 
@@ -1624,8 +1608,8 @@ function draw_players()
   else
    if p.h<7 then s=3
    elseif p.jumped>0 then s=4
-   elseif x<0 then s=1
-   elseif x>0 then s=2
+   elseif x<0 then s=1 
+   elseif x>0 then s=2 
    else s=6 end
   end
   if p.n==1 then s+=32 p_col=1 s_col=12 end
@@ -1654,6 +1638,7 @@ function draw_boss(id)
   if id!=5 then
    draw_eyes(boss.state, boss_eye_points[id])
    draw_lips(boss.state, boss_lip_points[id])
+   if id==3 then draw_smoke(boss.safe_space) end
   else
    draw_pox_box()
   end
@@ -1685,15 +1670,15 @@ function draw_pox_box()
 end
 
 function draw_platforms(id)
- if id==2 then
+ if id==2 then 
   local apple_vec=v(8,96)
   local banana_vec=v(24,104)
   local plum_vec=v(8,112)
   spr_vec_to_box(boss.col_boxes[2], apple_vec, v(16,16))
   spr_vec_to_box(boss.col_boxes[3], banana_vec, v(16,16))
   spr_vec_to_box(boss.col_boxes[4], plum_vec, v(8,8))
- else
-  if id!=5 then
+ else 
+  if id!=5 then 
    local start=2
    if id==1 then start=3 end
    if id==3 then start=4 end
@@ -1705,6 +1690,20 @@ function draw_platforms(id)
    end
   end
  end
+end
+
+function draw_smoke(ss)
+ if ss~=nil and game.frame_counter%15==0 then
+  rx=rnd(20)
+  if ss.xl<1 then rx+=108 end
+  cloud={x=rx,y=127,sp=56,s=rnd(2)+1}
+  add(game.particles,cloud)
+ end
+ for c in all(game.particles) do
+   sspr(64,24,8,8,c.x,c.y,8*c.s,8*c.s)
+   c.y-=1
+   if c.y<1 then del(game.particles,c) end
+  end
 end
 
  --mood, eye_x, eye_y, eye_r, distance, primary color, secondary color
@@ -1892,13 +1891,13 @@ __gfx__
 006cc60011c1c1c00c1c1c111171171100c0010000c00100c11c1c1c06666660008e8000000000000000000000000000fffffffffeeeeeeeeeeeffffffffffff
 00066000c0101010010101010c1c1c1000c00c0000c00c00101001010000000000080000000000000000000000000000fffffffffffeeeeeeeefffffffffffff
 0cc000c007c7cc7007c7c70000cccc000070700000700007000000000550005005505505666666660000000000000000ffffffffffffffffffffffffffffffff
-0c0c0c0c7ccc7cc77c7cccc70cccccc00700070070070700666666605775057555550550699933360000000000000000ffffffffffffffffffffffffffffffff
+0c0c0c0c7ccc7cc77c7cccc70cccccc00700070070070700666666605775057555050550699933360000000000000000ffffffffffffffffffffffffffffffff
 0cc0000c0c1117700c111cc70c111cc000070007070000706c6c6c6057a957a70505555569aa39960000000000000000ffffffffffffffffffffffffffffffff
-0c0000c0717171c7717171100171711070000700700000006c6c6c6055799a7505555050693939360000000000000000ffffffffff44444444444fffffffffff
+0c0000c0717171c7717171100171711070000700700000006c6c6c6055799a7500555050693939360000000000000000ffffffffff44444444444fffffffffff
 0c000ccc0c1c11c00c1c1cc70c1c1cc00007000000070070686c6c600577975055505555633333360000000000000000ffffffffff4fffffffff4fffffffffff
-000000007c111cc77c1117c00c1117c0070007070700070068686c60575aa57005055550693a3a360000000000000000fffffffff4fffffffffff4ffffffffff
+000000007c111cc77c1117c00c1117c0070007070700070068686c60575aa57005055050693a3a360000000000000000fffffffff4fffffffffff4ffffffffff
 000ccc000c1c1cc00c1c1c77cc1c1ccc000000000000000068686860557575505555050569a339960000000000000000ffffffffffffffffffffffffffffffff
-0000c000c1ccc1c7c1ccc17cc1ccc1cc7007007000007007666666600550575505055500699993960000000000000000ffffffffffffffffffffffffffffffff
+0000c000c1ccc1c7c1ccc17cc1ccc1cc7007007000007007666666600550575505055000699993960000000000000000ffffffffffffffffffffffffffffffff
 eeeeeeeeeeeeeeee99999999999999991111111c111111c13ffffffffffff333ffffffffff3333ff7777777766666666fffff33feeeeffeeffffffff99999999
 222222222222272299ffff99f9999ff9111111c111171c1133333fffff333333fffafffffbfa773f7777777766666666fffabf73eeeefeeeffffffff99999999
 e22722ee222222229999fff99fffff99117111c111717111a3333333333333aaf9fffaffb9fff7737777777766666666f9ffbaf3feefffefffffffff99999999
@@ -2291,3 +2290,4 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
