@@ -674,14 +674,19 @@ function update_menu()
   end
  end
  if game.menu==0 then
-  if btnp(4) or btnp(5) then
+  if btnp(5) then
    add(players,init_player(0))
    if game.menuchoice>0 then add(players,init_player(1)) end
    players[1].menuselect=0
    game.menu=2
   end
+  instructions = false
+  if btn(4) then --hold it
+    instructions = true
+    --draw instructions window
+  end
  elseif game.menu==2 then
-  if btnp(4) or btnp(5) then
+  if btnp(5) then
    if game.menuchoice==0 then game.difficulty=0 else game.difficulty=1 end
    game.ready_count=0
    game.state=2
@@ -1494,6 +1499,7 @@ function _draw()
  elseif game.state==4 then
   draw_menu()
  end
+ draw_instructions()
 end
 
 function draw_bullets()
@@ -1533,6 +1539,7 @@ function draw_menu()
   sspr(56,0,40,8,16,20,96,24)
   print("1 player",20,90,11)
   print("2 players",20,100)
+  print("hold z for instructions",20,110)
   if game.menuchoice==0 then sely=89 spr(17, 64, 90) spr(1, 64, 100) spr(33, 72, 100) else sely=99 spr(1, 64, 90) spr(17, 64, 100) spr(49, 72, 100) end
   spr(41,12,sely)
 
@@ -1553,6 +1560,14 @@ function draw_menu()
   print("viral",40,60)
   if game.menuchoice==0 then sely=48 else sely=58 end
   spr(41,30,sely)
+ end
+end
+
+function draw_instructions()
+ if instructions == true then
+   rect(4,4,123,123,11)
+   rectfill(10,10,118,118,7)
+   print("player one:",20,20,12)
  end
 end
 
