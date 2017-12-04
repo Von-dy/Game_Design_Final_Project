@@ -447,7 +447,7 @@ function _init()
  debug=false
  lbx,lby,mode=0,0,0
  --state: 0=overworld, 1=boss, 2=transition, 3=gameover, 4=menu
- game={ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={1,2,3}, difficulty=1, menu=0, menuchoice=0, scores={}, activescores={}, screenshake=0, camx=0, camy=0}
+ game={ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={1,2,3}, b_faught={}, difficulty=1, menu=0, menuchoice=0, scores={}, activescores={}, screenshake=0, camx=0, camy=0}
  quotes={"a virus is a small infectious agent that replicates only inside the living cells of other organisms. viruses can infect all types of life forms, from animals and plants to microorganisms, including bacteria and archaea","the heart is a muscular organ in most animals, which pumps blood through the blood vessels of the circulatory system. blood provides the body with oxygen and nutrients, as well as assists in the removal of metabolic wastes. in humans, the heart is located between the lungs, in the middle compartment of the chest","the brain is an organ that serves as the center of the nervous system in all vertebrate and most invertebrate animals. the brain is located in the head, usually close to the sensory organs for senses such as vision. the brain is the most complex organ in a vertebrate's body. in a human, the cerebral cortex contains approximately 15-33 billion neurons, each connected by synapses to several thousand other neurons.","the lungs are the primary organs of the respiratory system in humans and many other animals including a few fish and some snails. in mammals and most other vertebrates, two lungs are located near the backbone on either side of the heart. their function in the respiratory system is to extract oxygen from the atmosphere and transfer it into the bloodstream, and to release carbon dioxide from the bloodstream into the atmosphere, in a process of gas exchange.","the stomach is a muscular, hollow organ in the gastrointestinal tract of humans and many other animals, including several invertebrates. the stomach has a dilated structure and functions as a vital digestive organ. in the digestive system the stomach is involved in the second phase of digestion, following mastication (chewing). ","there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","viruses have no morality, no sense of good and evil, the deserving or the undeserving.... aids is not the swift sword with which the lord punishes the evil practitioners of male homosexuality and intravenous drug use. it is simply an opportunistic virus that does what it has to do to stay alive.","the fact that, with respect to size, the viruses overlapped with the organisms of the biologist at one extreme and with the molecules of the chemist at the other extreme only served to heighten the mystery regarding the nature of viruses. then too, it became obvious that a sharp line dividing living from non-living things could not be drawn and this fact served to add fuel for discussion of the age-old question of ?what is life?'","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus.","the average adult heart beats 72 times a minute; 100,000 times a day; 3,600,000 times a year; and 2.5 billion times during a lifetime.","every day, the heart creates enough energy to drive a truck 20 miles. in a lifetime, that is equivalent to driving to the moon and back.","the stomach serves as a first line of defense for your immune system. it contains hydrochloric acid, which helps to kill off bacteria and viruses that may enter with the food you eat."} 
  players={}
  game.update=curr_game:update_game(game.state)
@@ -520,6 +520,7 @@ function init_boss()
   music(16)
   if r>0 then game.next_boss=game.b_remaining[flr(rnd(r))+1] del(game.b_remaining, game.next_boss)
   else game.next_boss=4 end
+  add(game.b_faught, game.next_boss)
  else game.state=1 game.next_boss=5 end
  --4,5 scires and stuff
  for p in all(players) do
@@ -610,8 +611,16 @@ function init_transition()
 end
 
 function draw_transition()
- print_quote(random_quote,30,0,1,9)
- print("press z to continue",48,120,7)
+ --print_quote(random_quote,30,0,1,9)
+ print("press x to continue",48,120,7)
+ for i=1,4 do
+  local x=i*24
+  circfill(4+x,96,8,7) --draw white circle in background
+  if i<4 then line(13+x,96,19+x,96,7) end
+  if i>#game.b_faught then print("?", 3+x, 94, 2) end --draw sprite here
+  if i<#game.b_faught then sspr(56, 8, 8, 8, x-4, 89, 16,16) end
+  if game.b_faught[i] then spr(game.b_faught[i]+23, x, 92) end
+ end
 end
 -----------------------------
 -- menu functions
@@ -692,8 +701,10 @@ function curr_boss:platform_movement(id)
   return function() -- return stomach movement
    for i=1, #plats do
     local p=plats[i]
-    p=p:translate(v(-.25,0))
+    local move_vec=v(-.25,0)
+    p=p:translate(move_vec)
     if p.xr<0 then p=p:translate(v(128,0)) end
+    moving_plat_collision(p, move_vec)
     plats[i]=p
     boss.col_boxes[i+1]=p
    end
@@ -1710,14 +1721,14 @@ __gfx__
 06222260002282000028220008822280002002000020020000282200005bb50005bbb500533b50005350053505355550fffffff4fff44ffffff44fff76665707
 0062260022828280082828222272272200800200008002008228282800533500005550005b55b5005350053505333bb5ffffff44f0004ffff00f4ffff6667767
 000660008020202002020202082828200080080000800800202002020005500000050000555055505550055505555550ffffff440000444440004fffff765766
-022000200000000000000000000000000505005009995950909509090000000000000000000000000000000000000000fffffffffffffffffffffffffff76776
-020202200008800000000000000000005050050559555595090995900000000000000000000000000000000000000000fffffffffffffffffffffffffff76766
-022000200082280005998800000880000555555095599590599889090bbbbb0000000000000000000000000000000000ffffffffffffffffffffffffffffffff
-02000020008228000998228000822800005995059598895590888895003333b000000000000000000000000000000000ffffffffffeeefffeeeffffffff77fff
-02000222009889005998228009822800505995005598895959888890003333b000000000000000000000000000000000fffffffffeeeeeeeeeeefffff7777fff
-000000000099990005998800599880000555555095599590959889550bbbbb0000000000000000000000000000000000ffffffffeeee777777eeefff7777ffff
-000222000059950000000000059900005050050559555595095095990000000000000000000000000000000000000000ffffffffee777777777eee77777fffff
-000020000005000000000000005000000500505000905950909550950000000000000000000000000000000000000000fffffffee7777777777745577fffffff
+0220002000000000000000000000000005050050099959509095090920000002100001100000ee000001100000000000fffffffffffffffffffffffffff76776
+02020220000880000000000000000000505005055955559509099590020000201121221000000ee000e11e0000555000fffffffffffffffffffffffffff76766
+022000200082280005998800000880000555555095599590599889090020020002188220000000ee0ee118e005666550ffffffffffffffffffffffffffffffff
+02000020008228000998228000822800005995059598895590888895000220000288882000000eeeee811e8e56666665ffffffffffeeefffeeeffffffff77fff
+0200022200988900599822800982280050599500559889595988889000022000022818200000eeeee8e11eee56666666fffffffffeeeeeeeeeeefffff7777fff
+000000000099990005998800599880000555555095599590959889550020020000218220ee0eeee08ee11e8e56666666ffffffffeeee777777eeefff7777ffff
+000222000059950000000000059900005050050559555595095095990200002000228200eeeeee00eee00eee56666660ffffffffee777777777eee77777fffff
+0000200000050000000000000050000005005050009059509095509520000002000222000eee00000e0000e005555550fffffffee7777777777745577fffffff
 06666660000c10000001c0000000000000c11c0000c11c000001c0000000000000000000000000000000000000000000ffffffee0000000000044457ffffffff
 0066660000c11c0000c11c00000000000c111cc00c111cc000c11c000000000000000000000000000000000000000000fffffee000000000004444eeffffffff
 06cccc600111c1c00c1c111000000000c1711711c17117110c1c11100880880008808800000000000000000000000000fffffee777777777777777eeffffffff
