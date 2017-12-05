@@ -457,10 +457,9 @@ pox_option_cost={0,1,3,2,2}
 
 function _init()
  cls()
- debug=false
  lbx,lby,mode=0,0,0
  --state: 0=overworld, 1=boss, 2=transition, 3=gameover, 4=menu
- game={ready_count=0,frame_counter=0,state=4,next_boss=3,b_remaining={},b_faught={},difficulty=1,menu=0,menuchoice=0,scores={},activescores={},screenshake=0,camx=0,camy=0,particles={}}
+ game={shopping=false, ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={1,2,3}, b_faught={}, difficulty=1, menu=0, menuchoice=0, scores={}, activescores={}, screenshake=0, camx=0, camy=0,particles={}}
  quotes={"there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus.","the average adult heart beats 72 times a minute; 100,000 times a day; 3,600,000 times a year; and 2.5 billion times during a lifetime.","every day, the heart creates enough energy to drive a truck 20 miles. in a lifetime, that is equivalent to driving to the moon and back.","the stomach serves as a first line of defense for your immune system. it contains hydrochloric acid, which helps to kill off bacteria and viruses that may enter with the food you eat.","try interacting with pox box at the overworld, he may have something for you.","when fighting the heart, aim for the valves attached to it.","scarlet fever and commander cold have different abilities. commander cold stops bullets in their tracks while scarlet fever moves faster.","when fighting the lungs, be careful as they will try to blow you in all sorts of directions.","when fighting the stomach, try to avoid the stomach acid.","every player has two jumps. use them wisely!","if you see smoke while fighting the lungs, find a safe area to wait until it clears up."} 
  players={}
  game.update=curr_game:update_game(game.state)
@@ -813,9 +812,9 @@ function curr_boss:boss_logic(id)
  --lungs
  elseif id==3 then 
   return function()
-   if hpcheck(80) then s=0 boss.attacks=init_boss_attacks(id,2) end
+   if hpcheck(80) then s=0 end
    if hpcheck(79) then s=1 end
-   if hpcheck(40) then s=2 boss.timer=180 end
+   if hpcheck(40) then s=2 boss.timer=180  boss.attacks=init_boss_attacks(id,2) end
    boss.state=s
    if s>0 then
     for p in all(players) do
@@ -1141,6 +1140,7 @@ end
 -- player functions
 ------------------------------
 function update_players()
+ game.is_shopping=false
  local count=0 
  for p in all(players) do
   --see if player is dead
@@ -1230,11 +1230,11 @@ function player_movement(p,n)
  if btn(0,n) then 
   if a_state==0 then p.d=1 end
   if x>0 then x=0 end --if turning
-  if state==0 then x-=.05 else x-=.04 end --if ground or air
+  if state==0 then x-=.05 else x-=.025 end --if ground or air
  elseif btn(1,n) then 
   if a_state==0 then p.d=2 end
   if x<0 then x=0 end --if turning
-  if state==0 then x+=.05 else x+=.04 end -- if ground or air
+  if state==0 then x+=.05 else x+=.025 end -- if ground or air
  else x=0 end
 
  --1b. horizontal velocity bounds
@@ -1270,7 +1270,7 @@ function player_movement(p,n)
  if height==7 and crouching==true then p_hb=p_hb:extend(3, -4) end
  
  --5. init dodge
- if btnp(5,n) and p.dodge_meter>=25 and a_state==0 then state=4 x=0 y=0 end
+ if btnp(5,n) and p.dodge_meter>=25 then state=4 x=0 y=0 p.attack_state=0 end
  
  --set player values 
  p.jumped=j
@@ -1354,7 +1354,8 @@ function player_interact(p,n)
  elseif box_collide(p_hb, {boss.hit_boxes[2]}) then p.ready=true
  else p.state=1 end
 
- if p.shopping==true then 
+ if p.shopping==true then
+  game.is_shopping=true 
   if btnp(0,n) then p.shop_option-=1 end
   if btnp(1,n) then p.shop_option+=1 end
   if p.shop_option<1 then p.shop_option=1 end
@@ -1443,48 +1444,16 @@ function _draw()
  map(0,0,0,0,16,16)
  cameffects()
  if game.state<2 then
-  if debug==true then
-  -- draw player test
-  for player in all(players) do
-  if player.state==4 then draw_box(15, make_box(player.hit_box.xl+2, player.hit_box.yt+2, player.hit_box.xr-2, player.hit_box.yb-2)) end
-  draw_box(7, player.hit_box)
-  if player.attack_state>=1 then draw_box(9, player.attack_box) end
-  end
-  for b in all(boss.col_boxes) do
-   draw_box(3,b)
-  end
-  for b in all(boss.hit_boxes) do
-   draw_box(8,b)
-  end
-  for b in all(boss.bullets) do
-   draw_box(15,b.hbox)
-  end
-  for v in all(boss.valves) do
-   draw_box(8,v.hbox)
-  end 
-  if boss.safe_space then
-   draw_box(14,boss.safe_space)
-  end
-  if boss.av then
-   draw_box(14,boss.av.hbox)
-  end
-  if boss.id==2 and boss.wave.hbox then
-    draw_box(14,boss.wave.hbox)
-  end
-  else
-   draw_hud()
-   draw_boss(boss.id)
-   draw_bullets()
-   draw_platforms(boss.id)
-   draw_players()
-   show_performance()
-   if boss.id==2 and boss.wave and boss.wave.hbox then
-    draw_box(14,boss.wave.hbox)
-   end
-   if boss.shock_space then
-	   draw_box(14,boss.shock_space)
-	  end
-  end
+  draw_hud()
+  draw_boss(boss.id)
+  draw_bullets()
+  draw_platforms(boss.id)
+  draw_players()
+  if boss.id==2 and boss.wave and boss.wave.hbox then
+   draw_box(14,boss.wave.hbox)   end
+  if boss.shock_space then
+	  draw_box(14,boss.shock_space)
+	 end
  elseif game.state==2 then
   draw_transition()
  elseif game.state==3 then
@@ -1492,6 +1461,20 @@ function _draw()
  elseif game.state==4 then
   draw_menu()
  end
+end
+
+function draw_smoke(ss)
+ if ss~=nil and game.frame_counter%15==0 then
+  rx=rnd(20)
+  if ss.xl<1 then rx+=108 end
+  cloud={x=rx,y=127,sp=56,s=rnd(2)+1}
+  add(game.particles,cloud)
+ end
+ for c in all(game.particles) do
+   sspr(64,24,8,8,c.x,c.y,8*c.s,8*c.s)
+   c.y-=1
+   if c.y<1 then del(game.particles,c) end
+  end
 end
 
 function draw_bullets()
@@ -1505,24 +1488,12 @@ function draw_box(t,b)
  rect(b.xl, b.yt, b.xr, b.yb, t)
 end
 
-function show_performance()
- clip()
- local cpu=flr(stat(1)*100)
- local fps=-60/flr(-stat(1))
- local perf=
-  cpu .. "% cpu @ " ..
-  fps ..  " fps"
- print(perf,0,122,0)
- print(perf,0,121,fps==60 and 7 or 8)
-end
-
 -----------------------
 -- render functions
 -----------------------
 
 --menu
 function draw_menu()
- cls()
  local sely
  map(16,16,0,0,64,64)
  --main
@@ -1570,21 +1541,21 @@ function draw_player_hud()
   local p=players[i]
   --player health
   for hp=1,p.hp do
-   spr(23+i,0+8*hp+(i-1)*80,120)
+   spr(p.n*32,0+8*hp+(i-1)*80,120)
   end
   --player ap
-  rectfill(120*(i-1),5,7+120*(i-1),7,2)
-  rectfill(120*(i-1),5,120*(i-1)+(p.dodge_meter/100)*7,7,8)
-  rect(0+120*(i-1),4,8+120*(i-1),8,0)
+  rectfill(120*(i-1),2,7+120*(i-1),4,2)
+  rectfill(120*(i-1),2,120*(i-1)+(p.dodge_meter/100)*7,4,8+p.n*4)
+  rect(0+120*(i-1),1,8+120*(i-1),5,0)
  end
 end
 
 --given id of boss, draw the hp
 function draw_boss_health(id)
  if game.state==1 then
-  rectfill(0,1,128,3,8)
-  rectfill(0,1,(boss.hp/boss.max_hp)*128,3,3)
-  rect(0, 0, 128, 4, 0)
+  rectfill(24,1,104,4,2)
+  rectfill(24,1,24+(boss.hp/boss.max_hp)*80,4,3)
+  rect(23, 1, 105, 5, 0)
  end
 end
 
@@ -1640,29 +1611,37 @@ function draw_boss(id)
    draw_lips(boss.state, boss_lip_points[id])
    if id==3 then draw_smoke(boss.safe_space) end
   else
-   draw_pox_box()
+   if game.is_shopping then draw_pox_box()
+   else 
+    local t="nice job. last boss ahead."
+    if #game.b_remaining+1==3 then t="press x to interact with me"
+    elseif #game.b_remaining+1==2 then t="not too bad."
+    elseif #game.b_remaining+1==1 then t="ebola-chan would be proud"
+    end
+    print(t,1,30)
+   end
   end
  end
 end
 
 function draw_pox_box()
  print("item:",1,32)
- print("cost:",1,50)
-
+ print("cost:",1,40)
+ print("mp:",1,64)
  for i=1,3 do
   local option_index=boss.pox_box_options[i]
   local name=pox_option[option_index]
   local sprite=pox_option_sprites[option_index]
   local cost=pox_option_cost[option_index]
-  local x=(i*32)-#name-4
+  local x=(i*32)-#name
   print(name, x, 32, 7)
-  print(cost, x, 50)
-  spr(sprite, x, 40)
+  print(cost, x, 40)
+  spr(sprite, x+8, 38)
 
   for p in all(players) do
    if p.shopping==true then
-    print(p.mutation_tokens,8, 96) --print player tokens
-    if p.shop_option==i then spr(16+(32*p.n),x,23) end --print player option selection icon
+    print(p.mutation_tokens,40+(16*p.n), 64,8+p.n*4) --print player tokens
+    if p.shop_option==i then spr(16+(32*p.n),x+(12*p.n),23) end --print player option selection icon
    end
   end
 
@@ -1690,20 +1669,6 @@ function draw_platforms(id)
    end
   end
  end
-end
-
-function draw_smoke(ss)
- if ss~=nil and game.frame_counter%15==0 then
-  rx=rnd(20)
-  if ss.xl<1 then rx+=108 end
-  cloud={x=rx,y=127,sp=56,s=rnd(2)+1}
-  add(game.particles,cloud)
- end
- for c in all(game.particles) do
-   sspr(64,24,8,8,c.x,c.y,8*c.s,8*c.s)
-   c.y-=1
-   if c.y<1 then del(game.particles,c) end
-  end
 end
 
  --mood, eye_x, eye_y, eye_r, distance, primary color, secondary color
@@ -1891,13 +1856,13 @@ __gfx__
 006cc60011c1c1c00c1c1c111171171100c0010000c00100c11c1c1c06666660008e8000000000000000000000000000fffffffffeeeeeeeeeeeffffffffffff
 00066000c0101010010101010c1c1c1000c00c0000c00c00101001010000000000080000000000000000000000000000fffffffffffeeeeeeeefffffffffffff
 0cc000c007c7cc7007c7c70000cccc000070700000700007000000000550005005505505666666660000000000000000ffffffffffffffffffffffffffffffff
-0c0c0c0c7ccc7cc77c7cccc70cccccc00700070070070700666666605775057555050550699933360000000000000000ffffffffffffffffffffffffffffffff
+0c0c0c0c7ccc7cc77c7cccc70cccccc00700070070070700666666605775057555550550699933360000000000000000ffffffffffffffffffffffffffffffff
 0cc0000c0c1117700c111cc70c111cc000070007070000706c6c6c6057a957a70505555569aa39960000000000000000ffffffffffffffffffffffffffffffff
-0c0000c0717171c7717171100171711070000700700000006c6c6c6055799a7500555050693939360000000000000000ffffffffff44444444444fffffffffff
+0c0000c0717171c7717171100171711070000700700000006c6c6c6055799a7505555050693939360000000000000000ffffffffff44444444444fffffffffff
 0c000ccc0c1c11c00c1c1cc70c1c1cc00007000000070070686c6c600577975055505555633333360000000000000000ffffffffff4fffffffff4fffffffffff
-000000007c111cc77c1117c00c1117c0070007070700070068686c60575aa57005055050693a3a360000000000000000fffffffff4fffffffffff4ffffffffff
+000000007c111cc77c1117c00c1117c0070007070700070068686c60575aa57005055550693a3a360000000000000000fffffffff4fffffffffff4ffffffffff
 000ccc000c1c1cc00c1c1c77cc1c1ccc000000000000000068686860557575505555050569a339960000000000000000ffffffffffffffffffffffffffffffff
-0000c000c1ccc1c7c1ccc17cc1ccc1cc7007007000007007666666600550575505055000699993960000000000000000ffffffffffffffffffffffffffffffff
+0000c000c1ccc1c7c1ccc17cc1ccc1cc7007007000007007666666600550575505055500699993960000000000000000ffffffffffffffffffffffffffffffff
 eeeeeeeeeeeeeeee99999999999999991111111c111111c13ffffffffffff333ffffffffff3333ff7777777766666666fffff33feeeeffeeffffffff99999999
 222222222222272299ffff99f9999ff9111111c111171c1133333fffff333333fffafffffbfa773f7777777766666666fffabf73eeeefeeeffffffff99999999
 e22722ee222222229999fff99fffff99117111c111717111a3333333333333aaf9fffaffb9fff7737777777766666666f9ffbaf3feefffefffffffff99999999
