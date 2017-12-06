@@ -451,6 +451,7 @@ function init_player(num)
   dodge_meter=100,
   attack_state=0,
   attack_box=make_box(0,0,0,0),
+  attack_cooldown=0,
   mutation_tokens=3,
   shopping=false,
   shop_option=1,
@@ -477,7 +478,7 @@ end
 
 function init_boss()
  local n=game.next_boss
- boss={id=n, timer=180,attack_counter=1,counter=0, health_boxes={},hp=200,hit_cooldown=0,state=0,hit_boxes={}, col_boxes={}, hurt_boxes={}, bullets={}, attacks={},spawn=time(),d=0,pox_box_options={}}
+ boss={id=n, timer=180,attack_counter=1,counter=0, health_boxes={},hp=200,state=0,hit_boxes={}, col_boxes={}, hurt_boxes={}, bullets={}, attacks={},spawn=time(),d=0,pox_box_options={}}
  -- n=1 for heart
  -- n=2 for stomach
  -- n=3 for lungs
@@ -676,7 +677,6 @@ end
 curr_boss=kind()
 
 function update_boss()
- if boss.hit_cooldown>0 then boss.hit_cooldown-=1 end
  local s=boss.state
  for f in all(boss.funcs) do f() end
  --if boss is active, do attacks
@@ -747,7 +747,7 @@ function curr_boss:death_condition(id)
    if game.ready_count==#players then init_transition() end
   end
  else
-  return function() if boss.hp==0 then init_transition() end end
+  return function() if boss.hp<=0 then init_transition() end end
  end
 end
 
@@ -997,9 +997,9 @@ end
 --spawns one of two safe spaces
 function safespace()
  local id=flr(rnd(2))
- local s=make_box(0,0,108,127)
+ local s=make_box(24,0,127,127)
  if id>0 then
-  s=make_box(0,0,24,127)
+  s=make_box(0,0,108,127)
  end
  boss.safe_space=s
 end
@@ -1114,6 +1114,7 @@ function update_players()
   --else player is alive
   else
    if p.hit_cooldown>0 then p.hit_cooldown-=1 end
+   if p.attack_cooldown>0 then p.attack_cooldown-=1 end
    local n=p.n
    --different actions based on game state
    if p.state==4 then
@@ -1166,7 +1167,7 @@ function player_hit(p,n)
   if box_collide(p.hit_box,{hurtbox}) then
    p.d_vec.y=-3
    p.jumped=0
-   player_hurt(p)
+   if p.hit_cooldown==0 then player_hurt(p) end
   end
  end
 end
@@ -1244,7 +1245,7 @@ function player_movement(p,n)
 end
 
 function player_attack(p,n)
- local p_hb,p_ab,p_as=p.hit_box,p.attack_box,p.attack_state
+ local p_hb,p_ab,p_as,p_ac=p.hit_box,p.attack_box,p.attack_state,p.attack_cooldown
 
  --1. can attack/press attack check
  if btnp(4,n) and p_as==0 then
@@ -1258,12 +1259,13 @@ function player_attack(p,n)
  local damage=p.damage --suggested stat
  for i=1,#boss.hit_boxes do
   b=boss.hit_boxes[i]
-  if box_collide(p_ab,{b}) and p_as==1 and boss.hit_cooldown==0 and boss.health_boxes[i] and boss.health_boxes[i]>0 then
-   if boss.id==3 then for j=1,#boss.health_boxes do boss.health_boxes[j]-=1 end else boss.health_boxes[i]-=damage end
-   p.dodge_meter+=p.charge_speed
+  if box_collide(p_ab,{b}) and p_as==1 and boss.health_boxes[i] and boss.health_boxes[i]>0 then
+   if p_ac==0 then 
+	   if boss.id==3 then for j=1,#boss.health_boxes do boss.health_boxes[j]-=1 end else boss.health_boxes[i]-=damage end
+	   p.dodge_meter+=p.charge_speed
+    p_ac=30
+   end  
    p_as=2
-   boss.hit_cooldown=30
-   game.activescores[p.n].hitsgiven+=1
    sfx(49)
   end
  end
@@ -1284,6 +1286,7 @@ function player_attack(p,n)
  p_ab.yb=p_hb.yb-2
 
  --update player tables and translate box onto player
+ p.attack_cooldown=p_ac
  p.attack_state=p_as
  p.attack_box=p_ab:translate(v(p.d_vec.x,0))
 end
