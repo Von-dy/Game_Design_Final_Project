@@ -480,6 +480,10 @@ function init_player(num)
   mutation_tokens=3,
   shopping=false,
   shop_option=1,
+  damage=1,
+  attack_length=35,
+  charge_speed=10,
+  charge_max=100,
   menuselect=1
  }
 end
@@ -1296,12 +1300,12 @@ function player_attack(p,n)
 
  --2. collision checks
  --check for hit, cycle through boss hit boxes, make each box a table to re-use the box_collide function
- local damage=1 --suggested stat
+ local damage=p.damage --suggested stat
  for i=1,#boss.hit_boxes do
   b=boss.hit_boxes[i]
   if box_collide(p_ab,{b}) and p_as==1 and boss.hit_cooldown==0 and boss.health_boxes[i] and boss.health_boxes[i]>0 then
    if boss.id==3 then for j=1,#boss.health_boxes do boss.health_boxes[j]-=1 end else boss.health_boxes[i]-=damage end
-   p.dodge_meter+=10
+   p.dodge_meter+=p.charge_speed
    p_as=2
    boss.hit_cooldown=30
    game.activescores[p.n].hitsgiven+=1
@@ -1309,11 +1313,11 @@ function player_attack(p,n)
   end
  end
 
- local dodge_meter_max=100 --suggested stat
+ local dodge_meter_max=p.charge_max --suggested stat
  if p.dodge_meter>=dodge_meter_max then p.dodge_meter=dodge_meter_max end
  --3. hitbox movement
  --extend out
- local attack_length=35 --suggested stat
+ local attack_length=p.attack_length --suggested stat
  if p_as==1 then p_ab=p_ab:extend(p.d, 1) if p_ab.xl<p_hb.xl-attack_length or p_ab.xr>p_hb.xr+attack_length then p_as=2 end end
  --reel in
  if p_as==2 then p_ab=p_ab:extend(p.d, -2) if p_ab.xl>p_hb.xl-1 and p_ab.xr<p_hb.xr+1 then p_as=0 end end
@@ -1375,6 +1379,10 @@ function player_purchase(p,n)
  local option_index=boss.pox_box_options[p.shop_option]
  local cost=pox_option_cost[option_index]
  if p.mutation_tokens>=cost then
+  if option_index==2 then p.hp+=1
+  elseif option_index==3 then p.damage+=2
+  elseif option_index==4 then p.attack_length+=5
+  elseif option_index==5 then p.charge_speed+=5 p.charge_max+=15 end
   boss.pox_box_options[p.shop_option]=1
   p.mutation_tokens-=cost
   p.shopping=false
