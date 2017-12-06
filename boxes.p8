@@ -424,7 +424,7 @@ function _init()
  music(-1)
  lbx,lby,mode=0,0,0
  --state: 0=overworld, 1=boss, 2=transition, 3=gameover, 4=menu
- game={shopping=false, ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={2}, b_faught={}, difficulty=1, menu=0, menuchoice=0, scores={}, activescores={}, screenshake=0, camx=0, camy=0,particles={}}
+ game={shopping=false, ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={2}, b_faught={}, difficulty=1, menu=0, menuchoice=0, scores={}, screenshake=0, camx=0, camy=0,particles={}}
  quotes={"there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus.","the average adult heart beats 72 times a minute; 100,000 times a day; 3,600,000 times a year; and 2.5 billion times during a lifetime.","every day, the heart creates enough energy to drive a truck 20 miles. in a lifetime, that is equivalent to driving to the moon and back.","the stomach serves as a first line of defense for your immune system. it contains hydrochloric acid, which helps to kill off bacteria and viruses that may enter with the food you eat.","try interacting with pox box at the overworld, he may have something for you.","when fighting the heart, aim for the valves attached to it.","scarlet fever and commander cold have different abilities. commander cold stops bullets in their tracks while scarlet fever moves faster.","when fighting the lungs, be careful as they will try to blow you in all sorts of directions.","when fighting the stomach, try to avoid the stomach acid.","every player has two jumps. use them wisely!","if you see smoke while fighting the lungs, find a safe area to wait until it clears up."}
  players={}
  game.update=curr_game:update_game(game.state)
@@ -459,19 +459,8 @@ function init_player(num)
   charge_max=100,
   menuselect=1
  }
+ game.scores[num]=0
  add(players,p)
-end
-
-function scoreboard()
- thisboard={
-  bossid=boss.id,
-  lasttime=time(),
-  timer=0,
-  total=0,
-  hitstaken=0,
-  hitsgiven=0
- }
- return thisboard
 end
 
 function init_boss()
@@ -510,8 +499,6 @@ function init_boss()
   local x1,y1,x2,y2=0,104,6,111
   if n==4 then x1,y1,x2,y2=15,57,21,64 end
   p.hit_box=make_box(x1,y1,x2,y2)
-  
-  game.activescores[p.n]=scoreboard()
   if game.next_boss==5 then p.mutation_tokens+=3 end --give players 3 tokens
  end
 
@@ -1129,18 +1116,6 @@ function update_players()
   --see if all players are dead
   if #players==0 then game.state=3 game.update=curr_game:update_game(3) music(15) end
  end
- update_timers()
-end
-
-function update_timers()
- local t=time()
- for p in all(players) do
-  if t-game.activescores[p.n].lasttime>2 and p.hp>0 then
-   game.activescores[p.n].timer+=1
-   game.activescores[p.n].lasttime=t
-   game.activescores[p.n].total=(100*game.activescores[p.n].hitsgiven)-(50*game.activescores[p.n].hitstaken)-game.activescores[p.n].timer
-  end
- end
 end
 
 function player_hit(p,n)
@@ -1172,7 +1147,7 @@ end
 function player_hurt(p)
  p.hp-=1
  game.screenshake,p.hit_cooldown=7,120
- game.activescores[p.n].hitstaken+=1
+ game.scores[p.n]-=50
  sfx(48)
 end
 
@@ -1261,7 +1236,7 @@ function player_attack(p,n)
    p.dodge_meter+=p.charge_speed
    p_as=2
    boss.hit_cooldown=30
-   game.activescores[p.n].hitsgiven+=1
+   game.scores[p.n]+=100
    sfx(49)
   end
  end
@@ -1755,19 +1730,10 @@ function draw_gameover()
  cls()
  print("game over",50,30,3)
  line(50,36,84,36,3)
- print("time",24,42,11)
- print("hits",44,42)
- print("flubs",64,42)
- print("score",92,42)
- local ypos=56
- for p in all(players) do
-  if p.n<1 then spr(6,12,ypos) else spr(38,12,ypos) end
-  print(game.activescores[p.n].timer,30,ypos)
-  print(game.activescores[p.n].hitsgiven,50,ypos)
-  print(game.activescores[p.n].hitstaken,70,ypos)
-  print(game.activescores[p.n].total,96,ypos)
-  ypos+=16
- end
+ print("score",86,42)
+ spr(6,26,56)
+ print(game.scores[0],88,57,11)
+ if game.scores[1] then spr(38,26,72) print(game.scores[1],88,73) end
  print("x to restart",45,100,3)
 end
 
