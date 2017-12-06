@@ -423,11 +423,11 @@ boss_rooms={
   },
  { --brain
   {20,30,40,34}, --lplat1
-  {10,60,30,64}, --lplat2
-  {20,90,40,94}, --lplat3
+  {10,70,30,66}, --lplat2
+  {20,100,40,96}, --lplat3
   {88,30,108,34}, --rplat1
-  {98,60,118,64}, --rplat2
-  {88,90,108,94}, --rplat3
+  {98,70,118,66}, --rplat2
+  {88,100,108,96}, --rplat3
  },
  { --overworld
   {0, 112, 127, 127}
@@ -451,7 +451,7 @@ function _init()
  music(-1)
  lbx,lby,mode=0,0,0
  --state: 0=overworld, 1=boss, 2=transition, 3=gameover, 4=menu
- game={shopping=false, ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={1,2,3}, b_faught={}, difficulty=1, menu=0, menuchoice=0, scores={}, activescores={}, screenshake=0, camx=0, camy=0,particles={}}
+ game={shopping=false, ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={}, b_faught={}, difficulty=1, menu=0, menuchoice=0, scores={}, activescores={}, screenshake=0, camx=0, camy=0,particles={}}
  quotes={"there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus.","the average adult heart beats 72 times a minute; 100,000 times a day; 3,600,000 times a year; and 2.5 billion times during a lifetime.","every day, the heart creates enough energy to drive a truck 20 miles. in a lifetime, that is equivalent to driving to the moon and back.","the stomach serves as a first line of defense for your immune system. it contains hydrochloric acid, which helps to kill off bacteria and viruses that may enter with the food you eat.","try interacting with pox box at the overworld, he may have something for you.","when fighting the heart, aim for the valves attached to it.","scarlet fever and commander cold have different abilities. commander cold stops bullets in their tracks while scarlet fever moves faster.","when fighting the lungs, be careful as they will try to blow you in all sorts of directions.","when fighting the stomach, try to avoid the stomach acid.","every player has two jumps. use them wisely!","if you see smoke while fighting the lungs, find a safe area to wait until it clears up."}
  players={}
  game.update=curr_game:update_game(game.state)
@@ -526,12 +526,15 @@ function init_boss()
   else game.next_boss=4 end
   add(game.b_faught, game.next_boss)
  else game.state=1 game.next_boss=5 end
- --4,5 scires and stuff
+ --4,5 scores and stuff
  for p in all(players) do
   p.ready=false
   p.shopping=false
   p.state=1
-  p.hit_box=make_box(0,104,6,111)
+  local x1,y1,x2,y2=0,104,6,111
+  if n==4 then x1,y1,x2,y2=15,57,21,64 end
+  p.hit_box=make_box(x1,y1,x2,y2)
+  
   game.activescores[p.n]=scoreboard()
   if game.next_boss==5 then p.mutation_tokens+=3 end --give players 3 tokens
  end
@@ -598,8 +601,9 @@ function init_boss_attacks(id,state)
 
  --brain
  elseif id==4 and state==0 then
-  return {throw_item,bouncing_lightning,smart_shot,shockspace,shock_space}
-
+  return {throw_item,throw_item,bouncing_lightning,bouncing_lightning}
+ elseif id==4 and state==2 then
+ 	return {throw_item, bouncing_lightning, throw_item,bouncing_lightning, smart_shot,shockspace,shock_space}
  --overworld
  else
   return {}
@@ -832,8 +836,8 @@ function curr_boss:boss_logic(id)
   return function()
    if hpcheck(100) then s=0 end
    if hpcheck(99) then s=1 end
-   if hpcheck(50) then s=2 end
-   if hpcheck(20) then s=3 end
+   if hpcheck(50) then s=2 boss.attacks=init_boss_attacks(id,2)end
+   if hpcheck(20) then s=3 boss.timer=120 end
    boss.state=s
   end
  end
@@ -965,7 +969,7 @@ end
 
 --throw items at a player
 function throw_item()
- local sx,sy,sprite=105,72,48
+ local sx,sy=105,72
  if boss.id==4 then sx,sy=64,64 end
  local t=flr(rnd(#players))+1
  local target=players[t]
@@ -980,9 +984,7 @@ end
 --spawns one of two enzymes
 function spawn_enzyme()
  local i=flr(rnd(2))+20
- local x=112
- local y=16
- local e=make_bullet(i,x,y,x+6,y+6,179+i)
+ local e=make_bullet(i,112,16,118,22,179+i)
  e.spawn=time()
  e.state=0
  add(boss.bullets,e)
@@ -1384,7 +1386,7 @@ function player_bounds(p_hb)
  local x,y=0,0
  if p_hb.xl<0 then x=abs(p_hb.xl) end
  if p_hb.xr>127 then x=127-p_hb.xr end
- if p_hb.yt<0 then y=abs(p_hb.yt) end
+ if p_hb.yt<3 then y=abs(p_hb.yt) end
  if p_hb.yb>127 then y=127-p_hb.yb end
  return p_hb:translate(v(x,y))
 end
@@ -1906,14 +1908,14 @@ ddddddddddddddddbbbbbbbbccccccccdc7dcdcd7dd7d7d73bbbbbb3ffffffffdddddddd66666666
 11ddddd11dddddd1bbbbbbbbccccccccdcd7dcdcd7dddd7d3bbbbbb3ffffffffdddddddd666666668888888800000000ffff55ffffff55ffffffffffffffffff
 221ddd1221111d12bbbbbbbbcccccccc7d7ddddd7dddddddf3bbbb3fffffffffdddddddd666666668888888800000006ffffffffffffffffffffffffffffffff
 2221112222222122bbbbbbbbccccccccd7ddddddddddddddff3333ffffffffffdddddddd666666662222222266666666f555f555f555f555ffffffffffffffff
-deeeeeedd111111daaaaaaaa333333330101010101010100ffffffffffffffff111111110000000006666666666666665999599959995999ffffffffffffffff
-e222222e1cccccc1aaaaaaaa333333331111111111111111ffffffffffffffff11111111006666666677767766666666f555f555f555f555ffffffffffffffff
-e2e22e2e1c1cc1c1aaaaaaaa33333333017171111711c110ffffffffffffffff11111111666766777677767677666666ffffffffffffffffffffffffffffffff
-e222222e1cccccc1aaaaaaaa33333333111711c1c171c111ffffffffffffffff11111111666767776677667677666666ffff55ffffff55ffffffffffffffffff
-e2e22e2e1c1111c1aaaaaaaa333333330171cc1c171c1110ffffffffffffffff11111111066666666777667677666600ff559955ff559955ffffffffffffffff
-e2eeee2e1c1cc1c1aaaaaaaa333333331111111111111111ffffffffffffffff111111110000666667766776666600005599999955999999ffffffffffffffff
-e222222e1cccccc1aaaaaaaa333333330101010101010100ffffffffffffffff11111111000000006666666666000000ff559955ff559955ffffffffffffffff
-deeeeeedd111111daaaaaaaa333333330000000000000000ffffffffffffffff11111111000000000000000000000000ffff55ffffff55ffffffffffffffffff
+deeeeeedd111111daaaaaaaa3333333301010101010101005555555555555555111111110000000006666666666666665999599959995999ffffffffffffffff
+e222222e1cccccc1aaaaaaaa333333331111111111111111566666766666666511111111006666666677767766666666f555f555f555f555ffffffffffffffff
+e2e22e2e1c1cc1c1aaaaaaaa33333333017171111711c110567666667666766511111111666766777677767677666666ffffffffffffffffffffffffffffffff
+e222222e1cccccc1aaaaaaaa33333333111711c1c171c111566666666666666511111111666767776677667677666666ffff55ffffff55ffffffffffffffffff
+e2e22e2e1c1111c1aaaaaaaa333333330171cc1c171c1110566666666666667511111111066666666777667677666600ff559955ff559955ffffffffffffffff
+e2eeee2e1c1cc1c1aaaaaaaa3333333311111111111111115666676666766665111111110000666667766776666600005599999955999999ffffffffffffffff
+e222222e1cccccc1aaaaaaaa333333330101010101010100576666666666666511111111000000006666666666000000ff559955ff559955ffffffffffffffff
+deeeeeedd111111daaaaaaaa333333330000000000000000555555555555555511111111000000000000000000000000ffff55ffffff55ffffffffffffffffff
 00000000000000008888888000011110000000000000222222222220000000000000000000000000000000000000000000000000000000000000000000000000
 0000000111022000888888882201001000000000000022eee2222222220000000000000000000000000000000000000000000000000000000000000000000000
 0000000101122228888888882111001000000000000022eeeeeee888822000000000000111110000000011110000000000000000000000000000000000000000
