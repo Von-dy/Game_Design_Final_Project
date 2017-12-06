@@ -451,7 +451,7 @@ function _init()
  music(-1)
  lbx,lby,mode=0,0,0
  --state: 0=overworld, 1=boss, 2=transition, 3=gameover, 4=menu
- game={shopping=false, ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={1,2,3}, b_faught={}, difficulty=1, menu=0, menuchoice=0, scores={}, activescores={}, screenshake=0, camx=0, camy=0,particles={}}
+ game={shopping=false, ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={1,2,3}, b_faught={}, difficulty=1, menu=0, menuchoice=1, scores={}, activescores={}, screenshake=0, camx=0, camy=0,particles={}}
  quotes={"there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus.","the average adult heart beats 72 times a minute; 100,000 times a day; 3,600,000 times a year; and 2.5 billion times during a lifetime.","every day, the heart creates enough energy to drive a truck 20 miles. in a lifetime, that is equivalent to driving to the moon and back.","the stomach serves as a first line of defense for your immune system. it contains hydrochloric acid, which helps to kill off bacteria and viruses that may enter with the food you eat.","try interacting with pox box at the overworld, he may have something for you.","when fighting the heart, aim for the valves attached to it.","scarlet fever and commander cold have different abilities. commander cold stops bullets in their tracks while scarlet fever moves faster.","when fighting the lungs, be careful as they will try to blow you in all sorts of directions.","when fighting the stomach, try to avoid the stomach acid.","every player has two jumps. use them wisely!","if you see smoke while fighting the lungs, find a safe area to wait until it clears up."}
  players={}
  game.update=curr_game:update_game(game.state)
@@ -669,18 +669,19 @@ end
 function update_menu()
  --main
  if game.menu==0 or game.menu==2 then
-  if btn(2) then
+  if btn(1) then
    game.menuchoice=0
-  elseif btn(3) then
+  elseif btn(0) then
    game.menuchoice=1
   end
  end
  if game.menu==0 then
   if btnp(5) then
    add(players,init_player(0))
-   if game.menuchoice>0 then add(players,init_player(1)) end
+   if game.menuchoice<1 then add(players,init_player(1)) end
    players[1].menuselect=0
    game.menu=2
+   game.menuchoice=0
   end
   instructions = false
   if btn(4) then --hold it
@@ -1150,7 +1151,7 @@ function update_players()
  local count=0
  for p in all(players) do
   --see if player is dead
-  if p.hp<=0 then count+=1 p.hit_box.xl=-20
+  if p.hp<=0 then count+=1 p.hit_box.xl=-20 p.hit_box.xr=-22
   --else player is alive
   else
    if p.hit_cooldown>0 then p.hit_cooldown-=1 end
@@ -1507,7 +1508,7 @@ end
 
 --menu
 function draw_menu()
- local sely
+ local selx
  --main
  if game.menu==0 then
   --draw_lips(0, {48,64,25,2,5})
@@ -1516,8 +1517,11 @@ function draw_menu()
   --print("1 player",20,90,11)
   --print("2 players",20,100)
   --print("hold z for instructions",20,110)
-  if game.menuchoice==0 then sely=89 spr(17, 64, 90) spr(1, 64, 100) spr(33, 72, 100) else sely=99 spr(1, 64, 90) spr(17, 64, 100) spr(49, 72, 100) end
-  spr(41,12,sely)
+  print("1p",45,109,8)
+  print("2p",76,109,12)
+  if game.menuchoice>0 then selx=36 else selx=67 spr(38, 84, 56) end
+  spr(6, 36, 56)
+  spr(41,selx,108)
 
  --player select
  -- elseif game.menu==1 then
@@ -1532,10 +1536,10 @@ function draw_menu()
 
  --difficulty
  elseif game.menu==2 then
-  print("easy",40,50)
-  print("viral",40,60)
-  if game.menuchoice==0 then sely=48 else sely=58 end
-  spr(41,30,sely)
+  print("easy",43,109,3)
+  print("viral",70,109,11)
+  if game.menuchoice>0 then selx=35 else selx=62 end
+  spr(41,selx,108)
  end
 end
 
@@ -1871,10 +1875,10 @@ __gfx__
 0000200000050000000000000050000005005050009059509095509580000008000222000eee00000e0000e005555550fffffffee7777777777745577fffffff
 06666660000c10000001c0000000000000c11c0000c11c000001c0000000000000000000000000007777775777777777ffffffee0000000000044457ffffffff
 0066660000c11c0000c11c00000000000c111cc00c111cc000c11c000000000000000000000000007777755577777777fffffee000000000004444eeffffffff
-06cccc600111c1c00c1c111000000000c1711711c17117110c1c11100666666008808800000000007777756577777777fffffee777777777777777eeffffffff
-06cccc6017171110011171710000000001c111c001c111c0117117c1067777608ee8ee80003330000000056500000000ffffffee7777777777777eefffffffff
-06cccc6001c111c00c111c1000c11c0000111c0000111c000c111c10067777608eeeee80000003007777753577777777fffffffee77777777777eeffffffffff
-06cccc600011c100001c11000cc111c00010010000100100001c11000677776008eee80000333000777775b577777777ffffffffeeeeeeeeeeeeefffffffffff
+06cccc600111c1c00c1c111000000000c1711711c17117110c1c111006666660088088000bbbbb007777756577777777fffffee777777777777777eeffffffff
+06cccc6017171110011171710000000001c111c001c111c0117117c1067777608ee8ee8003777bb00000056500000000ffffffee7777777777777eefffffffff
+06cccc6001c111c00c111c1000c11c0000111c0000111c000c111c10067777608eeeee80033333b07777753577777777fffffffee77777777777eeffffffffff
+06cccc600011c100001c11000cc111c00010010000100100001c11000677776008eee80003333b00777775b577777777ffffffffeeeeeeeeeeeeefffffffffff
 006cc60011c1c1c00c1c1c111171171100c0010000c00100c11c1c1c06666660008e8000000000007777775777777777fffffffffeeeeeeeeeeeffffffffffff
 00066000c0101010010101010c1c1c1000c00c0000c00c00101001010000000000080000000000007777775777777777fffffffffffeeeeeeeefffffffffffff
 0cc000c007c7cc7007c7c70000cccc000070700000700007000000000550005005505505666666668888888ff8888888ffffffffffffffffffffffffffffffff
