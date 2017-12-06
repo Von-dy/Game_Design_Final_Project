@@ -512,7 +512,7 @@ function init_boss()
   local x1,y1,x2,y2=0,104,6,111
   if n==4 then x1,y1,x2,y2=15,57,21,64 end
   p.hit_box=make_box(x1,y1,x2,y2)
-  
+
   game.activescores[p.n]=scoreboard()
   if game.next_boss==5 then p.mutation_tokens+=3 end --give players 3 tokens
  end
@@ -642,9 +642,9 @@ end
 function update_menu()
  --main
  if game.menu==0 or game.menu==2 then
-  if btn(1) then
+  if btn(3) then
    game.menuchoice=0
-  elseif btn(0) then
+ elseif btn(2) then
    game.menuchoice=1
   end
  end
@@ -1158,7 +1158,7 @@ function player_hit(p,n)
   --check for wave
   if boss.wave then
    if box_collide(p.hit_box,{boss.wave.hbox}) then
-    player_hurt(p)   
+    player_hurt(p)
    end
   end
  end
@@ -1260,11 +1260,11 @@ function player_attack(p,n)
  for i=1,#boss.hit_boxes do
   b=boss.hit_boxes[i]
   if box_collide(p_ab,{b}) and p_as==1 and boss.health_boxes[i] and boss.health_boxes[i]>0 then
-   if p_ac==0 then 
+   if p_ac==0 then
 	   if boss.id==3 then for j=1,#boss.health_boxes do boss.health_boxes[j]-=1 end else boss.health_boxes[i]-=damage end
 	   p.dodge_meter+=p.charge_speed
     p_ac=30
-   end  
+   end
    p_as=2
    sfx(49)
   end
@@ -1462,23 +1462,25 @@ end
 -- render functions
 -----------------------
 --menu
-function draw_menu()
- local selx
- --main
- if game.frame_counter%20==0 then menu_color+=1 end
- if menu_color%2==0 then pal(5, 10) pal(10,5) end
-  
- if game.menu==0 then
-  spr(6, 48, 56)
-  if game.menuchoice>0 then selx=36 spr(35, 84, 56)  else selx=67 spr(38, 84, 56) end
- --difficulty
- elseif game.menu==2 then
-  print("easy",43,109,3)
-  print("viral",70,109,11)
-  if game.menuchoice>0 then selx=35 else selx=62 end
-  spr(41,selx,108)
- end
-end
+  function draw_menu()
+   local sely=0
+   local selx=0
+   --main
+   if game.frame_counter%20==0 then menu_color+=1 end
+   if menu_color%2==0 then pal(5, 10) pal(10,5) end
+
+   if game.menu==0 then
+    selx=40
+    spr(6, 48, 56)
+    if game.menuchoice>0 then sely=106 spr(35, 72, 56)  else sely=110 spr(38, 72, 56) end
+   --difficulty
+   elseif game.menu==2 then
+    selx=64
+    if game.menuchoice>0 then sely=106 else sely=110 end
+   end
+   spr(41, selx, sely)
+   print("HOW TO PLAY:PRESS z", 27, 122, 3)
+  end
 
 function draw_instructions()
  if instructions == true and game.menu==0 then
@@ -1596,7 +1598,7 @@ function draw_boss(id)
    if id==3 then draw_smoke(boss.safe_space) end
   else
    local s=""
-   if game.next_boss==1 then s="heart" 
+   if game.next_boss==1 then s="heart"
    elseif game.next_boss==2 then s="stomach" -- code
    elseif game.next_boss==3 then s="lungs"
    else s="brain" end
@@ -2239,4 +2241,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
