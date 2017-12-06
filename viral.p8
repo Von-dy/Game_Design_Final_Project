@@ -267,6 +267,10 @@ function curr_game:update_game(state)
   return function()
    update_menu()
   end
+ elseif state==5 then
+  return function()
+   draw_win()
+  end
  end
 end
 
@@ -425,7 +429,7 @@ function _init()
  lbx,lby,mode=0,0,0
  menu_color=0
  --state: 0=overworld, 1=boss, 2=transition, 3=gameover, 4=menu
- game={shopping=false, ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={2}, b_faught={}, difficulty=1, menu=0, menuchoice=0, scores={}, activescores={}, screenshake=0, camx=0, camy=0,particles={}}
+ game={shopping=false, ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={1,2,3}, b_faught={}, difficulty=1, menu=0, menuchoice=0, scores={},screenshake=0, camx=0, camy=0,particles={}}
  quotes={"there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus.","the average adult heart beats 72 times a minute; 100,000 times a day; 3,600,000 times a year; and 2.5 billion times during a lifetime.","every day, the heart creates enough energy to drive a truck 20 miles. in a lifetime, that is equivalent to driving to the moon and back.","the stomach serves as a first line of defense for your immune system. it contains hydrochloric acid, which helps to kill off bacteria and viruses that may enter with the food you eat.","try interacting with pox box at the overworld, he may have something for you.","when fighting the heart, aim for the valves attached to it.","scarlet fever and commander cold have different abilities. commander cold stops bullets in their tracks while scarlet fever moves faster.","when fighting the lungs, be careful as they will try to blow you in all sorts of directions.","when fighting the stomach, try to avoid the stomach acid.","every player has two jumps. use them wisely!","if you see smoke while fighting the lungs, find a safe area to wait until it clears up."}
  players={}
  game.update=curr_game:update_game(game.state)
@@ -461,20 +465,10 @@ function init_player(num)
   charge_max=100,
   menuselect=1
  }
+ game.scores[num]=0
  add(players,p)
 end
 
-function scoreboard()
- thisboard={
-  bossid=boss.id,
-  lasttime=time(),
-  timer=0,
-  total=0,
-  hitstaken=0,
-  hitsgiven=0
- }
- return thisboard
-end
 
 function init_boss()
  local n=game.next_boss
@@ -484,7 +478,6 @@ function init_boss()
  -- n=3 for lungs
  -- n=4 for brain
  -- n=5 for overworld
-
  --1. init hit_boxes
  init_boss_boxes(boss.hit_boxes, boss_hit_boxes[n])
  --2. init col_boxes
@@ -513,8 +506,13 @@ function init_boss()
   if n==4 then x1,y1,x2,y2=15,57,21,64 end
   p.hit_box=make_box(x1,y1,x2,y2)
 
-  game.activescores[p.n]=scoreboard()
-  if game.next_boss==5 then p.mutation_tokens+=3 end --give players 3 tokens
+  if game.next_boss==5 then 
+   if game.difficulty==0 then
+    p.mutation_tokens+=1 
+   elseif game.difficulty==1 then 
+    p.mutation_tokens+=3
+   end
+  end
  end
 
  --5. init boss functions
@@ -747,7 +745,16 @@ function curr_boss:death_condition(id)
    if game.ready_count==#players then init_transition() end
   end
  else
-  return function() if boss.hp<=0 then init_transition() end end
+  return function() 
+   if boss.hp<=0 then 
+    if boss.id==4 then
+    	game.state=5
+    	game.update=curr_game:update_game(5)
+    else
+    init_transition() 
+    end
+   end 
+  end
  end
 end
 
@@ -942,7 +949,7 @@ end
 --throw items at a player
 function throw_item()
  local sx,sy,os=105,72,rnd(15)-rnd(15)
- if boss.id==4 then sx,sy=64,64 end
+ if boss.id==4 then sx,sy=64,48 end
  local target=players[flr(rnd(#players))+1]
  local b=targeted_attack(11,target.hit_box.xl,target.hit_box.yt,sx,sy,offset)
  if boss.id==4 then b.spd=2 end
@@ -1132,18 +1139,6 @@ function update_players()
   --see if all players are dead
   if #players==0 then game.state=3 game.update=curr_game:update_game(3) music(15) end
  end
- update_timers()
-end
-
-function update_timers()
- local t=time()
- for p in all(players) do
-  if t-game.activescores[p.n].lasttime>2 and p.hp>0 then
-   game.activescores[p.n].timer+=1
-   game.activescores[p.n].lasttime=t
-   game.activescores[p.n].total=(100*game.activescores[p.n].hitsgiven)-(50*game.activescores[p.n].hitstaken)-game.activescores[p.n].timer
-  end
- end
 end
 
 function player_hit(p,n)
@@ -1175,7 +1170,7 @@ end
 function player_hurt(p)
  p.hp-=1
  game.screenshake,p.hit_cooldown=7,120
- game.activescores[p.n].hitstaken+=1
+ game.scores[p.n]-=50
  sfx(48)
 end
 
@@ -1264,6 +1259,7 @@ function player_attack(p,n)
 	   if boss.id==3 then for j=1,#boss.health_boxes do boss.health_boxes[j]-=1 end else boss.health_boxes[i]-=damage end
 	   p.dodge_meter+=p.charge_speed
     p_ac=30
+    game.scores[p.n]+=100
    end
    p_as=2
    sfx(49)
@@ -1336,7 +1332,7 @@ function player_purchase(p,n)
  local cost=pox_option_cost[option_index]
  if p.mutation_tokens>=cost then
   if option_index==2 then p.hp+=1
-  elseif option_index==3 then p.damage+=2
+  elseif option_index==3 then p.damage+=1
   elseif option_index==4 then p.attack_length+=5
   elseif option_index==5 then p.charge_speed+=5 p.charge_max+=15 end
   boss.pox_box_options[p.shop_option]=1
@@ -1418,8 +1414,6 @@ function _draw()
   draw_bullets()
   draw_platforms(boss.id)
   draw_players()
-  if boss.id==2 and boss.wave then
-   draw_box(14,boss.wave.hbox)   end
   if boss.shock_space then
 	  draw_box(14,boss.shock_space)
 	 end
@@ -1429,8 +1423,26 @@ function _draw()
   draw_gameover()
  elseif game.state==4 then
   draw_menu()
+ elseif game.state==5 then
+ 	draw_win()
  end
  draw_instructions()
+end
+
+function draw_win()
+ print_quote("congratulations, you won!    thanks for playing",30,0,10,7)
+ print("scores:",0,32)
+ spr(6,10,40)
+ print(game.scores[0],20,40,11)
+ if game.scores[1] then spr(38,70,40) print(game.scores[1],80,40) end
+ print("credits",15,56,7)
+ print("")
+ print("john demey")
+ print("drew merryman")
+ print("madeleine boies")
+ print("michael russell")
+ print("...and michael von der lippe")
+
 end
 
 function draw_smoke(ss)
@@ -1479,24 +1491,24 @@ end
     if game.menuchoice>0 then sely=106 else sely=110 end
    end
    spr(41, selx, sely)
-   print("HOW TO PLAY:PRESS z", 27, 122, 3)
+   print("how to play:press z", 27, 122, 3)
   end
 
 function draw_instructions()
  if instructions == true and game.menu==0 then
    rect(4,4,123,123,11)
    rectfill(10,10,118,118,7)
-   print("ability/interect/select: x",10,10,11)
+   print("ability/interact/select: x",10,10,11)
    print("attack/purchase:         z",10,20,11)
    print("movement:       arrow keys",10,30,11)
    print("scarlet-fever (player 1)",10,40,8)
    print("ability: diffusion",10,50,8)
-   print("description",10,60,8)
-   print("description cont.",10,70,8)
+   print("move through bullets and ",10,60,8)
+   print("platforms in a hot blaze",10,70,8)
    print("commander cold (player 2)",10,80,12)
    print("ability: chills",10,90,12)
-   print("description",10,100,12)
-   print("description cont.",10,110,12)
+   print("become a block of ice to",10,100,12)
+   print("block bullets",10,110,12)
  end
 end
 
@@ -1635,7 +1647,7 @@ function draw_pox_box()
 
   for p in all(players) do
    if p.shopping==true then
-    print(p.mutation_tokens,40+(16*p.n), 64,8+p.n*4) --print player tokens
+    print(p.mutation_tokens,40+(16*p.n), 64) --print player tokens
     if p.shop_option==i then spr(16+(32*p.n),x+(12*p.n),23) end --print player option selection icon
    end
   end
@@ -1766,19 +1778,10 @@ function draw_gameover()
  cls()
  print("game over",50,30,3)
  line(50,36,84,36,3)
- print("time",24,42,11)
- print("hits",44,42)
- print("flubs",64,42)
- print("score",92,42)
- local ypos=56
- for p in all(players) do
-  if p.n<1 then spr(6,12,ypos) else spr(38,12,ypos) end
-  print(game.activescores[p.n].timer,30,ypos)
-  print(game.activescores[p.n].hitsgiven,50,ypos)
-  print(game.activescores[p.n].hitstaken,70,ypos)
-  print(game.activescores[p.n].total,96,ypos)
-  ypos+=16
- end
+ print("score",86,42)
+ spr(6,26,56)
+ print(game.scores[0],88,57,11)
+ if game.scores[1] then spr(38,26,72) print(game.scores[1],88,73) end
  print("x to restart",45,100,3)
 end
 
@@ -2241,3 +2244,4 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
