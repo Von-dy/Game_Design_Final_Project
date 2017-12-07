@@ -51,61 +51,31 @@ function set(obj,props)
  end
  return obj
 end
-
--- used for callbacks into
--- entities that might or
--- might not have a method
--- to handle an event
---[[function event(ob,name,...)
- local cb=ob[name]
- return type(cb)=="function"
-  and cb(ob,...)
-  or cb
-end]]
-
-
--------------------------------
--- boxes
--------------------------------
-
--- a box is just a rectangle
--- with some helper methods
 box=kind()
- function box:translate(v)
-  return make_box(
-   self.xl+v.x,self.yt+v.y,
-   self.xr+v.x,self.yb+v.y
-  )
- end
-
- function box:overlaps(b)
-  return
-   self.xr>=b.xl and
-   b.xr>=self.xl and
-   self.yb>=b.yt and
-   b.yb>=self.yt
- end
-
---[[ function box:contains(pt)
-  return pt.x>=self.xl and
-   pt.y>=self.yt and
-   pt.x<=self.xr and
-   pt.y<=self.yb
- end
-]]
- --direction and value, 1 == left, 2 == right, 3 == up, 4 == down
- function box:extend(d, val)
-  if d==1 then return make_box(self.xl-val, self.yt, self.xr, self.yb) end
-  if d==2 then return make_box(self.xl, self.yt, self.xr+val, self.yb) end
-  if d==3 then return make_box(self.xl, self.yt-val, self.xr, self.yb) end
-  if d==4 then return make_box(self.xl, self.yt, self.xr, self.yb+val) end
- end
-
- function box:flr()
-  local v1=v(flr(self.xl), flr(self.yt))
-  local v2=v(flr(self.xr), flr(self.yb))
-  return vec_box(v1, v2)
- end
+function box:translate(v)
+ return make_box(
+  self.xl+v.x,self.yt+v.y,
+  self.xr+v.x,self.yb+v.y
+ )
+end
+function box:overlaps(b)
+ return
+  self.xr>=b.xl and
+  b.xr>=self.xl and
+  self.yb>=b.yt and
+  b.yb>=self.yt
+end
+function box:extend(d, val)
+ if d==1 then return make_box(self.xl-val, self.yt, self.xr, self.yb) end
+ if d==2 then return make_box(self.xl, self.yt, self.xr+val, self.yb) end
+ if d==3 then return make_box(self.xl, self.yt-val, self.xr, self.yb) end
+ if d==4 then return make_box(self.xl, self.yt, self.xr, self.yb+val) end
+end
+function box:flr()
+ local v1=v(flr(self.xl), flr(self.yt))
+ local v2=v(flr(self.xr), flr(self.yb))
+ return vec_box(v1, v2)
+end
 function make_box(xl,yt,xr,yb)
  if (xl>xr) xl,xr=xr,xl
  if (yt>yb) yt,yb=yb,yt
@@ -113,22 +83,12 @@ function make_box(xl,yt,xr,yb)
   xl=xl,yt=yt,xr=xr,yb=yb
  })
 end
-
 function vec_box(v1,v2)
  return make_box(
   v1.x,v1.y,
   v2.x,v2.y
  )
 end
-
--------------------------------
--- vectors
--------------------------------
-
--- for some stuff, we want
--- vector math - so we make
--- a vector type with all the
--- usual operations
 vec={}
 function vec.__add(v1,v2)
  return v(v1.x+v2.x,v1.y+v2.y)
@@ -142,85 +102,34 @@ end
 function vec.__div(v1,a)
  return v(v1.x/a,v1.y/a)
 end
---[[ we use the ^ operator
--- to mean dot product
-function vec.__pow(v1,v2)
- return v1.x*v2.x+v1.y*v2.y
-end
-function vec.__unm(v1)
- return v(-v1.x,-v1.y)
-end]]
--- this is not really the
--- length of the vector,
--- but length squared -
--- easier to calculate,
--- and can be used for most
--- of the same stuff
---[[function vec.__len(v1)
- local x,y=v1:split()
- return x*x+y*y
-end
--- normalized vector
-function vec:norm()
- return self/sqrt(#self)
-end
--- rotated 90-deg clockwise
-function vec:rotcw()
- return v(-self.y,self.x)
-end
--- force coordinates to
--- integers
-function vec:ints()
- return v(flr(self.x),flr(self.y))
-end]]
--- used for destructuring,
--- i.e.:  x,y=v:split()
 function vec:split()
  return self.x,self.y
 end
--- has to be there so
--- our metatable works
--- for both operators
--- and methods
 vec.__index = vec
-
--- creates a new vector
 function v(x,y)
  local vector={x=x,y=y}
  setmetatable(vector,vec)
  return vector
 end
-
--- vector for each cardinal
--- direction, ordered the
--- same way pico-8 d-pad is
 dirs={
  v(-1,0),v(1,0),
  v(0,-1),v(0,1)
 }
-
------------------------------
--- game
------------------------------
 curr_game=kind()
 function curr_game:update_game(state)
- --overworld/boss
  if state<2 then
   return function()
    update_players()
    update_boss()
   end
- --transition
  elseif state==2 then
   return function()
    if btnp(5) then init_boss() end
   end
- --game over
  elseif state==3 then
   return function()
    if btnp(5) then _init() end
   end
- --menu
  elseif state==4 then
   return function()
    update_menu()
@@ -231,10 +140,6 @@ function curr_game:update_game(state)
   end
  end
 end
-
------------------------------
--- boss hit boxes
------------------------------
 boss_hit_boxes={
  { --heart
   {88,8,96,64},
@@ -262,9 +167,6 @@ boss_hit_boxes={
   {6, 79, 30, 111}
  }
 }
-------------------------------
--- boss health boxes
-------------------------------
 boss_health_boxes={
  {20,20,20,20}, --heart
  {70}, --stomach
@@ -272,12 +174,6 @@ boss_health_boxes={
  {100}, --brain
  {}--overworld
 }
-
-------------------------------
--- boss anim box sprites
-------------------------------
--- length must amtch number of anim boxes
--- maps sprite numbers to boxes
 boss_anim_sprites={
  {192,192,208,208,128}, --heart
  {132,241,241}, --stomach
@@ -285,7 +181,6 @@ boss_anim_sprites={
  {140}, --brain
  {204, 12, 12} --overworld
 }
-
 boss_anim_size_vecs={
  {v(8,8), v(8,8), v(8,8), v(8,8), v(32,32)},
  {v(32,32), v(8,8), v(8,8)},
@@ -293,28 +188,18 @@ boss_anim_size_vecs={
  {v(32, 32)},
  {v(32,32), v(32,32), v(32,32)}
 }
-
------------------------------
--- boss face_points
------------------------------
-
 boss_eye_points={
  {88, 56, 4, 12, 2, 8}, --heart
  {92, 56, 4, 12, 3, 11}, --stomach
  {46, 62, 6, 31, 14, 8}, --lungs
  {46,62,6,31,14,8}, --brain
 }
-
 boss_lip_points={
  {91, 72, 16, 1, 5},
  {91, 72, 16, 1, 5},
  {51, 75, 21, 1, 14},
  {51,75,21,1,14}
 }
-
-------------------------------
--- boss hurt boxes
-------------------------------
 boss_hurt_boxes={
  { --heart
    --none
@@ -332,10 +217,6 @@ boss_hurt_boxes={
    --none
  }
 }
-
-------------------------------
--- boss rooms
-------------------------------
 boss_rooms={
  { --heart
   {0, 112, 127, 127}, --flr boss_rooms[1][1][1-4]
@@ -368,32 +249,20 @@ boss_rooms={
   {0, 112, 127, 127}
  }
 }
-
-------------------------------
--- pox box options stuff
-------------------------------
-
 pox_option={"sold","health","damage","length", "charge"}
 pox_option_sprites={23,198,197,230,229}
 pox_option_cost={0,1,3,2,2}
-
-------------------------------
--- init calls
-------------------------------
-
 function _init()
  cls()
  music(-1)
  lbx,lby,mode=0,0,0
  menu_color=0
- --state: 0=overworld, 1=boss, 2=transition, 3=gameover, 4=menu
  game={shopping=false, ready_count=0,frame_counter=0, state=4, next_boss=5, b_remaining={1,2,3}, b_faught={}, difficulty=1, menu=0, menuchoice=0, scores={},screenshake=0, camx=0, camy=0,particles={}}
  quotes={"there is nothing so patient, in this world or any other, as a virus searching for a host","it's in the misery of some unnamed slum that the next killer virus will emerge.","when there are too many deer in the forest or too many cats in the barn, nature restores the balance by the introduction of a communicable disease or virus.","the average adult heart beats 72 times a minute; 100,000 times a day; 3,600,000 times a year; and 2.5 billion times during a lifetime.","every day, the heart creates enough energy to drive a truck 20 miles. in a lifetime, that is equivalent to driving to the moon and back.","the stomach serves as a first line of defense for your immune system. it contains hydrochloric acid, which helps to kill off bacteria and viruses that may enter with the food you eat.","try interacting with pox box at the overworld, he may have something for you.","when fighting the heart, aim for the valves attached to it.","scarlet fever and commander cold have different abilities. commander cold stops bullets in their tracks while scarlet fever moves faster.","when fighting the lungs, be careful as they will try to blow you in all sorts of directions.","when fighting the stomach, try to avoid the stomach acid.","every player has two jumps. use them wisely!","if you see smoke while fighting the lungs, find a safe area to wait until it clears up."}
  players={}
  game.update=curr_game:update_game(game.state)
  init_area(0)
 end
-
 function init_player(num)
   local p={
   n=num,
@@ -426,29 +295,16 @@ function init_player(num)
  game.scores[num]=0
  add(players,p)
 end
-
-
 function init_boss()
  local n=game.next_boss
  boss={id=n, timer=180,attack_counter=1,counter=0, health_boxes={},hp=200,state=0,hit_boxes={}, col_boxes={}, hurt_boxes={}, bullets={}, attacks={},spawn=time(),d=0,pox_box_options={}}
- -- n=1 for heart
- -- n=2 for stomach
- -- n=3 for lungs
- -- n=4 for brain
- -- n=5 for overworld
- --1. init hit_boxes
  init_boss_boxes(boss.hit_boxes, boss_hit_boxes[n])
- --2. init col_boxes
  add(boss.col_boxes, make_box(0, 0, 127, 3)) -- every boss has a cieling right?
  init_boss_boxes(boss.col_boxes, boss_rooms[n])
- --3. init hurt_boxes
  init_boss_boxes(boss.hurt_boxes, boss_hurt_boxes[n])
- --3. init hp
  init_boss_health(boss.health_boxes,boss_health_boxes[n])
  boss.max_hp=80
  if n==2 then boss.max_hp=70 elseif n==4 then boss.max_hp=100 end
-
- --4. game_state and overworld check
  if n==5 then game.state=0
   init_pox_box_options() -- get new options in overworld
   local r=#game.b_remaining
@@ -457,13 +313,11 @@ function init_boss()
   else game.next_boss=4 end
   add(game.b_faught, game.next_boss)
  else game.state=1 game.next_boss=5 end
- --4,5 scores and stuff
  for p in all(players) do
   p.ready,p.shopping,p.state=false,false,1
   local x1,y1,x2,y2=0,104,6,111
   if n==4 then x1,y1,x2,y2=15,57,21,64 end
   p.hit_box=make_box(x1,y1,x2,y2)
-
   if game.next_boss==5 then 
    if game.difficulty==0 then
     p.mutation_tokens+=1 
@@ -472,26 +326,17 @@ function init_boss()
    end
   end
  end
-
- --5. init boss functions
  boss = curr_boss:new(boss)
  boss.funcs=init_boss_functions(n)
- --6 init boss attacks
  boss.attacks=init_boss_attacks(n,0)
-
- --7 set map area
  init_area(n)
-
- --8 set game start
  game.update=curr_game:update_game(game.state)
 end
-
 function init_pox_box_options()
  local current_options={}
  for i=1,3 do add(current_options, flr(rnd(#pox_option-1))+2) end
  boss.pox_box_options=current_options
 end
-
 function init_boss_functions(n)
  return { -- controls functions boss has access to
   curr_boss:platform_movement(n),
@@ -501,76 +346,55 @@ function init_boss_functions(n)
   curr_boss:death_condition(n)
  }
 end
-
-function init_boss_health(to_table,from_table)
- for i=1,#from_table do
-  local cur_box=from_table[i]
-  add(to_table, cur_box)
+function init_boss_health(tt,ft)
+ for i=1,#ft do
+  local cur_box=ft[i]
+  add(tt, cur_box)
  end
 end
-
-function init_boss_boxes(to_table, from_table)
- for i=1,#from_table do
-  local cur_box=from_table[i]
-  add(to_table, make_box(cur_box[1], cur_box[2], cur_box[3], cur_box[4]))
+function init_boss_boxes(tt, ft)
+ for i=1,#ft do
+  local cur_box=ft[i]
+  add(tt, make_box(cur_box[1], cur_box[2], cur_box[3], cur_box[4]))
  end
 end
-
-function init_boss_attacks(id,state)
- --heart
- if id==1 and state==0 then
+function init_boss_attacks(id,st)
+ if id==1 and st==0 then
   return {clot_attack,vb,valve_burst}
- elseif id==1 and state==2 then
+ elseif id==1 and st==2 then
   return {clot_attack,vb,valve_burst,mini_heart}
-
- --stomach
- elseif id==2 and state==0 then
+ elseif id==2 and st==0 then
   return {throw_item,wave,spawn_enzyme}
-
- --lungs
- elseif id==3 and state==0 then
+ elseif id==3 and st==0 then
   return {spawn_debris,change_direction}
- elseif id==3 and state==2 then
+ elseif id==3 and st==2 then
   return {spawn_debris,change_direction,safespace,hurt_space}
-
- --brain
- elseif id==4 and state==0 then
+ elseif id==4 and st==0 then
   return {throw_item,throw_item,bouncing_lightning,bouncing_lightning}
- elseif id==4 and state==2 then
+ elseif id==4 and st==2 then
  	return {throw_item, bouncing_lightning, throw_item,bouncing_lightning, smart_shot,shockspace,shock_space}
- --overworld
  else
   return {}
  end
 end
-
 function init_area(id)
- --heart
  if id==0 then
    lbx,lby=128,0
  elseif id==1 then
   lbx,lby=256,0
- --stomach
  elseif id==2 then
   lbx,lby=384,0
- --lungs
  elseif id==3 then
   lbx,lby=0,128
- --brain
  elseif id==4 then
   lbx,lby=512,0
- --overworld
  elseif id==5 then
   lbx,lby=256,128
- --transition
  elseif id==6 then
   lbx,lby=384,128
 end
  set_area(lbx/8,lby/8)
 end
-------------------------------
--- transition functions
-------------------------------
 function init_transition()
  music(-1)
  game.update=curr_game:update_game(2)
@@ -579,7 +403,6 @@ function init_transition()
  game.state=2
  ttk=time()
 end
-
 function draw_transition()
  print_quote(random_quote,30,0,1,9)
  print("press x to continue",48,120,7)
@@ -592,11 +415,7 @@ function draw_transition()
   if game.b_faught[i] then spr(game.b_faught[i]+23, x, 92) end
  end
 end
------------------------------
--- menu functions
-------------------------------
 function update_menu()
- --main
  if game.menu==0 or game.menu==2 then
   if btn(3) then
    game.menuchoice=0
@@ -615,7 +434,6 @@ function update_menu()
   instructions = false
   if btn(4) then --hold it
     instructions = true
-    --draw instructions window
   end
  elseif game.menu==2 then
   if  btnp(5) then
@@ -627,26 +445,18 @@ function update_menu()
   end
  end
 end
-------------------------------
--- boss functions
-------------------------------
 curr_boss=kind()
-
 function update_boss()
  local s=boss.state
  for f in all(boss.funcs) do f() end
- --if boss is active, do attacks
  boss.counter+=1
  if boss.counter>boss.timer then boss.counter=0 boss.attack_counter+=1 end
  if s>0 and boss.counter==0 and boss.id!=5 then --do attacks here
   boss.attacks[boss.attack_counter]()
  end
  if boss.attack_counter==#boss.attacks then boss.attack_counter=0 end
- --if change in boss state
  if s~=boss.state then music_player(boss.id,boss.state) end
 end
-
-
 function curr_boss:update_health()
  return function()
   local count=0
@@ -657,7 +467,6 @@ function curr_boss:update_health()
   if boss.id==3 then boss.hp=count/2 end
  end
 end
-
 function curr_boss:platform_movement(id)
  local col_boxes=boss.col_boxes
  if id==2 then
@@ -687,14 +496,12 @@ function curr_boss:platform_movement(id)
      if yt==112 and xl>10 then vec=v(-1,0) end
      plats[i]=p:translate(vec/s) -- speed used here --update local table here for player plat collision
      plat_vecs[i]=vec
-     --player col with moving plats
      moving_plat_collision(plats[i],vec/s)
      boss.col_boxes[i+3]=plats[i] --update boss table here
    end
   end
  end
 end
-
 function curr_boss:death_condition(id)
  if id==5 then
   return function()
@@ -715,10 +522,8 @@ function curr_boss:death_condition(id)
   end
  end
 end
-
 function curr_boss:boss_logic(id)
  local s=boss.state
- --heart
  if id==1 then
   return function()
    local count=0
@@ -729,17 +534,14 @@ function curr_boss:boss_logic(id)
     if v<20 then s=1 end
     if v==0 then count-=1 end
    end
-   --check valves
    if count<3 then s=2 boss.timer=150  boss.attacks=init_boss_attacks(id,2) end
    boss.state=s
   end
- --stomach
  elseif id==2 then
   return function()
    if hpcheck(70) then s=0 end
    if hpcheck(69) then s=1 end
    if hpcheck(40) then s=2 boss.timer=120 end
-   --wave movement
    if boss.wave then
     local w=boss.wave.hbox
     local timer=time()-boss.wave.spawn_time
@@ -751,7 +553,6 @@ function curr_boss:boss_logic(id)
    end
    boss.state=s
   end
- --lungs
  elseif id==3 then
   return function()
    if hpcheck(80) then s=0 end
@@ -769,7 +570,6 @@ function curr_boss:boss_logic(id)
     b.t=boss.d
    end
   end
- --brain
  elseif id==4 then
   return function()
    if hpcheck(100) then s=0 end
@@ -780,7 +580,6 @@ function curr_boss:boss_logic(id)
   end
  end
 end
-
 function curr_boss:update_bullets()
  return function()
   for b in all(boss.bullets) do
@@ -788,7 +587,6 @@ function curr_boss:update_bullets()
    local d=b.t
    local x,y=0,0
    local hbox=b.hbox
-   --8 directions
    if d==0 then
     x=-spd
    elseif d==1 then
@@ -809,53 +607,36 @@ function curr_boss:update_bullets()
    elseif d==7 then
     x+=spd
     y+=spd
-
-   --special bullets
-   --mini heart
    elseif d==10 then
     x-=spd
     y+=1.5*cos(.5*time())
-
-   --thrown food
    elseif d==11 then
     x-=spd*cos(b.ang)
     y+=spd*sin(-b.ang)
-
-   --enzymes
    elseif d==20 then
     if b.state==0 then
      x-=1
      for p in all(players) do
       if hbox.xl<p.hit_box.xr+6 then b.state=1 end
      end
-    --if same axis as a player, attack
     elseif b.state==1 then y+=1 end
-
    elseif d==21 then
-    --move along vertically
     if b.state==0 then
      y+=1
      for p in all(players) do
       if  hbox.yb>p.hit_box.yt-6 then b.state=1 end
      end
-    --if on same axis as player
     elseif b.state==1 then x-=1 end
-
-   --smart bullets
    elseif d==42 then
     if hbox.yt<b.target.hit_box.yt then y+=.2 else y-=.2 end
     if hbox.xl<b.target.hit_box.xl then x+=.3 else x-=.3 end
    end
-
    if d~=41 then
     b.hbox=hbox:translate(v(x,y))
    else
     b.hbox=hbox:translate(b.d_vec)
    end
-
-   --wall collision
    if box_collide(b.hbox,boss.col_boxes) then
-    --bouncing bullets
     if d==41 then
      b.bounce+=1
      if b.bounce<3 then
@@ -867,31 +648,21 @@ function curr_boss:update_bullets()
      del(boss.bullets,b)
     end
    end
-   --out of bounds
    if hbox.xl<0 or hbox.xr>127 or hbox.yt<0 or hbox.yb>127 then
     del(boss.bullets,b)
    end
   end
  end
 end
-
---checks if boss's hp is <= n
 function hpcheck(n)
  if boss.hp<=n then return true end
 end
-
-------------------------------
--- attack functions
-------------------------------
---makes a bullet with an angle
 function targeted_attack(bt,tx,ty,sx,sy,o,sprite)
  local b=make_bullet(bt,sx,sy,sx+6,sy+6,sprite)
  local offset=o or 0
  b.ang=atan2(sx-tx+offset,sy-ty)
  return b
 end
-
---make a bullet given a startx, starty, length(dx), height(dy), and type(d)
 function make_bullet(t,sx,sy,dx,dy,sprite)
  local dx=dx or sx+6
  local dy=dy or sy+6
@@ -903,8 +674,6 @@ function make_bullet(t,sx,sy,dx,dy,sprite)
  }
  return b
 end
-
---throw items at a player
 function throw_item()
  local sx,sy,os=105,72,rnd(15)-rnd(15)
  if boss.id==4 then sx,sy=64,48 end
@@ -913,10 +682,6 @@ function throw_item()
  if boss.id==4 then b.spd=2 end
  add(boss.bullets,b)
 end
-
---stomach attacks
-
---spawns one of two enzymes
 function spawn_enzyme()
  local i=flr(rnd(2))+20
  local e=make_bullet(i,112,16,118,22,179+i)
@@ -924,10 +689,7 @@ function spawn_enzyme()
  e.state=0
  add(boss.bullets,e)
 end
-
---spawn a wave
 function wave()
- --which pit to spawn from
  local side=flr(rnd(2))
  local x=32
  if side==1 then x=80 end
@@ -935,10 +697,6 @@ function wave()
  spawn_time=time()}
  boss.wave=w
 end
-
---lung attacks
-
---spawns debris on the sides of the map
 function spawn_debris()
  for i=0,4 do
 	 local x=1+rnd(4)
@@ -949,8 +707,6 @@ function spawn_debris()
 	 add(boss.bullets,c)
 	end
 end
-
---changes the direction of bullets on the map
 function change_direction()
  local direction=boss.d
  if direction==0 then direction=1
@@ -958,8 +714,6 @@ function change_direction()
  end
  boss.d=direction
 end
-
---spawns one of two safe spaces
 function safespace()
  local id=flr(rnd(2))
  local s=make_box(24,0,127,127)
@@ -968,8 +722,6 @@ function safespace()
  end
  boss.safe_space=s
 end
-
---damages anybody not in a safe space
 function hurt_space()
  if boss.safe_space then
   for p in all(players) do
@@ -980,10 +732,6 @@ function hurt_space()
  end
  boss.safe_space=nil
 end
-
---heart attacks
-
---rain bullets from ceiling
 function clot_attack()
  local side=flr(rnd(2))
  for i=0,64,4 do
@@ -1469,32 +1217,21 @@ function draw_instructions()
    print("block bullets",10,110,12)
  end
 end
-
---dodge_meter
 function draw_hud()
- --draw player stuff
  draw_player_hud()
- --draw boss stuff
  draw_boss_health(boss.id)
 end
-
---responsible for drawing player
---health and ability stuff
 function draw_player_hud()
  for i=1,#players do
   local p=players[i]
-  --player health
   for hp=1,p.hp do
    spr(p.n*32,0+8*hp+(i-1)*80,120)
   end
-  --player ap
   rectfill(120*(i-1),2,7+120*(i-1),4,2)
   rectfill(120*(i-1),2,120*(i-1)+(p.dodge_meter/100)*7,4,8+p.n*4)
   rect(0+120*(i-1),1,8+120*(i-1),5,0)
  end
 end
-
---given id of boss, draw the hp
 function draw_boss_health(id)
  if game.state==1 then
   rectfill(24,1,104,4,2)
@@ -1502,7 +1239,6 @@ function draw_boss_health(id)
   rect(23, 1, 105, 5, 0)
  end
 end
-
 function draw_players()
  for p in all(players) do
   local s=0
@@ -1519,7 +1255,6 @@ function draw_players()
    end
    if y>0 then flip_y=true end
    if x<0 then flip_x=true end
-   --if p.n==1 then spr(make_box(p.hit_box.x)) end
   else
    if p.h<7 then s=3
    elseif p.jumped>0 then s=4
@@ -1541,7 +1276,6 @@ function draw_players()
   end
  end
 end
-
 function draw_boss(id)
  for i=1, #boss.hit_boxes do
   local draw=true
@@ -1585,11 +1319,9 @@ function draw_boss(id)
    end
   end
  end
-
  if boss.wave then spr_vec_to_box(boss.wave.hbox, v(72,24), v(8,8)) end
  if boss.shock_space then spr_vec_to_box(boss.shock_space,v(56,112),v(8,8)) end
 end
-
 function draw_pox_box()
  print("item:",1,32)
  print("cost:",1,40)
@@ -1603,17 +1335,14 @@ function draw_pox_box()
   print(name, x, 32, 7)
   print(cost, x, 40)
   spr(sprite, x+8, 38)
-
   for p in all(players) do
    if p.shopping==true then
     print(p.mutation_tokens,40+(16*p.n), 64) --print player tokens
     if p.shop_option==i then spr(16+(32*p.n),x+(12*p.n),23) end --print player option selection icon
    end
   end
-
  end
 end
-
 function draw_platforms(id)
  if id==2 then
   local apple_vec=v(8,96)
@@ -1636,8 +1365,6 @@ function draw_platforms(id)
   end
  end
 end
-
- --mood, eye_x, eye_y, eye_r, distance, primary color, secondary color
 function draw_eyes(m, pts_table)
  local e_x=pts_table[1]
  local e_y=pts_table[2]
@@ -1647,20 +1374,12 @@ function draw_eyes(m, pts_table)
  local s_col=pts_table[6]
  local l_e_x=e_x
  local r_e_x=e_x+d
-
- --base circle
  circfill(e_x, e_y, e_r, 7)
  circfill(r_e_x, e_y, e_r, 7)
-
- --tracking pupils                                  -- sad pupils
  if m<=1 then draw_pupils(e_x, e_y, e_r, d, 0) else draw_pupils(e_x, e_y, e_r, d, 1) end
-
- --angry eyebrows
  if m==1 then
-  --left brow
  line(l_e_x-e_r, e_y-e_r-2, l_e_x+e_r, e_y-(e_r/2)-1, p_col)
  line(l_e_x-e_r, e_y-e_r-1, l_e_x+e_r, e_y-(e_r/2), s_col)
- --right brow
  line(r_e_x+e_r, e_y-e_r-2, r_e_x-e_r, e_y-(e_r/2)-1, p_col)
  line(r_e_x+e_r, e_y-e_r-1, r_e_x-e_r, e_y-(e_r/2), s_col)
  elseif m==2 then -- sad / eyelids
@@ -1673,15 +1392,10 @@ function draw_eyes(m, pts_table)
     line(r_e_x-i-1, e_y-e_r+i-1, r_e_x+i+1, e_y-e_r+i-1, p_col)
    end
   end
-  --pset(91,59,12)
-  --pset(98,59,12)
  end
 end
-
---left center_x, left center_y, radius, distance, mood
 function draw_pupils(c_x, c_y, r, d, m)
  local x,y,p_y,p_x=c_x-1,c_y,p_y,p_x
-
  if m==0 then --tracking
   for p in all(players) do
    p_x=p.hit_box.xl
@@ -1698,11 +1412,8 @@ function draw_pupils(c_x, c_y, r, d, m)
   rectfill(x,y,x+2,y+2,0)
   rectfill(x+d,y,x+d+2, y+2, 0)
 end
-
---mood, x, y, length, primary_col, secondary_col
 function draw_lips(m, pts_table)
  local x,y,len,p_col,s_col=pts_table[1],pts_table[2],pts_table[3],pts_table[4],pts_table[5]
-
  local l=len*2
  if m==0 then --happy mood
   for i=0, len-1 do
@@ -1732,7 +1443,6 @@ function draw_lips(m, pts_table)
    end
  end
 end
-
 function draw_gameover()
  cls()
  print("game over",50,30,3)
@@ -1743,32 +1453,15 @@ function draw_gameover()
  if game.scores[1] then spr(38,26,72) print(game.scores[1],88,73) end
  print("x to restart",45,100,3)
 end
-
------------------------
--- render engine/helpers
------------------------
-
---draw box test func, draws boxes
 function draw_box(t,b)
  rect(b.xl, b.yt, b.xr, b.yb, t)
 end
-
--- input: start sprite num, end sprite num
--- ouput: vectors with position of sprites
 function get_spr_vec_tables(start_num,end_num)
  local spr_table={}
  for i=start_num, end_num do add(spr_table, get_spr_pixels(i)) end
  return spr_table
 end
-
--- input: sprite number that you would normally pass an spr function
--- output: x,y = cordinates of sprites top left pixel
--- detail: called during init to set up low token count tables to index sprites
 function get_spr_pixels(spr_num) return v((spr_num%16)*8,flr((spr_num/16))*8) end
-
--- input: box to draw sprite onto, spr_num, optional size vec, width and height of sprite in sheet(used for boss rendering)
--- output: calls sspr function using box cords and vec cords
--- detail: if no spr_size_vec, assumed size is 8,8
 function spr_vec_to_box(box, spr_vec, spr_size_vec, flip_x, flip_y)
  local scr_x, scr_y=box.xl, box.yt
  local scr_w, scr_h=box.xr-scr_x, box.yb-scr_y
